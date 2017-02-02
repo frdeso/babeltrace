@@ -50,5 +50,9 @@ stamp-h1
 bindings/python/babeltrace.i
 bindings/python/babeltrace.py
 bindings/python/babeltrace_wrap.c
+bindings/python/setup.py
+bindings/python/installed_files.txt
+bindings/python/build
+bindings/python/babeltrace/__init__.py
 babeltrace.pc
 babeltrace-ctf.pc
