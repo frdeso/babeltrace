@@ -967,7 +967,7 @@ const char *bt_field_common_string_get_value(struct bt_field_common *field)
 	BT_ASSERT_PRE_FIELD_COMMON_IS_SET(field, "String field");
 	BT_ASSERT_PRE_FIELD_COMMON_HAS_TYPE_ID(field,
 		BT_FIELD_TYPE_ID_STRING, "Field");
-	return string->payload->str;
+	return string->payload ? string->payload->str : NULL;
 }
 
 static inline
