@@ -814,13 +814,10 @@ bt_field_enumeration_get_mappings(struct bt_field *field)
 int bt_field_signed_integer_get_value(struct bt_field *field, int64_t *value)
 {
 	struct bt_field_integer *integer;
-	struct bt_field_type_integer *integer_type;
 
 	BT_ASSERT_PRE_NON_NULL(field, "Integer field");
 	BT_ASSERT_PRE_NON_NULL(value, "Value");
 	BT_ASSERT_PRE_FIELD_HAS_TYPE_ID(field, BT_FIELD_TYPE_ID_INTEGER, "Field");
-	integer_type = container_of(field->type,
-		struct bt_field_type_integer, parent);
 	BT_ASSERT_PRE(bt_field_type_integer_is_signed(field->type),
 		"Field's type is unsigned: %!+f", field);
 	integer = container_of(field,
@@ -872,13 +869,10 @@ int bt_field_signed_integer_set_value(struct bt_field *field, int64_t value)
 int bt_field_unsigned_integer_get_value(struct bt_field *field, uint64_t *value)
 {
 	struct bt_field_integer *integer;
-	struct bt_field_type_integer *integer_type;
 
 	BT_ASSERT_PRE_NON_NULL(field, "Integer field");
 	BT_ASSERT_PRE_NON_NULL(value, "Value");
 	BT_ASSERT_PRE_FIELD_HAS_TYPE_ID(field, BT_FIELD_TYPE_ID_INTEGER, "Field");
-	integer_type = container_of(field->type,
-		struct bt_field_type_integer, parent);
 	BT_ASSERT_PRE(!bt_field_type_integer_is_signed(field->type),
 		"Field's type is signed: %!+f", field);
 	integer = container_of(field, struct bt_field_integer, parent);
