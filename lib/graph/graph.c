@@ -133,10 +133,12 @@ void bt_graph_destroy(struct bt_object *obj)
 		BT_LOGD_STR("Destroying connections.");
 		g_ptr_array_free(graph->connections, TRUE);
 	}
+
 	if (graph->components) {
 		BT_LOGD_STR("Destroying components.");
 		g_ptr_array_free(graph->components, TRUE);
 	}
+
 	if (graph->sinks_to_consume) {
 		g_queue_free(graph->sinks_to_consume);
 	}
