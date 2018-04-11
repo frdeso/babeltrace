@@ -4147,6 +4147,8 @@ int bt_field_type_common_variant_compare_recursive(
 	int i;
 	struct bt_field_type_common_variant *var_ft_a = BT_FROM_COMMON(ft_a);
 	struct bt_field_type_common_variant *var_ft_b = BT_FROM_COMMON(ft_b);
+	struct bt_field_type_common_enumeration *tag_a_ft;
+	struct bt_field_type_common_enumeration *tag_b_ft;
 
 	/* Tag name */
 	if (strcmp(var_ft_a->tag_name->str, var_ft_b->tag_name->str)) {
@@ -4157,16 +4159,25 @@ int bt_field_type_common_variant_compare_recursive(
 	}
 
 	/* Tag type */
-	ret = bt_field_type_common_compare(BT_TO_COMMON(var_ft_a->tag_ft),
-		BT_TO_COMMON(var_ft_b->tag_ft));
-	if (ret) {
+	tag_a_ft = var_ft_a->tag_ft;
+	tag_b_ft = var_ft_b->tag_ft;
+	if (tag_a_ft && tag_b_ft) {
+		ret = bt_field_type_common_compare(BT_TO_COMMON(tag_a_ft),
+			BT_TO_COMMON(tag_b_ft));
+		if (ret) {
+			BT_LOGV("Variant field types differ: different tag field types: "
+				"ft-a-tag-ft-addr=%p, ft-b-tag-ft-addr=%p",
+				tag_b_ft, tag_b_ft);
+			goto end;
+		}
+	} else if ((uintptr_t)tag_a_ft ^ (uintptr_t)tag_b_ft) {
+		/* One of the tag is a null pointer and the other is not. */
 		BT_LOGV("Variant field types differ: different tag field types: "
 			"ft-a-tag-ft-addr=%p, ft-b-tag-ft-addr=%p",
-			var_ft_a->tag_ft, var_ft_b->tag_ft);
+			tag_a_ft, tag_b_ft);
+		ret = 1;
 		goto end;
 	}
-
-	ret = 1;
 
 	/* Fields */
 	if (var_ft_a->fields->len != var_ft_b->fields->len) {
