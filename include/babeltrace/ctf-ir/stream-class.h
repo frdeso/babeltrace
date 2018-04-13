@@ -173,8 +173,6 @@ bt_stream_class_set_event_header_field_type().
 @returns	Created default stream class, or \c NULL on error.
 
 @postsuccessrefcountret1
-
-@sa bt_stream_class_create_empty(): Creates an empty stream class.
 */
 extern struct bt_stream_class *bt_stream_class_create(const char *name);
 

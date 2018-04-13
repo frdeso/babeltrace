@@ -58,8 +58,8 @@ stream you use to create a packet object becomes its parent.
 When you set the trace packet header and stream packet context fields of
 a packet with resp. bt_packet_set_header() and
 bt_packet_set_context(), their field type \em must be equivalent to
-the field types returned by resp. bt_trace_get_packet_header_type()
-and bt_stream_class_get_packet_context_type() for its parent trace
+the field types returned by resp. bt_trace_get_packet_header_field_type()
+and bt_stream_class_get_packet_context_field_type() for its parent trace
 class and stream class.
 
 You can attach a packet object to a \link ctfirevent CTF IR
@@ -168,7 +168,7 @@ extern struct bt_field *bt_packet_get_header(
 
 If \p header is not \c NULL, the field type of \p header, as returned by
 bt_field_get_type(), \em must be equivalent to the field type returned by
-bt_trace_get_packet_header_type() for the parent trace class of
+bt_trace_get_packet_header_field_type() for the parent trace class of
 \p packet.
 
 @param[in] packet	Packet of which to set the trace packet header field.
@@ -178,7 +178,7 @@ bt_trace_get_packet_header_type() for the parent trace class of
 @prenotnull{packet}
 @prehot{packet}
 @pre <strong>\p header, if not \c NULL</strong>, has a field type equivalent to
-	the field type returned by bt_trace_get_packet_header_type() for the
+	the field type returned by bt_trace_get_packet_header_field_type() for the
 	parent trace class of \p packet.
 @postrefcountsame{event}
 @post <strong>On success, if \p header is not \c NULL</strong>, the reference
@@ -216,7 +216,7 @@ extern struct bt_field *bt_packet_get_context(
 
 If \p context is not \c NULL, the field type of \p context, as returned by
 bt_field_get_type(), \em must be equivalent to the field type returned by
-bt_stream_class_get_packet_context_type() for the parent stream class of
+bt_stream_class_get_packet_context_field_type() for the parent stream class of
 \p packet.
 
 @param[in] packet	Packet of which to set the stream packet context field.
@@ -225,9 +225,10 @@ bt_stream_class_get_packet_context_type() for the parent stream class of
 
 @prenotnull{packet}
 @prehot{packet}
-@pre <strong>\p context, if not \c NULL</strong>, has a field type equivalent to
-	the field type returned by bt_stream_class_get_packet_context_type()
-	for the parent stream class of \p packet.
+@pre <strong>\p context, if not \c NULL</strong>, has a field type equivalent
+	to the field type returned by
+	bt_stream_class_get_packet_context_field_type() for the parent stream
+	class of \p packet.
 @postrefcountsame{packet}
 @post <strong>On success, if \p context is not \c NULL</strong>, the reference
 	count of \p context is incremented.

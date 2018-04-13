@@ -281,7 +281,7 @@ extern struct bt_field *bt_event_get_header(struct bt_event *event);
 
 If \p header is not \c NULL, the field type of \p header, as returned by
 bt_field_get_type(), \em must be equivalent to the field type returned by
-bt_stream_class_get_event_header_type() for the parent stream class
+bt_stream_class_get_event_header_field_type() for the parent stream class
 of \p event.
 
 @param[in] event	Event of which to set the stream event header
@@ -292,7 +292,7 @@ of \p event.
 @prenotnull{event}
 @prehot{event}
 @pre <strong>\p header, if not \c NULL</strong>, has a field type equivalent to
-	the field type returned by bt_stream_class_get_event_header_type()
+	the field type returned by bt_stream_class_get_event_header_field_type()
 	for the parent stream class of \p event.
 @postrefcountsame{event}
 @post <strong>On success, if \p header is not \c NULL</strong>,
@@ -331,7 +331,7 @@ extern struct bt_field *bt_event_get_stream_event_context(
 
 If \p context is not \c NULL, the field type of \p context, as returned by
 bt_field_get_type(), \em must be equivalent to the field type returned by
-bt_stream_class_get_event_context_type() for the parent stream class
+bt_stream_class_get_event_context_field_type() for the parent stream class
 of \p event.
 
 @param[in] event	Event of which to set the stream event context field.
@@ -341,7 +341,7 @@ of \p event.
 @prenotnull{event}
 @prehot{event}
 @pre <strong>\p context, if not \c NULL</strong>, has a field type equivalent to
-	the field type returned by bt_stream_class_get_event_context_type()
+	the field type returned by bt_stream_class_get_event_context_field_type()
 	for the parent stream class of \p event.
 @postrefcountsame{event}
 @post <strong>On success, if \p context is not \c NULL</strong>, the reference
@@ -375,7 +375,7 @@ extern struct bt_field *bt_event_get_context(struct bt_event *event);
 
 If \p context is not \c NULL, the field type of \p context, as returned by
 bt_field_get_type(), \em must be equivalent to the field type returned by
-bt_event_class_get_context_type() for the parent class of \p event.
+bt_event_class_get_context_field_type() for the parent class of \p event.
 
 @param[in] event	Event of which to set the context field.
 @param[in] context	Event context field.
@@ -384,7 +384,7 @@ bt_event_class_get_context_type() for the parent class of \p event.
 @prenotnull{event}
 @prehot{event}
 @pre <strong>\p context, if not \c NULL</strong>, has a field type equivalent to
-	the field type returned by bt_event_class_get_context_type() for the
+	the field type returned by bt_event_class_get_context_field_type() for the
 	parent class of \p event.
 @postrefcountsame{event}
 @post <strong>On success, if \p context is not \c NULL</strong>, the reference
@@ -417,7 +417,7 @@ extern struct bt_field *bt_event_get_payload(struct bt_event *event);
 
 If \p payload is not \c NULL, the field type of \p payload, as returned by
 bt_field_get_type(), \em must be equivalent to the field type returned by
-bt_event_class_get_payload_type() for the parent class of \p event.
+bt_event_class_get_payload_field_type() for the parent class of \p event.
 
 @param[in] event	Event of which to set the payload field.
 @param[in] payload	Event payload field.
@@ -426,7 +426,7 @@ bt_event_class_get_payload_type() for the parent class of \p event.
 @prenotnull{event}
 @prehot{event}
 @pre <strong>\p payload, if not \c NULL</strong>, has a field type equivalent to
-	the field typereturned by bt_event_class_get_payload_type() for the
+	the field typereturned by bt_event_class_get_payload_field_type() for the
 	parent class of \p event.
 @postrefcountsame{event}
 @post <strong>On success, if \p payload is not \c NULL</strong>, the reference

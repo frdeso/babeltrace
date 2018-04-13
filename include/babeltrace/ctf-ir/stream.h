@@ -56,9 +56,8 @@ A CTF IR <strong><em>stream</em></strong> is an instance of a
 
 You can obtain a CTF IR stream object in two different modes:
 
-- <strong>Normal mode</strong>: use bt_stream_create() or
-  bt_stream_create_with_id() with a stream class having a
-  \link ctfirtraceclass CTF IR trace class\endlink parent
+- <strong>Normal mode</strong>: use bt_stream_create() with a stream
+  class having a \link ctfirtraceclass CTF IR trace class\endlink parent
   \em not created by a \link ctfwriter CTF writer\endlink object to
   create a default stream.
 - <strong>CTF writer mode</strong>: use bt_stream_create() with
@@ -108,7 +107,7 @@ struct bt_event;
 \link ctfirtraceclass CTF IR trace class\endlink.
 
 \p id \em must be unique amongst the IDs of all the streams created
-from \p stream_class with bt_stream_create_with_id().
+from \p stream_class with bt_stream_create().
 
 \p name can be \c NULL to create an unnamed stream object.
 

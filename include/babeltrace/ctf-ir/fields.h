@@ -62,7 +62,7 @@ In the CTF IR hierarchy, you can set the root fields of two objects:
 - \ref ctfirevent
   - Stream event header field: bt_event_set_header().
   - Stream event context field: bt_event_set_stream_event_context().
-  - Event context field: bt_event_set_event_context().
+  - Event context field: bt_event_set_context().
   - Event payload field: bt_event_set_payload_field().
 
 There are two categories of fields:
@@ -637,8 +637,8 @@ extern struct bt_field *bt_field_enumeration_get_container(
 	@enumfield \p enum_field in their range.
 
 This function is the equivalent of using
-bt_field_type_enumeration_find_mappings_by_unsigned_value() or
-bt_field_type_enumeration_find_mappings_by_signed_value() with the
+bt_field_type_enumeration_unsigned_find_mappings_by_value() or
+bt_field_type_enumeration_signed_find_mappings_by_value() with the
 current integral value of \p enum_field.
 
 @param[in] enum_field	Enumeration field of which to get the mappings
@@ -893,7 +893,7 @@ The field type of \p field, as returned by bt_field_get_type(),
 bt_field_type_structure_get_field_type_by_name() with the field
 type of \p struct_field and the same name, \p name.
 
-bt_trace_get_packet_header_type() for the parent trace class of
+bt_trace_get_packet_header_field_type() for the parent trace class of
 \p packet.
 
 @param[in] struct_field	Structure field of which to set the field
