@@ -140,21 +140,21 @@ int bt_field_type_floating_point_set_mantissa_digits(
 /* Enumeration field type functions */
 struct bt_field_type *bt_field_type_enumeration_create(
 		struct bt_field_type *int_field_type);
-struct bt_field_type *bt_field_type_enumeration_get_container_type(
+struct bt_field_type *bt_field_type_enumeration_get_container_field_type(
 		struct bt_field_type *enum_field_type);
 int64_t bt_field_type_enumeration_get_mapping_count(
 		struct bt_field_type *enum_field_type);
-int bt_field_type_enumeration_get_mapping_signed(
+int bt_field_type_enumeration_signed_get_mapping_by_index(
 		struct bt_field_type *enum_field_type, int index,
 		const char **BTOUTSTR, int64_t *OUTPUT, int64_t *OUTPUT);
-int bt_field_type_enumeration_get_mapping_unsigned(
+int bt_field_type_enumeration_unsigned_get_mapping_by_index(
 		struct bt_field_type *enum_field_type, int index,
 		const char **BTOUTSTR, uint64_t *OUTPUT,
 		uint64_t *OUTPUT);
-int bt_field_type_enumeration_add_mapping_signed(
+int bt_field_type_enumeration_signed_add_mapping(
 		struct bt_field_type *enum_field_type, const char *name,
 		int64_t range_begin, int64_t range_end);
-int bt_field_type_enumeration_add_mapping_unsigned(
+int bt_field_type_enumeration_unsigned_add_mapping(
 		struct bt_field_type *enum_field_type, const char *name,
 		uint64_t range_begin, uint64_t range_end);
 struct bt_field_type_enumeration_mapping_iterator *
@@ -162,19 +162,19 @@ bt_field_type_enumeration_find_mappings_by_name(
 		struct bt_field_type *enum_field_type,
 		const char *name);
 struct bt_field_type_enumeration_mapping_iterator *
-bt_field_type_enumeration_find_mappings_by_signed_value(
+bt_field_type_enumeration_signed_find_mappings_by_value(
 		struct bt_field_type *enum_field_type,
 		int64_t value);
 struct bt_field_type_enumeration_mapping_iterator *
-bt_field_type_enumeration_find_mappings_by_unsigned_value(
+bt_field_type_enumeration_unsigned_find_mappings_by_value(
 		struct bt_field_type *enum_field_type,
 		uint64_t value);
 
 /* Enumeration field type mapping iterator functions */
-int bt_field_type_enumeration_mapping_iterator_get_signed(
+int bt_field_type_enumeration_mapping_iterator_signed_get(
 		struct bt_field_type_enumeration_mapping_iterator *iter,
 		const char **BTOUTSTR, int64_t *OUTPUT, int64_t *OUTPUT);
-int bt_field_type_enumeration_mapping_iterator_get_unsigned(
+int bt_field_type_enumeration_mapping_iterator_unsigned_get(
 		struct bt_field_type_enumeration_mapping_iterator *iter,
 		const char **BTOUTSTR, uint64_t *OUTPUT, uint64_t *OUTPUT);
 int bt_field_type_enumeration_mapping_iterator_next(
@@ -208,7 +208,7 @@ int bt_field_type_structure_add_field(
 struct bt_field_type *bt_field_type_array_create(
 		struct bt_field_type *element_field_type,
 		unsigned int length);
-struct bt_field_type *bt_field_type_array_get_element_type(
+struct bt_field_type *bt_field_type_array_get_element_field_type(
 		struct bt_field_type *array_field_type);
 int64_t bt_field_type_array_get_length(
 		struct bt_field_type *array_field_type);
@@ -217,7 +217,7 @@ int64_t bt_field_type_array_get_length(
 struct bt_field_type *bt_field_type_sequence_create(
 		struct bt_field_type *element_field_type,
 		const char *length_name);
-struct bt_field_type *bt_field_type_sequence_get_element_type(
+struct bt_field_type *bt_field_type_sequence_get_element_field_type(
 		struct bt_field_type *sequence_field_type);
 const char *bt_field_type_sequence_get_length_field_name(
 		struct bt_field_type *sequence_field_type);
@@ -228,7 +228,7 @@ struct bt_field_path *bt_field_type_sequence_get_length_field_path(
 struct bt_field_type *bt_field_type_variant_create(
 		struct bt_field_type *tag_field_type,
 		const char *tag_name);
-struct bt_field_type *bt_field_type_variant_get_tag_type(
+struct bt_field_type *bt_field_type_variant_get_tag_field_type(
 		struct bt_field_type *variant_field_type);
 const char *bt_field_type_variant_get_tag_name(
 		struct bt_field_type *variant_field_type);

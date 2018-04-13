@@ -44,13 +44,13 @@ struct bt_field *bt_event_get_stream_event_context(
 		struct bt_event *event);
 int bt_event_set_stream_event_context(struct bt_event *event,
 		struct bt_field *context);
-struct bt_field *bt_event_get_event_context(
+struct bt_field *bt_event_get_context(
 		struct bt_event *event);
-int bt_event_set_event_context(struct bt_event *event,
+int bt_event_set_context(struct bt_event *event,
 		struct bt_field *context);
-struct bt_field *bt_event_get_event_payload(
+struct bt_field *bt_event_get_payload(
 		struct bt_event *event);
-int bt_event_set_event_payload(struct bt_event *event,
+int bt_event_set_payload(struct bt_event *event,
 		struct bt_field *payload);
 struct bt_clock_value *bt_event_get_clock_value(
 		struct bt_event *event,

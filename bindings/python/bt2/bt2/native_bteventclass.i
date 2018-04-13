@@ -66,13 +66,13 @@ const char *bt_event_class_get_emf_uri(
 int bt_event_class_set_emf_uri(
 		struct bt_event_class *event_class,
 		const char *emf_uri);
-struct bt_field_type *bt_event_class_get_context_type(
+struct bt_field_type *bt_event_class_get_context_field_type(
 		struct bt_event_class *event_class);
-int bt_event_class_set_context_type(
+int bt_event_class_set_context_field_type(
 		struct bt_event_class *event_class,
 		struct bt_field_type *context_type);
-struct bt_field_type *bt_event_class_get_payload_type(
+struct bt_field_type *bt_event_class_get_payload_field_type(
 		struct bt_event_class *event_class);
-int bt_event_class_set_payload_type(
+int bt_event_class_set_payload_field_type(
 		struct bt_event_class *event_class,
 		struct bt_field_type *payload_type);

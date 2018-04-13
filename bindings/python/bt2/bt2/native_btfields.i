@@ -33,13 +33,13 @@ struct bt_field_type *bt_field_get_type(
 struct bt_field *bt_field_copy(struct bt_field *field);
 
 /* Integer field functions */
-int bt_field_signed_integer_get_value(struct bt_field *integer,
+int bt_field_integer_signed_get_value(struct bt_field *integer,
 		int64_t *OUTPUT);
-int bt_field_signed_integer_set_value(struct bt_field *integer,
+int bt_field_integer_signed_set_value(struct bt_field *integer,
 		int64_t value);
-int bt_field_unsigned_integer_get_value(struct bt_field *integer,
+int bt_field_integer_unsigned_get_value(struct bt_field *integer,
 		uint64_t *OUTPUT);
-int bt_field_unsigned_integer_set_value(struct bt_field *integer,
+int bt_field_integer_unsigned_set_value(struct bt_field *integer,
 		uint64_t value);
 
 /* Floating point number field functions */

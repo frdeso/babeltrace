@@ -52,9 +52,9 @@ bt_trace_get_environment_field_value_by_name(
 int bt_trace_set_environment_field(
 		struct bt_trace *trace_class, const char *name,
 		struct bt_value *value);
-struct bt_field_type *bt_trace_get_packet_header_type(
+struct bt_field_type *bt_trace_get_packet_header_field_type(
 		struct bt_trace *trace_class);
-int bt_trace_set_packet_header_type(struct bt_trace *trace_class,
+int bt_trace_set_packet_header_field_type(struct bt_trace *trace_class,
 		struct bt_field_type *packet_header_type);
 int64_t bt_trace_get_clock_class_count(
 		struct bt_trace *trace_class);

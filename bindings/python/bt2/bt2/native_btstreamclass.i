@@ -26,8 +26,6 @@
 struct bt_stream_class;
 
 /* Functions */
-struct bt_stream_class *bt_stream_class_create_empty(
-		const char *name);
 struct bt_stream_class *bt_stream_class_create(const char *name);
 struct bt_trace *bt_stream_class_get_trace(
 		struct bt_stream_class *stream_class);
@@ -39,21 +37,21 @@ int64_t bt_stream_class_get_id(
 		struct bt_stream_class *stream_class);
 int bt_stream_class_set_id(
 		struct bt_stream_class *stream_class, uint64_t id);
-struct bt_field_type *bt_stream_class_get_packet_context_type(
+struct bt_field_type *bt_stream_class_get_packet_context_field_type(
 		struct bt_stream_class *stream_class);
-int bt_stream_class_set_packet_context_type(
+int bt_stream_class_set_packet_context_field_type(
 		struct bt_stream_class *stream_class,
 		struct bt_field_type *packet_context_type);
 struct bt_field_type *
-bt_stream_class_get_event_header_type(
+bt_stream_class_get_event_header_field_type(
 		struct bt_stream_class *stream_class);
-int bt_stream_class_set_event_header_type(
+int bt_stream_class_set_event_header_field_type(
 		struct bt_stream_class *stream_class,
 		struct bt_field_type *event_header_type);
 struct bt_field_type *
-bt_stream_class_get_event_context_type(
+bt_stream_class_get_event_context_field_type(
 		struct bt_stream_class *stream_class);
-int bt_stream_class_set_event_context_type(
+int bt_stream_class_set_event_context_field_type(
 		struct bt_stream_class *stream_class,
 		struct bt_field_type *event_context_type);
 int64_t bt_stream_class_get_event_class_count(
