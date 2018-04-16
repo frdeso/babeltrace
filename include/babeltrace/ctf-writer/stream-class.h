@@ -30,8 +30,8 @@
  * http://www.efficios.com/ctf
  */
 
+/* For bt_bool. */
 #include <babeltrace/ref.h>
-#include <babeltrace/ctf-ir/stream-class.h>
 
 #ifdef __cplusplus
 extern "C" {

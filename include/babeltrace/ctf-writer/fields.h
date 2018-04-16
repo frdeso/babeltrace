@@ -33,7 +33,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-/* For bt_bool */
+/* For bt_bool. */
 #include <babeltrace/ctf-writer/fields.h>
 
 #ifdef __cplusplus

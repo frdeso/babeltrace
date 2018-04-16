@@ -30,8 +30,14 @@
  * http://www.efficios.com/ctf
  */
 
+/*
+ * This file is needed for backward compatibility, so we simply include the
+ * right declaration.
+ */
+#include <babeltrace/ctf-writer/field-types.h>
+
+/* For bt_get and bt_put. */
 #include <babeltrace/ref.h>
-#include <babeltrace/ctf-ir/field-types.h>
 
 #ifdef __cplusplus
 extern "C" {

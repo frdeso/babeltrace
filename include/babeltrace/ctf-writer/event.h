@@ -30,9 +30,11 @@
  * http://www.efficios.com/ctf
  */
 
+/* For bt_get and bt_put. */
 #include <babeltrace/ref.h>
+
+/* For enum bt_event_class_log_level. */
 #include <babeltrace/ctf-ir/event-class.h>
-#include <babeltrace/ctf-ir/event.h>
 
 #ifdef __cplusplus
 extern "C" {

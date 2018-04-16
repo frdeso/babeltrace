@@ -33,7 +33,10 @@
 #include <stdint.h>
 #include <stddef.h>
 
+/* For bt_bool. */
 #include <babeltrace/types.h>
+
+/* For enum bt_field_type_id. */
 #include <babeltrace/ctf-ir/field-types.h>
 
 #ifdef __cplusplus
