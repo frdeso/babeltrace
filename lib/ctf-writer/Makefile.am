@@ -1,6 +1,7 @@
 noinst_LTLIBRARIES = libctf-writer.la
 
 libctf_writer_la_SOURCES = \
+	clock-class.c \
 	clock.c \
 	event-class.c \
 	event.c \
