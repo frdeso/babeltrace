@@ -20,48 +20,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from bt2 import native_bt, object, utils
+from . import domain
+from bt2 import internal
 import bt2.packet
-import bt2.event
-import abc
-import bt2
+from bt2 import native_bt
 
-
-def _create_from_ptr(stream_ptr):
-    import bt2.ctf_writer
-
-    if native_bt.stream_is_writer(stream_ptr):
-        cls = bt2.ctf_writer._CtfWriterStream
-    else:
-        cls = _Stream
-
-    return cls._create_from_ptr(stream_ptr)
-
-
-class _StreamBase(object._Object):
-    @property
-    def stream_class(self):
-        stream_class_ptr = native_bt.stream_get_class(self._ptr)
-        assert(stream_class_ptr)
-        return bt2.StreamClass._create_from_ptr(stream_class_ptr)
-
-    @property
-    def name(self):
-        return native_bt.stream_get_name(self._ptr)
-
-    @property
-    def id(self):
-        id = native_bt.stream_get_id(self._ptr)
-        return id if id >= 0 else None
-
-    def __eq__(self, other):
-        if self.addr == other.addr:
-            return True
-
-        return (self.name, self.id) == (other.name, other.id)
-
-
-class _Stream(_StreamBase):
+class _Stream(internal._Stream, domain._DomainProvider):
     def create_packet(self):
         packet_ptr = native_bt.packet_create(self._ptr)
 
@@ -70,19 +34,4 @@ class _Stream(_StreamBase):
 
         return bt2.packet._Packet._create_from_ptr(packet_ptr)
 
-    def __eq__(self, other):
-        if type(other) is not type(self):
-            return False
-
-        return _StreamBase.__eq__(self, other)
-
-    def _copy(self):
-        return self.stream_class(self.name, self.id)
-
-    def __copy__(self):
-        return self._copy()
-
-    def __deepcopy__(self, memo):
-        cpy = self._copy()
-        memo[id(self)] = cpy
-        return cpy
+domain._Domain.Stream = _Stream

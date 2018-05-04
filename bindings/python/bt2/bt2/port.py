@@ -20,7 +20,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from bt2 import native_bt, object, utils
+from bt2 import native_bt, utils
+from bt2.internal import object
 import collections.abc
 import bt2.component
 import bt2.connection

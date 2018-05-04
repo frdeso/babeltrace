@@ -189,16 +189,16 @@ class TraceTestCase(unittest.TestCase):
 
     def test_streams_len(self):
         self._tc.add_stream_class(self._create_stream_class('sc1', 3))
-        stream0 = self._tc[3]()
-        stream1 = self._tc[3]()
-        stream2 = self._tc[3]()
+        stream0 = self._tc[3](name='stream_0', id=0)
+        stream1 = self._tc[3](name='stream_1', id=1)
+        stream2 = self._tc[3](name='stream_2', id=2)
         self.assertEqual(len(self._tc.streams), 3)
 
     def test_streams_iter(self):
         self._tc.add_stream_class(self._create_stream_class('sc1', 3))
-        stream0 = self._tc[3](id=12)
-        stream1 = self._tc[3](id=15)
-        stream2 = self._tc[3](id=17)
+        stream0 = self._tc[3](name='stream_0', id=12)
+        stream1 = self._tc[3](name='stream_1', id=15)
+        stream2 = self._tc[3](name='stream_2', id=17)
         sids = set()
 
         for stream in self._tc.streams:

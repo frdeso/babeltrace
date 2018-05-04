@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 #
-# Copyright (c) 2016-2017 Philippe Proulx <pproulx@efficios.com>
+# Copyright (c) 2018 Francis Deslauriers <francis.deslauriers@efficios.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -20,13 +20,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from bt2 import native_bt, object, stream, utils
-import uuid as uuidp
-import bt2.event
-import bt2.fields
-import abc
+from bt2 import object, utils, native_bt
 import bt2
-
+import uuid as uuidp
 
 class CtfWriterClock(object._Object):
     def __init__(self, name, description=None, frequency=None, precision=None,
@@ -182,134 +178,3 @@ class CtfWriterClock(object._Object):
         ret = native_bt.ctf_clock_set_time(self._ptr, time)
 
     time = property(fset=_time)
-
-
-class _CtfWriterStream(stream._StreamBase):
-    @property
-    def discarded_events_count(self):
-        ret, count = native_bt.stream_get_discarded_events_count(self._ptr)
-        utils._handle_ret(ret, "cannot get CTF writer stream object's discarded events count")
-        return count
-
-    def append_discarded_events(self, count):
-        utils._check_uint64(count)
-        native_bt.stream_append_discarded_events(self._ptr, count)
-
-    def append_event(self, event):
-        utils._check_type(event, bt2.event._Event)
-        ret = native_bt.stream_append_event(self._ptr, event._ptr)
-        utils._handle_ret(ret, 'cannot append event object to CTF writer stream object')
-
-    def flush(self):
-        ret = native_bt.stream_flush(self._ptr)
-        utils._handle_ret(ret, 'cannot flush CTF writer stream object')
-
-    @property
-    def packet_header_field(self):
-        field_ptr = native_bt.stream_get_packet_header(self._ptr)
-
-        if field_ptr is None:
-            return
-
-        return bt2.fields._create_from_ptr(field_ptr)
-
-    @packet_header_field.setter
-    def packet_header_field(self, packet_header_field):
-        packet_header_field_ptr = None
-
-        if packet_header_field is not None:
-            utils._check_type(packet_header_field, bt2.fields._Field)
-            packet_header_field_ptr = packet_header_field._ptr
-
-        ret = native_bt.stream_set_packet_header(self._ptr,
-                                                 packet_header_field_ptr)
-        utils._handle_ret(ret, "cannot set CTF writer stream object's packet header field")
-
-    @property
-    def packet_context_field(self):
-        field_ptr = native_bt.stream_get_packet_context(self._ptr)
-
-        if field_ptr is None:
-            return
-
-        return bt2.fields._create_from_ptr(field_ptr)
-
-    @packet_context_field.setter
-    def packet_context_field(self, packet_context_field):
-        packet_context_field_ptr = None
-
-        if packet_context_field is not None:
-            utils._check_type(packet_context_field, bt2.fields._Field)
-            packet_context_field_ptr = packet_context_field._ptr
-
-        ret = native_bt.stream_set_packet_context(self._ptr,
-                                                  packet_context_field_ptr)
-        utils._handle_ret(ret, "cannot set CTF writer stream object's packet context field")
-
-    def __eq__(self, other):
-        if type(other) is not type(self):
-            return False
-
-        if self.addr == other.addr:
-            return True
-
-        if not _StreamBase.__eq__(self, other):
-            return False
-
-        self_props = (
-            self.discarded_events_count,
-            self.packet_header_field,
-            self.packet_context_field,
-        )
-        other_props = (
-            other.discarded_events_count,
-            other.packet_header_field,
-            other.packet_context_field,
-        )
-        return self_props == other_props
-
-    def _copy(self, copy_func):
-        cpy = self.stream_class(self.name)
-        cpy.append_discarded_events(self.discarded_events_count)
-        cpy.packet_header_field = copy_func(self.packet_header_field)
-        cpy.packet_context_field = copy_func(self.packet_context_field)
-        return cpy
-
-    def __copy__(self):
-        return self._copy(copy.copy)
-
-    def __deepcopy__(self, memo):
-        cpy = self._copy(copy.deepcopy)
-        memo[id(self)] = cpy
-        return cpy
-
-
-class CtfWriter(object._Object):
-    def __init__(self, path):
-        utils._check_str(path)
-        ptr = native_bt.ctf_writer_create(path)
-
-        if ptr is None:
-            raise bt2.CreationError('cannot create CTF writer object')
-
-        super().__init__(ptr)
-
-    @property
-    def trace(self):
-        trace_ptr = native_bt.ctf_writer_get_trace(self._ptr)
-        assert(trace_ptr)
-        return bt2.Trace._create_from_ptr(trace_ptr)
-
-    @property
-    def metadata_string(self):
-        metadata_string = native_bt.ctf_writer_get_metadata_string(self._ptr)
-        assert(metadata_string is not None)
-        return metadata_string
-
-    def flush_metadata(self):
-        native_bt.ctf_writer_flush_metadata(self._ptr)
-
-    def add_clock(self, clock):
-        utils._check_type(clock, CtfWriterClock)
-        ret = native_bt.ctf_writer_add_clock(self._ptr, clock._ptr)
-        utils._handle_ret(ret, 'cannot add CTF writer clock object to CTF writer object')

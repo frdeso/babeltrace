@@ -1,6 +1,7 @@
 # The MIT License (MIT)
 #
 # Copyright (c) 2017 Philippe Proulx <pproulx@efficios.com>
+# Copyright (c) 2018 Francis Deslauriers <francis.deslauriers@efficios.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -39,22 +40,10 @@ from bt2.component import _UserSourceComponent
 from bt2.connection import *
 from bt2.connection import _Connection
 from bt2.connection import _PrivateConnection
-from bt2.ctf_writer import *
-from bt2.ctf_writer import _CtfWriterStream
 from bt2.event import _Event
 from bt2.event_class import *
 from bt2.field_types import *
-from bt2.field_types import _FieldType
 from bt2.fields import *
-from bt2.fields import _ArrayField
-from bt2.fields import _EnumerationField
-from bt2.fields import _Field
-from bt2.fields import _FloatingPointNumberField
-from bt2.fields import _IntegerField
-from bt2.fields import _SequenceField
-from bt2.fields import _StringField
-from bt2.fields import _StructureField
-from bt2.fields import _VariantField
 from bt2.graph import *
 from bt2.logging import *
 from bt2.notification import *
@@ -158,9 +147,3 @@ def _init_and_register_exit():
 
 
 _init_and_register_exit()
-
-
-try:
-    del native_bt
-except:
-    pass

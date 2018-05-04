@@ -1,6 +1,7 @@
 # The MIT License (MIT)
 #
 # Copyright (c) 2017 Philippe Proulx <pproulx@efficios.com>
+# Copyright (c) 2018 Francis Deslauriers <francis.deslauriers@efficios.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -20,41 +21,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from bt2 import native_bt
-import abc
+from . import domain
+from bt2 import internal
 
-
-class _Object:
-    def __init__(self, ptr):
-        self._ptr = ptr
-
-    @property
-    def addr(self):
-        return int(self._ptr)
-
-    @classmethod
-    def _create_from_ptr(cls, ptr):
-        obj = cls.__new__(cls)
-        obj._ptr = ptr
-        return obj
-
-    def _get(self):
-        native_bt.get(self._ptr)
-
-    def __del__(self):
-        ptr = getattr(self, '_ptr', None)
-        native_bt.put(ptr)
-        self._ptr = None
-
-    def __repr__(self):
-        return '<{}.{} object @ {}>'.format(self.__class__.__module__,
-                                            self.__class__.__name__,
-                                            hex(self.addr))
-
-
-class _PrivateObject:
-    def __del__(self):
-        pub_ptr = getattr(self, '_pub_ptr', None)
-        native_bt.put(pub_ptr)
-        self._pub_ptr = None
-        super().__del__()
+class ClockClass(internal._ClockClass, domain._DomainProvider):
+    pass

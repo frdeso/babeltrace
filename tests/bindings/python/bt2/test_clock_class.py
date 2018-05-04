@@ -6,45 +6,45 @@ import bt2
 
 class ClockClassOffsetTestCase(unittest.TestCase):
     def test_create_default(self):
-        cco = bt2.ClockClassOffset()
+        cco = bt2.internal.ClockClassOffset()
         self.assertEqual(cco.seconds, 0)
         self.assertEqual(cco.cycles, 0)
 
     def test_create(self):
-        cco = bt2.ClockClassOffset(23, 4871232)
+        cco = bt2.internal.ClockClassOffset(23, 4871232)
         self.assertEqual(cco.seconds, 23)
         self.assertEqual(cco.cycles, 4871232)
 
     def test_create_kwargs(self):
-        cco = bt2.ClockClassOffset(seconds=23, cycles=4871232)
+        cco = bt2.internal.ClockClassOffset(seconds=23, cycles=4871232)
         self.assertEqual(cco.seconds, 23)
         self.assertEqual(cco.cycles, 4871232)
 
     def test_create_invalid_seconds(self):
         with self.assertRaises(TypeError):
-            bt2.ClockClassOffset('hello', 4871232)
+            bt2.internal.ClockClassOffset('hello', 4871232)
 
     def test_create_invalid_cycles(self):
         with self.assertRaises(TypeError):
-            bt2.ClockClassOffset(23, 'hello')
+            bt2.internal.ClockClassOffset(23, 'hello')
 
     def test_eq(self):
-        cco1 = bt2.ClockClassOffset(23, 42)
-        cco2 = bt2.ClockClassOffset(23, 42)
+        cco1 = bt2.internal.ClockClassOffset(23, 42)
+        cco2 = bt2.internal.ClockClassOffset(23, 42)
         self.assertEqual(cco1, cco2)
 
     def test_ne_seconds(self):
-        cco1 = bt2.ClockClassOffset(23, 42)
-        cco2 = bt2.ClockClassOffset(24, 42)
+        cco1 = bt2.internal.ClockClassOffset(23, 42)
+        cco2 = bt2.internal.ClockClassOffset(24, 42)
         self.assertNotEqual(cco1, cco2)
 
     def test_ne_cycles(self):
-        cco1 = bt2.ClockClassOffset(23, 42)
-        cco2 = bt2.ClockClassOffset(23, 43)
+        cco1 = bt2.internal.ClockClassOffset(23, 42)
+        cco2 = bt2.internal.ClockClassOffset(23, 43)
         self.assertNotEqual(cco1, cco2)
 
     def test_eq_invalid(self):
-        self.assertFalse(bt2.ClockClassOffset() == 23)
+        self.assertFalse(bt2.internal.ClockClassOffset() == 23)
 
 
 class ClockClassTestCase(unittest.TestCase):
@@ -65,13 +65,13 @@ class ClockClassTestCase(unittest.TestCase):
         my_uuid = uuid.uuid1()
         cc = bt2.ClockClass(name='name', description='some description',
                             frequency=1001, precision=176,
-                            offset=bt2.ClockClassOffset(45, 3003),
+                            offset=bt2.internal.ClockClassOffset(45, 3003),
                             is_absolute=True, uuid=my_uuid)
         self.assertEqual(cc.name, 'name')
         self.assertEqual(cc.description, 'some description')
         self.assertEqual(cc.frequency, 1001)
         self.assertEqual(cc.precision, 176)
-        self.assertEqual(cc.offset, bt2.ClockClassOffset(45, 3003))
+        self.assertEqual(cc.offset, bt2.internal.ClockClassOffset(45, 3003))
         self.assertEqual(cc.is_absolute, True)
         self.assertEqual(cc.uuid, copy.deepcopy(my_uuid))
 
@@ -108,8 +108,8 @@ class ClockClassTestCase(unittest.TestCase):
             self._cc.precision = 'lel'
 
     def test_assign_offset(self):
-        self._cc.offset = bt2.ClockClassOffset(12, 56)
-        self.assertEqual(self._cc.offset, bt2.ClockClassOffset(12, 56))
+        self._cc.offset = bt2.internal.ClockClassOffset(12, 56)
+        self.assertEqual(self._cc.offset, bt2.internal.ClockClassOffset(12, 56))
 
     def test_assign_invalid_offset(self):
         with self.assertRaises(TypeError):
@@ -153,11 +153,11 @@ class ClockClassTestCase(unittest.TestCase):
         my_uuid = uuid.uuid1()
         cc1 = bt2.ClockClass(name='name', description='some description',
                              frequency=1001, precision=176,
-                             offset=bt2.ClockClassOffset(45, 3003),
+                             offset=bt2.internal.ClockClassOffset(45, 3003),
                              is_absolute=True, uuid=my_uuid)
         cc2 = bt2.ClockClass(name='name', description='some description',
                              frequency=1001, precision=176,
-                             offset=bt2.ClockClassOffset(45, 3003),
+                             offset=bt2.internal.ClockClassOffset(45, 3003),
                              is_absolute=True, uuid=my_uuid)
         self.assertEqual(cc1, cc2)
 
@@ -165,11 +165,11 @@ class ClockClassTestCase(unittest.TestCase):
         my_uuid = uuid.uuid1()
         cc1 = bt2.ClockClass(name='mane', description='some description',
                              frequency=1001, precision=176,
-                             offset=bt2.ClockClassOffset(45, 3003),
+                             offset=bt2.internal.ClockClassOffset(45, 3003),
                              is_absolute=True, uuid=my_uuid)
         cc2 = bt2.ClockClass(name='name', description='some description',
                              frequency=1001, precision=176,
-                             offset=bt2.ClockClassOffset(45, 3003),
+                             offset=bt2.internal.ClockClassOffset(45, 3003),
                              is_absolute=True, uuid=my_uuid)
         self.assertNotEqual(cc1, cc2)
 
@@ -177,11 +177,11 @@ class ClockClassTestCase(unittest.TestCase):
         my_uuid = uuid.uuid1()
         cc1 = bt2.ClockClass(name='name', description='some descripti2',
                              frequency=1001, precision=176,
-                             offset=bt2.ClockClassOffset(45, 3003),
+                             offset=bt2.internal.ClockClassOffset(45, 3003),
                              is_absolute=True, uuid=my_uuid)
         cc2 = bt2.ClockClass(name='name', description='some description',
                              frequency=1001, precision=176,
-                             offset=bt2.ClockClassOffset(45, 3003),
+                             offset=bt2.internal.ClockClassOffset(45, 3003),
                              is_absolute=True, uuid=my_uuid)
         self.assertNotEqual(cc1, cc2)
 
@@ -189,11 +189,11 @@ class ClockClassTestCase(unittest.TestCase):
         my_uuid = uuid.uuid1()
         cc1 = bt2.ClockClass(name='name', description='some description',
                              frequency=1003, precision=176,
-                             offset=bt2.ClockClassOffset(45, 3003),
+                             offset=bt2.internal.ClockClassOffset(45, 3003),
                              is_absolute=True, uuid=my_uuid)
         cc2 = bt2.ClockClass(name='name', description='some description',
                              frequency=1001, precision=176,
-                             offset=bt2.ClockClassOffset(45, 3003),
+                             offset=bt2.internal.ClockClassOffset(45, 3003),
                              is_absolute=True, uuid=my_uuid)
         self.assertNotEqual(cc1, cc2)
 
@@ -201,11 +201,11 @@ class ClockClassTestCase(unittest.TestCase):
         my_uuid = uuid.uuid1()
         cc1 = bt2.ClockClass(name='name', description='some description',
                              frequency=1001, precision=171,
-                             offset=bt2.ClockClassOffset(45, 3003),
+                             offset=bt2.internal.ClockClassOffset(45, 3003),
                              is_absolute=True, uuid=my_uuid)
         cc2 = bt2.ClockClass(name='name', description='some description',
                              frequency=1001, precision=176,
-                             offset=bt2.ClockClassOffset(45, 3003),
+                             offset=bt2.internal.ClockClassOffset(45, 3003),
                              is_absolute=True, uuid=my_uuid)
         self.assertNotEqual(cc1, cc2)
 
@@ -213,11 +213,11 @@ class ClockClassTestCase(unittest.TestCase):
         my_uuid = uuid.uuid1()
         cc1 = bt2.ClockClass(name='name', description='some description',
                              frequency=1001, precision=176,
-                             offset=bt2.ClockClassOffset(45, 3001),
+                             offset=bt2.internal.ClockClassOffset(45, 3001),
                              is_absolute=True, uuid=my_uuid)
         cc2 = bt2.ClockClass(name='name', description='some description',
                              frequency=1001, precision=176,
-                             offset=bt2.ClockClassOffset(45, 3003),
+                             offset=bt2.internal.ClockClassOffset(45, 3003),
                              is_absolute=True, uuid=my_uuid)
         self.assertNotEqual(cc1, cc2)
 
@@ -225,22 +225,22 @@ class ClockClassTestCase(unittest.TestCase):
         my_uuid = uuid.uuid1()
         cc1 = bt2.ClockClass(name='name', description='some description',
                              frequency=1001, precision=176,
-                             offset=bt2.ClockClassOffset(45, 3003),
+                             offset=bt2.internal.ClockClassOffset(45, 3003),
                              is_absolute=True, uuid=my_uuid)
         cc2 = bt2.ClockClass(name='name', description='some description',
                              frequency=1001, precision=176,
-                             offset=bt2.ClockClassOffset(45, 3003),
+                             offset=bt2.internal.ClockClassOffset(45, 3003),
                              is_absolute=False, uuid=my_uuid)
         self.assertNotEqual(cc1, cc2)
 
     def test_ne_uuid(self):
         cc1 = bt2.ClockClass(name='name', description='some description',
                              frequency=1001, precision=176,
-                             offset=bt2.ClockClassOffset(45, 3003),
+                             offset=bt2.internal.ClockClassOffset(45, 3003),
                              is_absolute=True, uuid=uuid.uuid1())
         cc2 = bt2.ClockClass(name='name', description='some description',
                              frequency=1001, precision=176,
-                             offset=bt2.ClockClassOffset(45, 3003),
+                             offset=bt2.internal.ClockClassOffset(45, 3003),
                              is_absolute=True, uuid=uuid.uuid1())
         self.assertNotEqual(cc1, cc2)
 
@@ -251,7 +251,7 @@ class ClockClassTestCase(unittest.TestCase):
 class ClockValueTestCase(unittest.TestCase):
     def setUp(self):
         self._cc = bt2.ClockClass('salut', 1000,
-                                  offset=bt2.ClockClassOffset(45, 354))
+                                  offset=bt2.internal.ClockClassOffset(45, 354))
         self._cv = self._cc(123)
 
     def tearDown(self):

@@ -20,7 +20,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from bt2 import native_bt, object, utils
+from bt2 import native_bt, utils
+from bt2.internal import object
 import bt2.clock_class_priority_map
 import bt2.clock_value
 import collections
@@ -91,7 +92,7 @@ class EventNotification(_CopyableNotification):
     def event(self):
         event_ptr = native_bt.notification_event_get_event(self._ptr)
         assert(event_ptr)
-        return bt2.event._create_from_ptr(event_ptr)
+        return bt2._Event._create_from_ptr(event_ptr)
 
     @property
     def clock_class_priority_map(self):
@@ -210,7 +211,7 @@ class StreamBeginningNotification(_CopyableNotification):
     def stream(self):
         stream_ptr = native_bt.notification_stream_begin_get_stream(self._ptr)
         assert(stream_ptr)
-        return bt2.stream._create_from_ptr(stream_ptr)
+        return bt2._Stream._create_from_ptr(stream_ptr)
 
     def __eq__(self, other):
         if type(other) is not type(self):
@@ -245,7 +246,7 @@ class StreamEndNotification(_CopyableNotification):
     def stream(self):
         stream_ptr = native_bt.notification_stream_end_get_stream(self._ptr)
         assert(stream_ptr)
-        return bt2.stream._create_from_ptr(stream_ptr)
+        return bt2.stream._Stream._create_from_ptr(stream_ptr)
 
     def __eq__(self, other):
         if type(other) is not type(self):
@@ -273,6 +274,7 @@ class _InactivityNotificationClockValuesIterator(collections.abc.Iterator):
     def __next__(self):
         if self._at == len(self._clock_classes):
             raise StopIteration
+        at = self._at;
 
         self._at += 1
         return self._clock_classes[at]
@@ -378,7 +380,7 @@ class InactivityNotification(_CopyableNotification):
 
         # copy clock values
         for orig_clock_class in self.clock_class_priority_map:
-            orig_clock_value = self.clock_value(orig_clock_class)
+            orig_clock_value = self.clock_values[orig_clock_class]
 
             if orig_clock_value is None:
                 continue
@@ -434,7 +436,7 @@ class _DiscardedPacketsNotification(_DiscardedElementsNotification):
     def stream(self):
         stream_ptr = native_bt.notification_discarded_packets_get_stream(self._ptr)
         assert(stream_ptr)
-        return bt2.stream._create_from_ptr(stream_ptr)
+        return bt2.stream._Stream._create_from_ptr(stream_ptr)
 
     @property
     def beginning_clock_value(self):
@@ -470,7 +472,7 @@ class _DiscardedEventsNotification(_DiscardedElementsNotification):
     def stream(self):
         stream_ptr = native_bt.notification_discarded_events_get_stream(self._ptr)
         assert(stream_ptr)
-        return bt2.stream._create_from_ptr(stream_ptr)
+        return bt2.stream._Stream._create_from_ptr(stream_ptr)
 
     @property
     def beginning_clock_value(self):

@@ -1191,14 +1191,6 @@ class SequenceFieldTestCase(_TestArraySequenceFieldCommon, unittest.TestCase):
         self._def.value = new_values
         self.assertCountEqual(self._def, new_values)
 
-    def test_value_resize_rollback(self):
-        with self.assertRaises(TypeError):
-            self._def.value = [1, 2, 3, 'unexpected string']
-        self.assertEqual(self._def, self._def_value)
-
-        with self.assertRaises(TypeError):
-            self._def.value = [1, 2, 3, 'unexpected string']
-
 
 class StructureFieldTestCase(_TestCopySimple, unittest.TestCase):
     def setUp(self):

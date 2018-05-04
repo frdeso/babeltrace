@@ -94,9 +94,6 @@ extern int bt_ctf_field_floating_point_set_value(
 extern struct bt_ctf_field *bt_ctf_field_enumeration_get_container(
 		struct bt_ctf_field *enum_field);
 
-extern struct bt_ctf_field_type_enumeration_mapping_iterator *
-bt_ctf_field_enumeration_get_mappings(struct bt_ctf_field *enum_field);
-
 extern const char *bt_ctf_field_string_get_value(
 		struct bt_ctf_field *string_field);
 

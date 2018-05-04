@@ -2,11 +2,13 @@ import unittest
 import uuid
 import copy
 import bt2
+import bt2.native_bt
+import bt2.ctfwriter
 
 
 class CtfWriterClockTestCase(unittest.TestCase):
     def setUp(self):
-        self._clock = bt2.CtfWriterClock('salut')
+        self._clock = bt2.ctfwriter.CtfWriterClock('salut')
 
     def tearDown(self):
         del self._clock
@@ -16,11 +18,11 @@ class CtfWriterClockTestCase(unittest.TestCase):
 
     def test_create_invalid_no_name(self):
         with self.assertRaises(TypeError):
-            bt2.CtfWriterClock()
+            bt2.ctfwriter.CtfWriterClock()
 
     def test_create_full(self):
         my_uuid = uuid.uuid1()
-        cc = bt2.CtfWriterClock(name='name', description='some description',
+        cc = bt2.ctfwriter.CtfWriterClock(name='name', description='some description',
                                 frequency=1001, precision=176,
                                 offset=bt2.ClockClassOffset(45, 3003),
                                 is_absolute=True, uuid=my_uuid)
@@ -103,11 +105,11 @@ class CtfWriterClockTestCase(unittest.TestCase):
 
     def test_eq(self):
         my_uuid = uuid.uuid1()
-        cc1 = bt2.CtfWriterClock(name='name', description='some description',
+        cc1 = bt2.ctfwriter.CtfWriterClock(name='name', description='some description',
                                  frequency=1001, precision=176,
                                  offset=bt2.ClockClassOffset(45, 3003),
                                  is_absolute=True, uuid=my_uuid)
-        cc2 = bt2.CtfWriterClock(name='name', description='some description',
+        cc2 = bt2.ctfwriter.CtfWriterClock(name='name', description='some description',
                                  frequency=1001, precision=176,
                                  offset=bt2.ClockClassOffset(45, 3003),
                                  is_absolute=True, uuid=my_uuid)
@@ -115,11 +117,11 @@ class CtfWriterClockTestCase(unittest.TestCase):
 
     def test_ne_name(self):
         my_uuid = uuid.uuid1()
-        cc1 = bt2.CtfWriterClock(name='mane', description='some description',
+        cc1 = bt2.ctfwriter.CtfWriterClock(name='mane', description='some description',
                                  frequency=1001, precision=176,
                                  offset=bt2.ClockClassOffset(45, 3003),
                                  is_absolute=True, uuid=my_uuid)
-        cc2 = bt2.CtfWriterClock(name='name', description='some description',
+        cc2 = bt2.ctfwriter.CtfWriterClock(name='name', description='some description',
                                  frequency=1001, precision=176,
                                  offset=bt2.ClockClassOffset(45, 3003),
                                  is_absolute=True, uuid=my_uuid)
@@ -127,11 +129,11 @@ class CtfWriterClockTestCase(unittest.TestCase):
 
     def test_ne_description(self):
         my_uuid = uuid.uuid1()
-        cc1 = bt2.CtfWriterClock(name='name', description='some descripti2',
+        cc1 = bt2.ctfwriter.CtfWriterClock(name='name', description='some descripti2',
                                  frequency=1001, precision=176,
                                  offset=bt2.ClockClassOffset(45, 3003),
                                  is_absolute=True, uuid=my_uuid)
-        cc2 = bt2.CtfWriterClock(name='name', description='some description',
+        cc2 = bt2.ctfwriter.CtfWriterClock(name='name', description='some description',
                                  frequency=1001, precision=176,
                                  offset=bt2.ClockClassOffset(45, 3003),
                                  is_absolute=True, uuid=my_uuid)
@@ -139,11 +141,11 @@ class CtfWriterClockTestCase(unittest.TestCase):
 
     def test_ne_frequency(self):
         my_uuid = uuid.uuid1()
-        cc1 = bt2.CtfWriterClock(name='name', description='some description',
+        cc1 = bt2.ctfwriter.CtfWriterClock(name='name', description='some description',
                                  frequency=1003, precision=176,
                                  offset=bt2.ClockClassOffset(45, 3003),
                                  is_absolute=True, uuid=my_uuid)
-        cc2 = bt2.CtfWriterClock(name='name', description='some description',
+        cc2 = bt2.ctfwriter.CtfWriterClock(name='name', description='some description',
                                  frequency=1001, precision=176,
                                  offset=bt2.ClockClassOffset(45, 3003),
                                  is_absolute=True, uuid=my_uuid)
@@ -151,11 +153,11 @@ class CtfWriterClockTestCase(unittest.TestCase):
 
     def test_ne_precision(self):
         my_uuid = uuid.uuid1()
-        cc1 = bt2.CtfWriterClock(name='name', description='some description',
+        cc1 = bt2.ctfwriter.CtfWriterClock(name='name', description='some description',
                                  frequency=1001, precision=171,
                                  offset=bt2.ClockClassOffset(45, 3003),
                                  is_absolute=True, uuid=my_uuid)
-        cc2 = bt2.CtfWriterClock(name='name', description='some description',
+        cc2 = bt2.ctfwriter.CtfWriterClock(name='name', description='some description',
                                  frequency=1001, precision=176,
                                  offset=bt2.ClockClassOffset(45, 3003),
                                  is_absolute=True, uuid=my_uuid)
@@ -163,11 +165,11 @@ class CtfWriterClockTestCase(unittest.TestCase):
 
     def test_ne_offset(self):
         my_uuid = uuid.uuid1()
-        cc1 = bt2.CtfWriterClock(name='name', description='some description',
+        cc1 = bt2.ctfwriter.CtfWriterClock(name='name', description='some description',
                                  frequency=1001, precision=176,
                                  offset=bt2.ClockClassOffset(45, 3001),
                                  is_absolute=True, uuid=my_uuid)
-        cc2 = bt2.CtfWriterClock(name='name', description='some description',
+        cc2 = bt2.ctfwriter.CtfWriterClock(name='name', description='some description',
                                  frequency=1001, precision=176,
                                  offset=bt2.ClockClassOffset(45, 3003),
                                  is_absolute=True, uuid=my_uuid)
@@ -175,22 +177,22 @@ class CtfWriterClockTestCase(unittest.TestCase):
 
     def test_ne_absolute(self):
         my_uuid = uuid.uuid1()
-        cc1 = bt2.CtfWriterClock(name='name', description='some description',
+        cc1 = bt2.ctfwriter.CtfWriterClock(name='name', description='some description',
                                  frequency=1001, precision=176,
                                  offset=bt2.ClockClassOffset(45, 3003),
                                  is_absolute=True, uuid=my_uuid)
-        cc2 = bt2.CtfWriterClock(name='name', description='some description',
+        cc2 = bt2.ctfwriter.CtfWriterClock(name='name', description='some description',
                                  frequency=1001, precision=176,
                                  offset=bt2.ClockClassOffset(45, 3003),
                                  is_absolute=False, uuid=my_uuid)
         self.assertNotEqual(cc1, cc2)
 
     def test_ne_uuid(self):
-        cc1 = bt2.CtfWriterClock(name='name', description='some description',
+        cc1 = bt2.ctfwriter.CtfWriterClock(name='name', description='some description',
                                  frequency=1001, precision=176,
                                  offset=bt2.ClockClassOffset(45, 3003),
                                  is_absolute=True, uuid=uuid.uuid1())
-        cc2 = bt2.CtfWriterClock(name='name', description='some description',
+        cc2 = bt2.ctfwriter.CtfWriterClock(name='name', description='some description',
                                  frequency=1001, precision=176,
                                  offset=bt2.ClockClassOffset(45, 3003),
                                  is_absolute=True, uuid=uuid.uuid1())

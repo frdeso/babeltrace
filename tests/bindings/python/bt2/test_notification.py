@@ -25,7 +25,7 @@ class _NotificationTestCase(unittest.TestCase):
         self._trace.add_stream_class(self._sc)
         self._cc_prio_map = bt2.ClockClassPriorityMap()
         self._cc_prio_map[self._clock_class] = 231
-        self._stream = self._sc()
+        self._stream = self._sc(name='stream_0', id=0)
         self._packet = self._stream.create_packet()
         self._packet.header_field['hello'] = 19487
         self._event = self._ec()
@@ -178,7 +178,7 @@ class StreamBeginningNotificationTestCase(_NotificationTestCase):
 
     def test_ne_stream(self):
         notif = bt2.StreamBeginningNotification(self._stream)
-        stream_copy = self._sc(name='salut')
+        stream_copy = self._sc(name='salut', id=1)
         notif2 = bt2.StreamBeginningNotification(stream_copy)
         self.assertNotEqual(notif, notif2)
 
@@ -210,7 +210,7 @@ class StreamEndNotificationTestCase(_NotificationTestCase):
 
     def test_ne_stream(self):
         notif = bt2.StreamEndNotification(self._stream)
-        stream_copy = self._sc(name='salut')
+        stream_copy = self._sc(name='salut', id=1)
         notif2 = bt2.StreamEndNotification(stream_copy)
         self.assertNotEqual(notif, notif2)
 

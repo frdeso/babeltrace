@@ -20,12 +20,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from bt2 import native_bt, object, utils
+from bt2 import native_bt, utils
+from bt2.internal import object
 import collections.abc
 import bt2.clock_class
 import copy
 import bt2
-
 
 class _ClockClassIterator(collections.abc.Iterator):
     def __init__(self, cc_prio_map):
