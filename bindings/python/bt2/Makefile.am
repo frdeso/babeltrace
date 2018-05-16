@@ -65,45 +65,45 @@ STATIC_BINDINGS_CTFWRITER_DEPS =		\
 	bt2/ctfwriter/stream_class.py		\
 	bt2/ctfwriter/trace.py				\
 	bt2/ctfwriter/values.py				\
-	bt2/ctfwriter/native_bt_ctf_clock.i				\
-	bt2/ctfwriter/native_bt_ctf_clockclass.i		\
-	bt2/ctfwriter/native_bt_ctf_event.i				\
-	bt2/ctfwriter/native_bt_ctf_eventclass.i		\
-	bt2/ctfwriter/native_bt_ctf_field_types.i		\
-	bt2/ctfwriter/native_bt_ctf_fields.i			\
-	bt2/ctfwriter/native_bt_ctf_stream.i			\
-	bt2/ctfwriter/native_bt_ctf_streamclass.i		\
-	bt2/ctfwriter/native_bt_ctf_trace.i				\
-	bt2/ctfwriter/native_bt_ctf_writer.i
+	bt2/ctfwriter/native_btctf_clock.i			\
+	bt2/ctfwriter/native_btctf_clockclass.i		\
+	bt2/ctfwriter/native_btctf_event.i			\
+	bt2/ctfwriter/native_btctf_eventclass.i		\
+	bt2/ctfwriter/native_btctf_fieldtypes.i		\
+	bt2/ctfwriter/native_btctf_fields.i			\
+	bt2/ctfwriter/native_btctf_stream.i			\
+	bt2/ctfwriter/native_btctf_streamclass.i	\
+	bt2/ctfwriter/native_btctf_trace.i			\
+	bt2/ctfwriter/native_btctf_writer.i
 
 
 STATIC_BINDINGS_DEPS =					\
 	bt2/logging.c						\
 	bt2/logging.h						\
-	bt2/native_btccpriomap.i			\
-	bt2/native_btclockclass.i			\
-	bt2/native_btcomponentclass.i		\
-	bt2/native_btcomponent.i			\
-	bt2/native_btconnection.i			\
-	bt2/native_bteventclass.i			\
-	bt2/native_btevent.i				\
-	bt2/native_btfields.i				\
-	bt2/native_btft.i					\
-	bt2/native_btgraph.i				\
-	bt2/native_bt.i						\
-	bt2/native_btlogging.i				\
-	bt2/native_btnotification.i			\
-	bt2/native_btnotifiter.i			\
-	bt2/native_btpacket.i				\
-	bt2/native_btplugin.i				\
-	bt2/native_btport.i					\
-	bt2/native_btqueryexec.i			\
-	bt2/native_btref.i					\
-	bt2/native_btstreamclass.i			\
-	bt2/native_btstream.i				\
-	bt2/native_bttrace.i				\
-	bt2/native_btvalues.i				\
-	bt2/native_btversion.i
+	bt2/native_bt_ccpriomap.i			\
+	bt2/native_bt_clockclass.i			\
+	bt2/native_bt_componentclass.i		\
+	bt2/native_bt_component.i			\
+	bt2/native_bt_connection.i			\
+	bt2/native_bt_eventclass.i			\
+	bt2/native_bt_event.i				\
+	bt2/native_bt_fields.i				\
+	bt2/native_bt_fieldtypes.i			\
+	bt2/native_bt_graph.i				\
+	bt2/native_bt_.i					\
+	bt2/native_bt_logging.i				\
+	bt2/native_bt_notification.i		\
+	bt2/native_bt_notifiter.i			\
+	bt2/native_bt_packet.i				\
+	bt2/native_bt_plugin.i				\
+	bt2/native_bt_port.i				\
+	bt2/native_bt_queryexec.i			\
+	bt2/native_bt_ref.i					\
+	bt2/native_bt_streamclass.i			\
+	bt2/native_bt_stream.i				\
+	bt2/native_bt_trace.i				\
+	bt2/native_bt_values.i				\
+	bt2/native_bt_version.i
 
 STATIC_BINDINGS_DEPS += $(STATIC_BINDINGS_INTERNAL_DEPS)
 STATIC_BINDINGS_DEPS += $(STATIC_BINDINGS_IR_DEPS)
