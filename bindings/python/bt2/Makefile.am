@@ -90,7 +90,7 @@ STATIC_BINDINGS_DEPS =					\
 	bt2/native_bt_fields.i				\
 	bt2/native_bt_fieldtypes.i			\
 	bt2/native_bt_graph.i				\
-	bt2/native_bt_.i					\
+	bt2/native_bt.i						\
 	bt2/native_bt_logging.i				\
 	bt2/native_bt_notification.i		\
 	bt2/native_bt_notifiter.i			\
