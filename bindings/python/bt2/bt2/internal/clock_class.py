@@ -1,6 +1,7 @@
 # The MIT License (MIT)
 #
 # Copyright (c) 2017 Philippe Proulx <pproulx@efficios.com>
+# Copyright (c) 2018 Francis Deslauriers <francis.deslauriers@efficios.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -20,9 +21,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from bt2 import utils
 import uuid as uuidp
-import numbers
+
+from bt2 import utils
 import bt2
 from . import object
 
@@ -60,7 +61,7 @@ class _ClockClass(object._Object):
         ptr = self._Domain.clock_class_create(name, frequency)
 
         if ptr is None:
-            raise bt2.internal.CreationError('cannot create clock class object')
+            raise bt2.CreationError('cannot create clock class object')
 
         super().__init__(ptr)
 

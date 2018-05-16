@@ -20,17 +20,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from . import domain
-from bt2 import native_bt, utils
-from bt2 import internal
-import bt2.clock_class
-import bt2.packet
-import bt2.stream
-import bt2.fields
-import bt2.clock_value
 import collections
-import numbers
-import copy
+
+from . import domain
+from bt2 import native_bt, utils, internal
+import bt2.clock_value
+import bt2.packet
 import bt2
 
 class _EventClockValuesIterator(collections.abc.Iterator):

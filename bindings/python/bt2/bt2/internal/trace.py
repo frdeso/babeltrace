@@ -1,6 +1,7 @@
 # The MIT License (MIT)
 #
 # Copyright (c) 2017 Philippe Proulx <pproulx@efficios.com>
+# Copyright (c) 2018 Francis Deslauriers <francis.deslauriers@efficios.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -20,13 +21,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from bt2 import utils
 import collections.abc
 import copy
+
+from bt2 import utils
 import bt2
-
-from . import object, field_types, stream
-
+from . import object, field_types, stream_class
 
 class _StreamClassIterator(collections.abc.Iterator):
     def __init__(self, trace):
@@ -99,7 +99,7 @@ class _TraceClockClasses(collections.abc.Mapping):
         if cc_ptr is None:
             raise KeyError(key)
 
-        return bt2.ClockClass._create_from_ptr(cc_ptr)
+        return self._trace._Domain.ClockClass._create_from_ptr(cc_ptr)
 
     def __len__(self):
         count = self._trace._Domain.trace_get_clock_class_count(self._trace._ptr)
@@ -168,7 +168,7 @@ class _Trace(object._Object, collections.abc.Mapping):
         if sc_ptr is None:
             raise KeyError(key)
 
-        return bt2.StreamClass._create_from_ptr(sc_ptr)
+        return self._Domain.StreamClass._create_from_ptr(sc_ptr)
 
     def __len__(self):
         count = self._Domain.trace_get_stream_class_count(self._ptr)
@@ -179,7 +179,7 @@ class _Trace(object._Object, collections.abc.Mapping):
         return _StreamClassIterator(self)
 
     def add_stream_class(self, stream_class):
-        utils._check_type(stream_class, bt2.internal._StreamClass)
+        utils._check_type(stream_class, self._Domain.StreamClass)
         ret = self._Domain.trace_add_stream_class(self._ptr, stream_class._ptr)
         utils._handle_ret(ret, "cannot add stream class object to trace class object")
 
@@ -223,7 +223,7 @@ class _Trace(object._Object, collections.abc.Mapping):
         return _TraceClockClasses(self)
 
     def add_clock_class(self, clock_class):
-        utils._check_type(clock_class, bt2.ClockClass)
+        utils._check_type(clock_class, self._Domain.ClockClass)
         ret = self._Domain.trace_add_clock_class(self._ptr, clock_class._ptr)
         utils._handle_ret(ret, "cannot add clock class object to trace class object")
 
@@ -246,7 +246,7 @@ class _Trace(object._Object, collections.abc.Mapping):
         packet_header_field_type_ptr = None
 
         if packet_header_field_type is not None:
-            utils._check_type(packet_header_field_type, bt2.internal.field_types._FieldType)
+            utils._check_type(packet_header_field_type, field_types._FieldType)
             packet_header_field_type_ptr = packet_header_field_type._ptr
 
         ret = self._Domain.trace_set_packet_header_field_type(self._ptr,

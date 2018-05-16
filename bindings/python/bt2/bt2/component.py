@@ -20,16 +20,17 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import collections.abc
+import os
+import sys
+import traceback
+
 from bt2 import native_bt, utils
 from bt2.internal import object
 import bt2.notification_iterator
-import collections.abc
 import bt2.values
-import traceback
 import bt2.port
-import sys
 import bt2
-import os
 
 
 _env_var = os.environ.get('BABELTRACE_PYTHON_BT2_NO_TRACEBACK')

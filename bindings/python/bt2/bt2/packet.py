@@ -20,13 +20,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import copy
+
 from bt2 import native_bt, utils
 from bt2.internal import object
 from . import domain
 import bt2.fields
-import bt2.stream
-import copy
-import abc
 import bt2
 
 

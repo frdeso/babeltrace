@@ -1,6 +1,7 @@
 # The MIT License (MIT)
 #
 # Copyright (c) 2016-2017 Philippe Proulx <pproulx@efficios.com>
+# Copyright (c) 2018 Francis Deslauriers <francis.deslauriers@efficios.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -21,10 +22,7 @@
 # THE SOFTWARE.
 
 from bt2 import utils
-import bt2.internal.event
-import abc
 import bt2
-
 from . import object
 
 class _StreamBase(object._Object):
@@ -32,7 +30,7 @@ class _StreamBase(object._Object):
     def stream_class(self):
         stream_class_ptr = self._Domain.stream_get_class(self._ptr)
         assert(stream_class_ptr)
-        return bt2.StreamClass._create_from_ptr(stream_class_ptr)
+        return self._Domain.StreamClass._create_from_ptr(stream_class_ptr)
 
     @property
     def name(self):

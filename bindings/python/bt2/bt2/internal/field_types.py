@@ -1,6 +1,7 @@
 # The MIT License (MIT)
 #
 # Copyright (c) 2017 Philippe Proulx <pproulx@efficios.com>
+# Copyright (c) 2018 Francis Deslauriers <francis.deslauriers@efficios.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -20,12 +21,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from bt2 import utils
-import collections.abc
 import abc
 import bt2
+import collections.abc
 
-from . import object, fields
+from bt2 import utils
+from . import fields, object
 
 class _FieldType(object._Object):
     def __init__(self, ptr):
@@ -182,11 +183,11 @@ class _IntegerFieldType(_FieldType, _AlignmentProp, _ByteOrderProp):
         if ptr is None:
             return
 
-        return bt2.ClockClass._create_from_ptr(ptr)
+        return self._Domain.ClockClass._create_from_ptr(ptr)
 
     @mapped_clock_class.setter
     def mapped_clock_class(self, clock_class):
-        utils._check_type(clock_class, bt2.ClockClass)
+        utils._check_type(clock_class, self._Domain.ClockClass)
         ret = self._Domain.field_type_integer_set_mapped_clock_class(self._ptr, clock_class._ptr)
         utils._handle_ret(ret, "cannot set integer field type object's mapped clock class")
 

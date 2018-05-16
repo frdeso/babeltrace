@@ -1,6 +1,7 @@
 # The MIT License (MIT)
 #
 # Copyright (c) 2017 Philippe Proulx <pproulx@efficios.com>
+# Copyright (c) 2018 Francis Deslauriers <francis.deslauriers@efficios.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -20,13 +21,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from bt2 import utils
-import bt2.internal.field_types
 import collections.abc
 import copy
+
+from bt2 import utils
 import bt2
 
-from . import object, event
+from . import object, event, field_types
 
 class _EventClass(object._Object):
     def __init__(self, name, id=None, log_level=None, emf_uri=None,
@@ -35,7 +36,7 @@ class _EventClass(object._Object):
         ptr = self._Domain.event_class_create(name)
 
         if ptr is None:
-            raise bt2.internal.CreationError('cannot create event class object')
+            raise bt2.CreationError('cannot create event class object')
 
         super().__init__(ptr)
 
@@ -132,7 +133,7 @@ class _EventClass(object._Object):
         context_field_type_ptr = None
 
         if context_field_type is not None:
-            utils._check_type(context_field_type, bt2.internal.field_types._FieldType)
+            utils._check_type(context_field_type, field_types._FieldType)
             context_field_type_ptr = context_field_type._ptr
 
         ret = self._Domain.event_class_set_context_field_type(self._ptr, context_field_type_ptr)
@@ -152,7 +153,7 @@ class _EventClass(object._Object):
         payload_field_type_ptr = None
 
         if payload_field_type is not None:
-            utils._check_type(payload_field_type, bt2.internal.field_types._FieldType)
+            utils._check_type(payload_field_type, field_types._FieldType)
             payload_field_type_ptr = payload_field_type._ptr
 
         ret = self._Domain.event_class_set_payload_field_type(self._ptr, payload_field_type_ptr)
@@ -162,7 +163,7 @@ class _EventClass(object._Object):
         event_ptr = self._Domain.event_create(self._ptr)
 
         if event_ptr is None:
-            raise bt2.internal.CreationError('cannot create event field object')
+            raise bt2.CreationError('cannot create event object')
 
         return self._Domain.create_event_from_ptr(event_ptr)
 

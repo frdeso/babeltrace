@@ -21,9 +21,8 @@
 # THE SOFTWARE.
 
 from . import domain
-from bt2 import internal
+from bt2 import internal, native_bt
 import bt2.packet
-from bt2 import native_bt
 
 class _Stream(internal._Stream, domain._DomainProvider):
     def create_packet(self):

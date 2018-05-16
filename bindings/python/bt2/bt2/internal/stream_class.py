@@ -1,6 +1,7 @@
 # The MIT License (MIT)
 #
 # Copyright (c) 2017 Philippe Proulx <pproulx@efficios.com>
+# Copyright (c) 2018 Francis Deslauriers <francis.deslauriers@efficios.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -20,14 +21,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from bt2 import utils
 import collections.abc
 import copy
+
 import bt2
+from bt2 import utils
 
-from . import object, field_types, stream
-
-
+from . import field_types, object
 
 class _EventClassIterator(collections.abc.Iterator):
     def __init__(self, stream_class):
@@ -55,7 +55,7 @@ class _StreamClass(object._Object, collections.abc.Mapping):
         ptr = self._Domain.stream_class_create(name)
 
         if ptr is None:
-            raise bt2.internal.CreationError('cannot create stream class object')
+            raise bt2.CreationError('cannot create stream class object')
 
         super().__init__(ptr)
 
@@ -86,7 +86,7 @@ class _StreamClass(object._Object, collections.abc.Mapping):
         if ec_ptr is None:
             raise KeyError(key)
 
-        return bt2.EventClass._create_from_ptr(ec_ptr)
+        return self._Domain.EventClass._create_from_ptr(ec_ptr)
 
     def __len__(self):
         count = self._Domain.stream_class_get_event_class_count(self._ptr)
@@ -97,7 +97,7 @@ class _StreamClass(object._Object, collections.abc.Mapping):
         return _EventClassIterator(self)
 
     def add_event_class(self, event_class):
-        utils._check_type(event_class, bt2.EventClass)
+        utils._check_type(event_class, self._Domain.EventClass)
         ret = self._Domain.stream_class_add_event_class(self._ptr, event_class._ptr)
         utils._handle_ret(ret, "cannot add event class object to stream class object's")
 
@@ -106,7 +106,7 @@ class _StreamClass(object._Object, collections.abc.Mapping):
         tc_ptr = self._Domain.stream_class_get_trace(self._ptr)
 
         if tc_ptr is not None:
-            return bt2.Trace._create_from_ptr(tc_ptr)
+            return self._Domain.Trace._create_from_ptr(tc_ptr)
 
     @property
     def name(self):
@@ -147,7 +147,7 @@ class _StreamClass(object._Object, collections.abc.Mapping):
         packet_context_field_type_ptr = None
 
         if packet_context_field_type is not None:
-            utils._check_type(packet_context_field_type, bt2.internal.field_types._FieldType)
+            utils._check_type(packet_context_field_type, field_types._FieldType)
             packet_context_field_type_ptr = packet_context_field_type._ptr
 
         ret = self._Domain.stream_class_set_packet_context_field_type(self._ptr,
@@ -168,7 +168,7 @@ class _StreamClass(object._Object, collections.abc.Mapping):
         event_header_field_type_ptr = None
 
         if event_header_field_type is not None:
-            utils._check_type(event_header_field_type, bt2.internal.field_types._FieldType)
+            utils._check_type(event_header_field_type, field_types._FieldType)
             event_header_field_type_ptr = event_header_field_type._ptr
 
         ret = self._Domain.stream_class_set_event_header_field_type(self._ptr,
@@ -189,7 +189,7 @@ class _StreamClass(object._Object, collections.abc.Mapping):
         event_context_field_type_ptr = None
 
         if event_context_field_type is not None:
-            utils._check_type(event_context_field_type, bt2.internal.field_types._FieldType)
+            utils._check_type(event_context_field_type, field_types._FieldType)
             event_context_field_type_ptr = event_context_field_type._ptr
 
         ret = self._Domain.stream_class_set_event_context_field_type(self._ptr,
@@ -203,7 +203,7 @@ class _StreamClass(object._Object, collections.abc.Mapping):
         stream_ptr = self._Domain.stream_create(self._ptr, name, id)
 
         if stream_ptr is None:
-            raise bt2.internal.CreationError('cannot create stream object')
+            raise bt2.CreationError('cannot create stream object')
 
         return self._Domain.create_stream_from_ptr(stream_ptr)
 

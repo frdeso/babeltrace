@@ -1,6 +1,7 @@
 # The MIT License (MIT)
 #
 # Copyright (c) 2016-2017 Philippe Proulx <pproulx@efficios.com>
+# Copyright (c) 2018 Francis Deslauriers <francis.deslauriers@efficios.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -20,13 +21,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from bt2 import utils
-import collections
-import numbers
-import copy
 import abc
+import collections
+import copy
+import numbers
+
 import bt2
-from . import object, clock_class, stream, fields
+from bt2 import utils
+from . import object, fields
 
 class _Event(object._Object):
     @property
@@ -51,7 +53,7 @@ class _Event(object._Object):
         if stream_ptr is None:
             return stream_ptr
 
-        return bt2.stream._Stream._create_from_ptr(stream_ptr)
+        return self._Domain.Stream._create_from_ptr(stream_ptr)
 
     @property
     def header_field(self):

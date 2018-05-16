@@ -20,12 +20,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import collections.abc
+import copy
+
 from bt2 import native_bt, utils
 from bt2.internal import object
 import bt2.notification_iterator
-import collections.abc
 import bt2.port
-import copy
 import bt2
 
 

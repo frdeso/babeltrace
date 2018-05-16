@@ -1,6 +1,7 @@
 # The MIT License (MIT)
 #
 # Copyright (c) 2017 Philippe Proulx <pproulx@efficios.com>
+# Copyright (c) 2018 Francis Deslauriers <francis.deslauriers@efficios.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -20,14 +21,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from bt2 import utils
-import collections.abc
-import functools
-import numbers
-import math
 import abc
 import bt2
+import collections.abc
+import functools
+import math
+import numbers
 
+from bt2 import utils
 from . import object, field_types
 
 
@@ -663,7 +664,7 @@ class _SequenceField(_ArraySequenceField):
             if self.length_field is not None:
                 length_ft = self.length_field.field_type
             else:
-                length_ft = bt2.IntegerFieldType(size=64, is_signed=False)
+                length_ft = self._Domaine.IntegerFieldType(size=64, is_signed=False)
             self.length_field = length_ft(len(values))
 
         try:

@@ -20,15 +20,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import copy
+import collections
+
 from bt2 import native_bt, utils
 from bt2.internal import object
 import bt2.clock_class_priority_map
 import bt2.clock_value
-import collections
+import bt2.event
 import bt2.packet
 import bt2.stream
-import bt2.event
-import copy
 import bt2
 
 

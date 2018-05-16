@@ -20,14 +20,15 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from bt2 import native_bt, utils
-from bt2.internal import object
-import collections.abc
-import functools
-import numbers
-import math
 import abc
 import bt2
+import collections.abc
+import functools
+import math
+import numbers
+
+from bt2 import native_bt, utils
+from bt2.internal import object
 
 
 def _handle_status(status, obj_name):
