@@ -20,28 +20,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-__all__ = [
-        'ClockClass',
-        'CtfWriter',
-        'CtfWriterClock',
-        'EventClass',
-        'EventClassLogLevel',
-        'ArrayFieldType',
-        'EnumerationFieldType',
-        'FloatingPointNumberFieldType',
-        'IntegerFieldType',
-        'SequenceFieldType',
-        'StringFieldType',
-        'StructureFieldType',
-        'VariantFieldType',
-        'StreamClass',
-        'Trace']
-
-
-from .clock_class import ClockClass
-from .clock import CtfWriterClock
-from .CtfWriter import CtfWriter
-from .event_class import EventClass, EventClassLogLevel
-from .field_types import IntegerFieldType, FloatingPointNumberFieldType, EnumerationFieldType, StringFieldType, StructureFieldType, VariantFieldType, ArrayFieldType, SequenceFieldType
-from .stream_class import StreamClass
-from .trace import Trace
+from .clock_class import *
+from .clock import *
+from .CtfWriter import *
+from .event_class import *
+from .field_types import *
+from .stream_class import *
+from .trace import *
+from .values import *

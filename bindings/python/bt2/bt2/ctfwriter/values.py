@@ -21,6 +21,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+__all__ = ['_Value', 'ArrayValue', 'BoolValue', 'FloatValue', 'IntegerValue',
+        'MapValue', 'StringValue']
+
 from bt2 import native_bt, object, utils
 import collections.abc
 import functools

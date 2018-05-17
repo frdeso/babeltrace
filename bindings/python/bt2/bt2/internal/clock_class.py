@@ -21,6 +21,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+__all__ = ['ClockClassOffset', '_ClockClass']
+
 import uuid as uuidp
 
 from bt2 import utils

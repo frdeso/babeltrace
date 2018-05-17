@@ -20,6 +20,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+__all__ = ['CtfWriterClock']
+
 from bt2 import object, utils, native_bt
 import bt2
 import uuid as uuidp

@@ -21,6 +21,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+__all__ = ['_Field', '_NumericField', '_IntegralField', '_RealField',
+        '_IntegerField', '_FloatingPointNumberField', '_EnumerationField',
+        '_StringField', '_ContainerField', '_StructureField', '_VariantField',
+        '_ArraySequenceField', '_ArrayField', '_SequenceField']
+
 import abc
 import bt2
 import collections.abc

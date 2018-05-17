@@ -20,6 +20,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+__all__ = ['ByteOrder', 'Encoding', 'Base', '_FieldType', 'IntegerFieldType',
+        'FloatingPointNumberFieldType', 'EnumerationFieldType',
+        'StringFieldType', 'StructureFieldType', 'VariantFieldType',
+        'ArrayFieldType', 'SequenceFieldType']
+
 from . import domain
 from bt2 import internal
 
@@ -27,33 +32,29 @@ ByteOrder = domain._Domain._ByteOrder
 Encoding = domain._Domain._Encoding
 Base = domain._Domain._Base
 
-class IntegerFieldType(internal._IntegerFieldType, domain._DomainProvider):
+class _FieldType(internal._FieldType, domain._DomainProvider):
     pass
 
+class IntegerFieldType(internal._IntegerFieldType, domain._DomainProvider):
+    pass
 
 class FloatingPointNumberFieldType(internal._FloatingPointNumberFieldType, domain._DomainProvider):
     pass
 
-
 class EnumerationFieldType(internal._EnumerationFieldType, domain._DomainProvider):
     pass
-
 
 class StringFieldType(internal._StringFieldType, domain._DomainProvider):
     pass
 
-
 class StructureFieldType(internal._StructureFieldType, domain._DomainProvider):
     pass
-
 
 class VariantFieldType(internal._VariantFieldType, domain._DomainProvider):
     pass
 
-
 class ArrayFieldType(internal._ArrayFieldType, domain._DomainProvider):
     pass
-
 
 class SequenceFieldType(internal._SequenceFieldType, domain._DomainProvider):
     pass
@@ -77,4 +78,3 @@ domain._Domain.StructureFieldType = StructureFieldType
 domain._Domain.VariantFieldType = VariantFieldType
 domain._Domain.ArrayFieldType = ArrayFieldType
 domain._Domain.SequenceFieldType = SequenceFieldType
-

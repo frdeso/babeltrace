@@ -40,7 +40,7 @@ from bt2.component import _UserSourceComponent
 from bt2.connection import *
 from bt2.connection import _Connection
 from bt2.connection import _PrivateConnection
-from bt2.event import _Event
+from bt2.event import *
 from bt2.event_class import *
 from bt2.field_types import *
 from bt2.fields import *
@@ -62,12 +62,11 @@ from bt2.port import _PrivateOutputPort
 from bt2.port import _PrivatePort
 from bt2.py_plugin import *
 from bt2.query_executor import *
-from bt2.stream import _Stream
+from bt2.stream import *
 from bt2.stream_class import *
 from bt2.trace import *
 from bt2.trace_collection_notification_iterator import *
 from bt2.values import *
-from bt2.values import _Value
 
 
 class Error(Exception):

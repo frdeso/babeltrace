@@ -20,14 +20,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from bt2.internal.object import _Object
-from bt2.internal.clock_class import _ClockClass, ClockClassOffset
-from bt2.internal.event_class import _EventClass
-from bt2.internal.stream_class import _StreamClass
-from bt2.internal.field_types import _IntegerFieldType, _FloatingPointNumberFieldType, _EnumerationFieldType, _StringFieldType, _StructureFieldType, _ArrayFieldType, _SequenceFieldType, _VariantFieldType
-from bt2.internal.trace import  _Trace
-from bt2.internal.event import  _Event
-from bt2.internal.stream import _Stream
-from bt2.internal.domain import _Domain
-
-from bt2.internal.fields import _Field, _NumericField, _IntegralField, _RealField, _IntegerField, _FloatingPointNumberField, _EnumerationField, _StringField, _ContainerField, _StructureField, _VariantField, _ArraySequenceField, _ArrayField, _SequenceField
+from .object import *
+from .clock_class import *
+from .event_class import  *
+from .stream_class import *
+from .field_types import *
+from .trace import *
+from .event import *
+from .stream import *
+from .domain import *
+from .fields import *

@@ -21,6 +21,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+__all__ = ['_IntegerField', '_FloatingPointNumberField', '_EnumerationField',
+        '_StringField', '_StructureField', '_VariantField', '_ArrayField',
+        '_SequenceField']
+
 from . import domain
 from bt2 import internal
 

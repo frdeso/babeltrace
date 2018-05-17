@@ -20,6 +20,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+__all__ = ['create_value', '_Value', 'ArrayValue', 'BoolValue', 'FloatValue',
+        'IntegerValue', 'MapValue', 'StringValue']
+
+
 import abc
 import bt2
 import collections.abc

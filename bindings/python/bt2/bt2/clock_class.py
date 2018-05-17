@@ -21,6 +21,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+__all__ = ['ClockClass', 'ClockClassOffset']
+
 from . import domain
 import bt2.clock_value as clock_value
 
