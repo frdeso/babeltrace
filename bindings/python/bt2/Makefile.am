@@ -19,8 +19,7 @@ STATIC_BINDINGS_INTERNAL_DEPS =
 	bt2/internal/stream_class.py				\
 	bt2/internal/trace.py						\
 	bt2/internal/trace_collection_notification_iterator.py	\
-	bt2/internal/utils.py						\
-	bt2/internal/values.py
+	bt2/internal/utils.py
 
 STATIC_BINDINGS_IR_DEPS =			\
 	bt2/clock_class.py				\
@@ -64,7 +63,6 @@ STATIC_BINDINGS_CTFWRITER_DEPS =		\
 	bt2/ctfwriter/stream.py				\
 	bt2/ctfwriter/stream_class.py		\
 	bt2/ctfwriter/trace.py				\
-	bt2/ctfwriter/values.py				\
 	bt2/ctfwriter/native_btctf_clock.i			\
 	bt2/ctfwriter/native_btctf_clockclass.i		\
 	bt2/ctfwriter/native_btctf_event.i			\

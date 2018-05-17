@@ -27,4 +27,3 @@ from .event_class import *
 from .field_types import *
 from .stream_class import *
 from .trace import *
-from .values import *
