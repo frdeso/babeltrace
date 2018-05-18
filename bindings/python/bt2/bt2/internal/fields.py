@@ -348,7 +348,7 @@ class _EnumerationField(_IntegerField):
         labels = []
         for mapping in self.field_type:
             if self._value >= mapping.lower and self._value <= mapping.upper:
-                labels.append(mapping.name)
+                labels.append(repr(mapping.name))
 
         return '{} ({})'.format(self._value, ', '.join(labels))
 
@@ -357,12 +357,6 @@ class _EnumerationField(_IntegerField):
     @property
     def _value(self):
         return self.integer_field._value
-
-    @property
-    def mappings(self):
-        iter_ptr = self._Domain.field_enumeration_get_mappings(self._ptr)
-        assert(iter_ptr)
-        return field_types._EnumerationFieldTypeMappingIterator(self, iter_ptr, self.field_type.is_signed)
 
 
 @functools.total_ordering

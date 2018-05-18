@@ -81,6 +81,5 @@ domain._Domain.EnumerationField = _EnumerationField
 domain._Domain.StringField = _StringField
 domain._Domain.StructureField = _StructureField
 domain._Domain.VariantField = _VariantField
-domain._Domain.ArraySequenceField = _ArraySequenceField
 domain._Domain.ArrayField = _ArrayField
 domain._Domain.SequenceField = _SequenceField

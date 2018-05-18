@@ -40,6 +40,7 @@ class _EventClockValuesIterator(collections.abc.Iterator):
         if self._at == len(self._clock_classes):
             raise StopIteration
 
+        at = selt._at
         self._at += 1
         return self._clock_classes[at]
 
@@ -58,41 +59,6 @@ class _EventClockValues(collections.abc.Mapping):
 
         clock_value = bt2.clock_value._create_clock_value_from_ptr(clock_value_ptr)
         return clock_value
-
-    def _get_clock_value_cycles(self, clock_class_ptr):
-        clock_value_ptr = native_bt.event_get_clock_value(self._ptr,
-                                                          clock_class_ptr)
-
-        if clock_value_ptr is None:
-            return
-
-        ret, cycles = self._Domain.clock_value_get_value(clock_value_ptr)
-        self._Domain.put(clock_value_ptr)
-        utils._handle_ret(ret, "cannot get clock value object's cycles")
-        return cycles
-
-    @property
-    def _clock_classes(self):
-        stream_class = self.event_class.stream_class
-
-        if stream_class is None:
-            return []
-
-        trace = stream_class.trace
-
-        if trace is None:
-            return []
-
-        clock_classes = []
-
-        for clock_class in trace.clock_classes.values():
-            clock_classes.append(clock_class)
-
-        return clock_classes
-
-    @property
-    def _clock_class_ptrs(self):
-        return [cc._ptr for cc in self._clock_classes]
 
     def add(self, clock_value):
         utils._check_type(clock_value, bt2.clock_value._ClockValue)
@@ -164,6 +130,44 @@ class _Event(internal._Event, domain._DomainProvider):
 
         raise KeyError(key)
 
+    @property
+    def _clock_classes(self):
+        stream_class = self.event_class.stream_class
+
+        if stream_class is None:
+            return []
+
+        trace = stream_class.trace
+
+        if trace is None:
+            return []
+
+        clock_classes = []
+
+        for clock_class in trace.clock_classes.values():
+            clock_classes.append(clock_class)
+
+        return clock_classes
+
+    @property
+    def _clock_class_ptrs(self):
+        return [cc._ptr for cc in self._clock_classes]
+
+    def add(self, clock_value):
+        utils._check_type(clock_value, bt2.clock_value._ClockValue)
+        ret = native_bt.event_set_clock_value(self._event._ptr,
+                                              clock_value._ptr)
+        utils._handle_ret(ret, "cannot set event object's clock value")
+
+    def __len__(self):
+        count = len(self._event._clock_classes)
+        assert(count >= 0)
+        return count
+
+    def __iter__(self):
+        return _EventClockValuesIterator(self)
+
+
     def _eq(self, other):
         self_clock_values = {}
         other_clock_values = {}
@@ -187,6 +191,18 @@ class _Event(internal._Event, domain._DomainProvider):
 
             if clock_value is not None:
                 self.clock_values.add(clock_value)
+
+    def _get_clock_value_cycles(self, clock_class_ptr):
+        clock_value_ptr = native_bt.event_get_clock_value(self._ptr,
+                                                          clock_class_ptr)
+
+        if clock_value_ptr is None:
+            return
+
+        ret, cycles = self._Domain.clock_value_get_value(clock_value_ptr)
+        self._Domain.put(clock_value_ptr)
+        utils._handle_ret(ret, "cannot get clock value object's cycles")
+        return cycles
 
     @property
     def clock_values(self):

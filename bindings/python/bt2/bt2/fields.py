@@ -25,30 +25,34 @@ __all__ = ['_ArrayField', '_EnumerationField', '_Field'
         ,'_StringField', '_StructureField', '_VariantField']
 
 from . import domain
-from bt2 import internal
+from bt2 import field_types, internal
 
 
 class _Field(internal._Field, domain._DomainProvider):
     pass
 
 
-class _IntegerField(internal._IntegerField, domain._DomainProvider):
+class _IntegerField(internal._IntegerField, _Field, domain._DomainProvider):
     pass
 
 
-class _FloatingPointNumberField(internal._FloatingPointNumberField, domain._DomainProvider):
+class _FloatingPointNumberField(internal._FloatingPointNumberField, _Field, domain._DomainProvider):
     pass
 
 
 class _EnumerationField(internal._EnumerationField, _IntegerField, domain._DomainProvider):
-    pass
+    @property
+    def mappings(self):
+        iter_ptr = self._Domain.field_enumeration_get_mappings(self._ptr)
+        assert(iter_ptr)
+        return field_types._EnumerationFieldTypeMappingIterator(self, iter_ptr, self.field_type.is_signed)
 
 
 class _StringField(internal._StringField, _Field,  domain._DomainProvider):
     pass
 
 
-class _StructureField(internal._StructureField, domain._DomainProvider):
+class _StructureField(internal._StructureField, _Field, domain._DomainProvider):
     pass
 
 
@@ -56,11 +60,11 @@ class _VariantField(internal._VariantField, _Field, domain._DomainProvider):
     pass
 
 
-class _ArrayField(internal._ArrayField, domain._DomainProvider):
+class _ArrayField(internal._ArrayField, _Field, domain._DomainProvider):
     pass
 
 
-class _SequenceField(internal._SequenceField, domain._DomainProvider):
+class _SequenceField(internal._SequenceField, _Field, domain._DomainProvider):
     pass
 
 
@@ -81,6 +85,5 @@ domain._Domain.EnumerationField = _EnumerationField
 domain._Domain.StringField = _StringField
 domain._Domain.StructureField = _StructureField
 domain._Domain.VariantField = _VariantField
-domain._Domain.ArraySequenceField = _ArraySequenceField
 domain._Domain.ArrayField = _ArrayField
 domain._Domain.SequenceField = _SequenceField

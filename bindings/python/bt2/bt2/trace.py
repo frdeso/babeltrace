@@ -24,7 +24,7 @@
 __all__ = ['Trace']
 
 from . import domain
-from bt2 import internal, native_bt
+from bt2 import internal, native_bt, utils
 
 
 class Trace(internal._Trace, domain._DomainProvider):
@@ -68,7 +68,6 @@ class Trace(internal._Trace, domain._DomainProvider):
     def set_is_static(self):
         ret = native_bt.trace_set_is_static(self._ptr)
         utils._handle_ret(ret, "cannot set trace object as static")
-
 
 
 domain._Domain.Trace = Trace

@@ -147,14 +147,12 @@ class _Event(object._Object):
             self.stream_event_context_field,
             self.context_field,
             self.payload_field,
-            self_clock_values,
         )
         other_props = (
             other.header_field,
             other.stream_event_context_field,
             other.context_field,
             other.payload_field,
-            other_clock_values,
         )
         if self_props != other_props:
             return False

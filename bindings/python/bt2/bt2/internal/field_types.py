@@ -22,8 +22,9 @@
 # THE SOFTWARE.
 
 __all__ = ['_FieldType', '_IntegerFieldType', '_FloatingPointNumberFieldType',
-        '_EnumerationFieldType', '_StringFieldType', '_StructureFieldType',
-        '_ArrayFieldType', '_SequenceFieldType', '_VariantFieldType']
+        '_EnumerationFieldTypeMapping', '_EnumerationFieldType',
+        '_StringFieldType', '_StructureFieldType', '_ArrayFieldType',
+        '_SequenceFieldType', '_VariantFieldType']
 
 import bt2
 import collections.abc

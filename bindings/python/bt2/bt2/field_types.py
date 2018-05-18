@@ -25,8 +25,9 @@ __all__ = ['ByteOrder', 'Encoding', 'Base', 'FieldType', 'IntegerFieldType',
         'StringFieldType', 'StructureFieldType', 'VariantFieldType',
         'ArrayFieldType', 'SequenceFieldType']
 
+import collections
 from . import domain
-from bt2 import internal
+from bt2 import internal, utils
 
 
 ByteOrder = domain._Domain.ByteOrder
@@ -46,7 +47,7 @@ class FloatingPointNumberFieldType(FieldType, internal._FloatingPointNumberField
     pass
 
 
-class _EnumerationFieldTypeMappingIterator(object._Object,
+class _EnumerationFieldTypeMappingIterator(internal.object._Object,
                                            collections.abc.Iterator):
     def __init__(self, enum_field_type, iter_ptr, is_signed):
         super().__init__(iter_ptr)
