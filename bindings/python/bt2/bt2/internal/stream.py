@@ -27,7 +27,8 @@ from bt2 import utils
 import bt2
 from . import object
 
-class _StreamBase(object._Object):
+
+class _Stream(_StreamBase):
     @property
     def stream_class(self):
         stream_class_ptr = self._Domain.stream_get_class(self._ptr)
@@ -49,8 +50,6 @@ class _StreamBase(object._Object):
 
         return (self.name, self.id) == (other.name, other.id)
 
-
-class _Stream(_StreamBase):
     def __eq__(self, other):
         if type(other) is not type(self):
             return False

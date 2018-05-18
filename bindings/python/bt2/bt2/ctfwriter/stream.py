@@ -21,20 +21,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-__all__=['_Stream']
+__all__ = ['_Stream']
 
 from . import domain
 import bt2.packet
 from bt2 import internal
 from bt2 import native_bt
 
+
 class _Stream(internal._Stream, domain._DomainProvider):
-    def create_packet(self):
-        packet_ptr = native_bt.packet_create(self._ptr)
+    pass
 
-        if packet_ptr is None:
-            raise bt2.CreationError('cannot create packet object')
-
-        return bt2.packet._Packet._create_from_ptr(packet_ptr)
 
 domain._Domain.Stream = _Stream

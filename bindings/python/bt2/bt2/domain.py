@@ -23,8 +23,8 @@
 import bt2.internal.domain
 import bt2.native_bt as native_bt
 
-class _Domain(bt2.internal.domain._Domain):
 
+class _Domain(bt2.internal.domain._Domain):
     FIELD_TYPE_ID_INTEGER = native_bt.FIELD_TYPE_ID_INTEGER
     FIELD_TYPE_ID_FLOAT = native_bt.FIELD_TYPE_ID_FLOAT
     FIELD_TYPE_ID_ENUM = native_bt.FIELD_TYPE_ID_ENUM
@@ -43,9 +43,7 @@ class _Domain(bt2.internal.domain._Domain):
     FIELD_ID_SEQUENCE = native_bt.FIELD_TYPE_ID_SEQUENCE
     FIELD_ID_VARIANT = native_bt.FIELD_TYPE_ID_VARIANT
 
-    put = native_bt.put
-    get = native_bt.get
-
+    # Clock Class
     clock_class_create = native_bt.clock_class_create
     clock_class_get_name = native_bt.clock_class_get_name
     clock_class_set_name = native_bt.clock_class_set_name
@@ -64,6 +62,7 @@ class _Domain(bt2.internal.domain._Domain):
     clock_class_get_uuid = native_bt.clock_class_get_uuid
     clock_class_set_uuid = native_bt.clock_class_set_uuid
 
+    # Clock Value
     clock_value_create = native_bt.clock_value_create
     clock_value_get_value = native_bt.clock_value_get_value
     clock_value_get_value_ns_from_epoch = native_bt.clock_value_get_value_ns_from_epoch
@@ -83,8 +82,6 @@ class _Domain(bt2.internal.domain._Domain):
     event_set_context = native_bt.event_set_context
     event_get_payload = native_bt.event_get_payload
     event_set_payload = native_bt.event_set_payload
-    event_get_clock_value = native_bt.event_get_clock_value
-    event_set_clock_value = native_bt.event_set_clock_value
 
     # Event Class
     event_class_create = native_bt.event_class_create
@@ -121,23 +118,24 @@ class _Domain(bt2.internal.domain._Domain):
         DEBUG_LINE = native_bt.EVENT_CLASS_LOG_LEVEL_DEBUG_LINE
         DEBUG = native_bt.EVENT_CLASS_LOG_LEVEL_DEBUG
 
-    class _ByteOrder:
+    class ByteOrder:
         NATIVE = native_bt.BYTE_ORDER_NATIVE
         LITTLE_ENDIAN = native_bt.BYTE_ORDER_LITTLE_ENDIAN
         BIG_ENDIAN = native_bt.BYTE_ORDER_BIG_ENDIAN
         NETWORK = native_bt.BYTE_ORDER_NETWORK
 
-    class _Encoding:
+
+    class Encoding:
         NONE = native_bt.STRING_ENCODING_NONE
         UTF8 = native_bt.STRING_ENCODING_UTF8
         ASCII = native_bt.STRING_ENCODING_ASCII
 
-    class _Base:
+
+    class Base:
         BINARY = native_bt.INTEGER_BASE_BINARY
         OCTAL = native_bt.INTEGER_BASE_OCTAL
         DECIMAL = native_bt.INTEGER_BASE_DECIMAL
         HEXADECIMAL = native_bt.INTEGER_BASE_HEXADECIMAL
-
 
 
     # Field
@@ -270,7 +268,6 @@ class _Domain(bt2.internal.domain._Domain):
     stream_class_add_event_class = native_bt.stream_class_add_event_class
 
     # Trace
-    trace_create = native_bt.trace_create
     trace_get_name = native_bt.trace_get_name
     trace_set_name = native_bt.trace_set_name
     trace_get_native_byte_order = native_bt.trace_get_native_byte_order
@@ -294,8 +291,6 @@ class _Domain(bt2.internal.domain._Domain):
     trace_add_stream_class = native_bt.trace_add_stream_class
     trace_get_stream_count = native_bt.trace_get_stream_count
     trace_get_stream_by_index = native_bt.trace_get_stream_by_index
-    trace_is_static = native_bt.trace_is_static
-    trace_set_is_static = native_bt.trace_set_is_static
 
 class _DomainProvider:
     _Domain = _Domain

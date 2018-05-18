@@ -24,7 +24,6 @@
 __all__ = ['ClockClassOffset', '_ClockClass']
 
 import uuid as uuidp
-
 from bt2 import utils
 import bt2
 from . import object
@@ -112,9 +111,9 @@ class _ClockClass(object._Object):
 
     def __copy__(self):
         return self._Domain.ClockClass(name=self.name, description=self.description,
-                          frequency=self.frequency, precision=self.precision,
-                          offset=self.offset, is_absolute=self.is_absolute,
-                          uuid=self.uuid)
+                frequency=self.frequency, precision=self.precision,
+                offset=self.offset, is_absolute=self.is_absolute,
+                uuid=self.uuid)
 
     def __deepcopy__(self, memo):
         cpy = self.__copy__()

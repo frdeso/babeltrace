@@ -24,11 +24,11 @@ __all__ = ['ClockClassPriorityMap']
 
 import collections.abc
 import copy
-
 from bt2 import native_bt, utils
 from bt2.internal import object
 import bt2.clock_class
 import bt2
+
 
 class _ClockClassIterator(collections.abc.Iterator):
     def __init__(self, cc_prio_map):

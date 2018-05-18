@@ -26,6 +26,7 @@ __all__ = ['Trace']
 from . import domain
 from bt2 import internal, native_bt
 
+
 class Trace(internal._Trace, domain._DomainProvider):
     def __init__(self, name=None, native_byte_order=None, env=None,
                  packet_header_field_type=None, clock_classes=None,
@@ -58,5 +59,16 @@ class Trace(internal._Trace, domain._DomainProvider):
         if stream_classes is not None:
             for stream_class in stream_classes:
                 self.add_stream_class(stream_class)
+
+    @property
+    def is_static(self):
+        is_static = native_bt.trace_is_static(self._ptr)
+        return is_static > 0
+
+    def set_is_static(self):
+        ret = native_bt.trace_set_is_static(self._ptr)
+        utils._handle_ret(ret, "cannot set trace object as static")
+
+
 
 domain._Domain.Trace = Trace

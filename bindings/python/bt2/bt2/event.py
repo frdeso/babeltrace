@@ -23,12 +23,12 @@
 __all__ = ['_Event']
 
 import collections
-
 from . import domain
 from bt2 import native_bt, utils, internal
 import bt2.clock_value
 import bt2.packet
 import bt2
+
 
 class _EventClockValuesIterator(collections.abc.Iterator):
     def __init__(self, event_clock_values):
@@ -58,6 +58,41 @@ class _EventClockValues(collections.abc.Mapping):
 
         clock_value = bt2.clock_value._create_clock_value_from_ptr(clock_value_ptr)
         return clock_value
+
+    def _get_clock_value_cycles(self, clock_class_ptr):
+        clock_value_ptr = native_bt.event_get_clock_value(self._ptr,
+                                                          clock_class_ptr)
+
+        if clock_value_ptr is None:
+            return
+
+        ret, cycles = self._Domain.clock_value_get_value(clock_value_ptr)
+        self._Domain.put(clock_value_ptr)
+        utils._handle_ret(ret, "cannot get clock value object's cycles")
+        return cycles
+
+    @property
+    def _clock_classes(self):
+        stream_class = self.event_class.stream_class
+
+        if stream_class is None:
+            return []
+
+        trace = stream_class.trace
+
+        if trace is None:
+            return []
+
+        clock_classes = []
+
+        for clock_class in trace.clock_classes.values():
+            clock_classes.append(clock_class)
+
+        return clock_classes
+
+    @property
+    def _clock_class_ptrs(self):
+        return [cc._ptr for cc in self._clock_classes]
 
     def add(self, clock_value):
         utils._check_type(clock_value, bt2.clock_value._ClockValue)
@@ -128,6 +163,30 @@ class _Event(internal._Event, domain._DomainProvider):
             return pkt_header_field[key]
 
         raise KeyError(key)
+
+    def _eq(self, other):
+        self_clock_values = {}
+        other_clock_values = {}
+
+        for clock_class_ptr in self._clock_class_ptrs:
+            self_clock_values[int(clock_class_ptr)] = self._get_clock_value_cycles(clock_class_ptr)
+
+        for clock_class_ptr in other._clock_class_ptrs:
+            other_clock_values[int(clock_class_ptr)] = self._get_clock_value_cycles(clock_class_ptr)
+
+        return self_clock_values == other_clock_values
+
+    def _copy(self, cpy):
+        # Copy known clock value references. It's not necessary to copy
+        # clock class or clock value objects because once a clock value
+        # is created from a clock class, the clock class is frozen.
+        # Thus even if we copy the clock class, the user cannot modify
+        # it, therefore it's useless to copy it.
+        for clock_class in cpy._clock_classes:
+            clock_value = cpy.clock_values[clock_class]
+
+            if clock_value is not None:
+                self.clock_values.add(clock_value)
 
     @property
     def clock_values(self):

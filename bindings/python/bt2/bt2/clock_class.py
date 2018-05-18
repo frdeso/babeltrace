@@ -25,14 +25,15 @@ __all__ = ['ClockClass', 'ClockClassOffset']
 
 from . import domain
 import bt2.clock_value as clock_value
-
 from bt2 import internal
+
 
 class ClockClass(internal._ClockClass, domain._DomainProvider):
     def __call__(self, cycles):
         return clock_value._ClockValue(self._ptr, cycles)
 
-class ClockClassOffset(internal.ClockClassOffset):
-    pass
+
+ClockClassOffset = internal.ClockClassOffset
+
 
 domain._Domain.ClockClass = ClockClass

@@ -26,7 +26,13 @@ __all__ = ['_Event']
 from bt2 import internal
 from . import domain
 
+
 class _Event(internal._Event, domain._DomainProvider):
-    pass
+    def _eq(self, other):
+        return True
+
+    def _copy(self, cpy):
+        pass
+
 
 domain._Domain.Event = _Event

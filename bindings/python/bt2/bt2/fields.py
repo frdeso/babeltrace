@@ -27,47 +27,42 @@ __all__ = ['_ArrayField', '_EnumerationField', '_Field'
 from . import domain
 from bt2 import internal
 
+
 class _Field(internal._Field, domain._DomainProvider):
     pass
 
-class _NumericField(internal._NumericField, _Field, domain._DomainProvider):
+
+class _IntegerField(internal._IntegerField, domain._DomainProvider):
     pass
 
-class _IntegralField(internal._IntegralField, _NumericField, domain._DomainProvider):
+
+class _FloatingPointNumberField(internal._FloatingPointNumberField, domain._DomainProvider):
     pass
 
-class _RealField(internal._RealField, _NumericField, domain._DomainProvider):
-    pass
-
-class _IntegerField(internal._IntegerField, _IntegralField, domain._DomainProvider):
-    pass
-
-class _FloatingPointNumberField(internal._FloatingPointNumberField, _RealField, domain._DomainProvider):
-    pass
 
 class _EnumerationField(internal._EnumerationField, _IntegerField, domain._DomainProvider):
     pass
 
+
 class _StringField(internal._StringField, _Field,  domain._DomainProvider):
     pass
 
-class _ContainerField(internal._ContainerField, _Field, domain._DomainProvider):
+
+class _StructureField(internal._StructureField, domain._DomainProvider):
     pass
 
-class _StructureField(internal._StructureField, _ContainerField, domain._DomainProvider):
-    pass
 
 class _VariantField(internal._VariantField, _Field, domain._DomainProvider):
     pass
 
-class _ArraySequenceField(internal._ArraySequenceField, _ContainerField, domain._DomainProvider):
+
+class _ArrayField(internal._ArrayField, domain._DomainProvider):
     pass
 
-class _ArrayField(internal._ArrayField, _ArraySequenceField, domain._DomainProvider):
+
+class _SequenceField(internal._SequenceField, domain._DomainProvider):
     pass
 
-class _SequenceField(internal._SequenceField, _ArraySequenceField, domain._DomainProvider):
-    pass
 
 domain._Domain._FIELD_ID_TO_OBJ = {
     domain._Domain.FIELD_ID_INTEGER: _IntegerField,
@@ -80,12 +75,12 @@ domain._Domain._FIELD_ID_TO_OBJ = {
     domain._Domain.FIELD_ID_VARIANT: _VariantField,
 }
 
-domain._Domain.IntegerField=_IntegerField
-domain._Domain.FloatingPointNumberField=_FloatingPointNumberField
-domain._Domain.EnumerationField=_EnumerationField
-domain._Domain.StringField=_StringField
-domain._Domain.StructureField=_StructureField
-domain._Domain.VariantField=_VariantField
-domain._Domain.ArraySequenceField=_ArraySequenceField
-domain._Domain.ArrayField=_ArrayField
-domain._Domain.SequenceField=_SequenceField
+domain._Domain.IntegerField = _IntegerField
+domain._Domain.FloatingPointNumberField = _FloatingPointNumberField
+domain._Domain.EnumerationField = _EnumerationField
+domain._Domain.StringField = _StringField
+domain._Domain.StructureField = _StructureField
+domain._Domain.VariantField = _VariantField
+domain._Domain.ArraySequenceField = _ArraySequenceField
+domain._Domain.ArrayField = _ArrayField
+domain._Domain.SequenceField = _SequenceField

@@ -41,7 +41,7 @@ class _EventClassIterator(collections.abc.Iterator):
             raise StopIteration
 
         ec_ptr = self._stream_class._Domain.stream_class_get_event_class_by_index(self._stream_class._ptr,
-                                                                 self._at)
+                                                                                  self._at)
         assert(ec_ptr)
         ev_id = self._stream_class._Domain.event_class_get_id(ec_ptr)
         self._stream_class._Domain.put(ec_ptr)

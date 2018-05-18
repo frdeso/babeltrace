@@ -21,7 +21,6 @@
 # THE SOFTWARE.
 
 import functools
-
 from bt2 import native_bt, utils
 from bt2.internal import object
 import bt2.connection

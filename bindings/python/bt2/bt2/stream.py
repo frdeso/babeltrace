@@ -26,6 +26,7 @@ from . import domain
 from bt2 import internal, native_bt
 import bt2.packet
 
+
 class _Stream(internal._Stream, domain._DomainProvider):
     def create_packet(self):
         packet_ptr = native_bt.packet_create(self._ptr)
@@ -34,5 +35,6 @@ class _Stream(internal._Stream, domain._DomainProvider):
             raise bt2.CreationError('cannot create packet object')
 
         return bt2.packet._Packet._create_from_ptr(packet_ptr)
+
 
 domain._Domain.Stream = _Stream

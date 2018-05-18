@@ -21,8 +21,7 @@
 # THE SOFTWARE.
 
 import copy
-
-from bt2 import native_bt, utils
+from bt2 import native_bt, utils, domain
 from bt2.internal import object
 from . import domain
 import bt2.fields
@@ -34,7 +33,7 @@ class _Packet(object._Object):
     def stream(self):
         stream_ptr = native_bt.packet_get_stream(self._ptr)
         assert(stream_ptr)
-        return bt2.domain._Domain.create_stream_from_ptr(stream_ptr)
+        return domain._Domain.create_stream_from_ptr(stream_ptr)
 
     @property
     def header_field(self):
@@ -43,7 +42,7 @@ class _Packet(object._Object):
         if field_ptr is None:
             return
 
-        return bt2.domain._Domain.create_field_from_ptr(field_ptr)
+        return domain._Domain.create_field_from_ptr(field_ptr)
 
     @header_field.setter
     def header_field(self, header_field):
@@ -63,7 +62,7 @@ class _Packet(object._Object):
         if field_ptr is None:
             return
 
-        return bt2.domain._Domain.create_field_from_ptr(field_ptr)
+        return domain._Domain.create_field_from_ptr(field_ptr)
 
     @context_field.setter
     def context_field(self, context_field):

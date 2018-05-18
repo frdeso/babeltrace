@@ -77,6 +77,7 @@ class _FieldType(object._Object):
 
         return field
 
+
 class _AlignmentProp:
     @property
     def alignment(self):
@@ -266,34 +267,6 @@ class _EnumerationFieldTypeMapping:
         return (self.name, self.lower, self.upper) == (other.name, other.lower, other.upper)
 
 
-class _EnumerationFieldTypeMappingIterator(object._Object,
-                                           collections.abc.Iterator):
-    def __init__(self, enum_field_type, iter_ptr, is_signed):
-        super().__init__(iter_ptr)
-        self._enum_field_type = enum_field_type
-        self._is_signed = is_signed
-        self._done = (iter_ptr is None)
-
-    def __next__(self):
-        if self._done:
-            raise StopIteration
-
-        ret = self._enum_field_type._Domain.field_type_enumeration_mapping_iterator_next(self._ptr)
-        if ret < 0:
-            self._done = True
-            raise StopIteration
-
-        if self._is_signed:
-            ret, name, lower, upper = self._enum_field_type._Domain.field_type_enumeration_mapping_iterator_signed_get(self._ptr)
-        else:
-            ret, name, lower, upper = self._enum_field_type._Domain.field_type_enumeration_mapping_iterator_unsigned_get(self._ptr)
-
-        assert(ret == 0)
-        mapping = _EnumerationFieldTypeMapping(name, lower, upper)
-
-        return mapping
-
-
 class _EnumerationFieldType(_IntegerFieldType, collections.abc.Sequence):
     _NAME = 'Enumeration'
 
@@ -389,24 +362,6 @@ class _EnumerationFieldType(_IntegerFieldType, collections.abc.Sequence):
         ret, name, lower, upper = get_fn(self._ptr, index)
         assert(ret == 0)
         return _EnumerationFieldTypeMapping(name, lower, upper)
-
-    def _get_mapping_iter(self, iter_ptr):
-        return _EnumerationFieldTypeMappingIterator(self, iter_ptr, self.is_signed)
-
-    def mappings_by_name(self, name):
-        utils._check_str(name)
-        iter_ptr = self._Domain.field_type_enumeration_find_mappings_by_name(self._ptr, name)
-        return self._get_mapping_iter(iter_ptr)
-
-    def mappings_by_value(self, value):
-        if self.is_signed:
-            utils._check_int64(value)
-            iter_ptr = self._Domain.field_type_enumeration_signed_find_mappings_by_value(self._ptr, value)
-        else:
-            utils._check_uint64(value)
-            iter_ptr = self._Domain.field_type_enumeration_unsigned_find_mappings_by_value(self._ptr, value)
-
-        return self._get_mapping_iter(iter_ptr)
 
     def add_mapping(self, name, lower, upper=None):
         utils._check_str(name)

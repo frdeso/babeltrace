@@ -22,9 +22,13 @@
 
 __all__ = ['_Domain']
 
-from bt2 import utils
+from bt2 import native_bt, utils
+
 
 class _Domain:
+    put = native_bt.put
+    get = native_bt.get
+
     @classmethod
     def create_field_type_from_ptr(cls, ptr):
         typeid = cls.field_type_get_type_id(ptr)
@@ -58,4 +62,3 @@ class _Domain:
     @classmethod
     def create_stream_from_ptr(cls, ptr):
         return cls.Stream._create_from_ptr(ptr)
-

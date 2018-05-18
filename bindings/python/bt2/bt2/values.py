@@ -30,7 +30,6 @@ import collections.abc
 import functools
 import math
 import numbers
-
 from bt2 import native_bt, utils
 from bt2.internal import object
 

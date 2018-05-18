@@ -208,15 +208,6 @@ class _Trace(object._Object, collections.abc.Mapping):
         utils._handle_ret(ret, "cannot set trace class object's native byte order")
 
     @property
-    def is_static(self):
-        is_static = self._Domain.trace_is_static(self._ptr)
-        return is_static > 0
-
-    def set_is_static(self):
-        ret = self._Domain.trace_set_is_static(self._ptr)
-        utils._handle_ret(ret, "cannot set trace object as static")
-
-    @property
     def env(self):
         return _TraceEnv(self)
 

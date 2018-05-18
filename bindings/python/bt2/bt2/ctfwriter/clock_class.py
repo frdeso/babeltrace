@@ -26,5 +26,9 @@ __all__ = ['ClockClass']
 from . import domain
 from bt2 import internal
 
+
 class ClockClass(internal._ClockClass, domain._DomainProvider):
     pass
+
+
+domain._Domain.ClockClass = ClockClass

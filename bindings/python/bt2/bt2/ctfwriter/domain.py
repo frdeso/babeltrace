@@ -111,18 +111,18 @@ class _Domain(bt2.internal.domain._Domain):
         DEBUG_LINE = native_bt.CTF_EVENT_CLASS_LOG_LEVEL_DEBUG_LINE
         DEBUG = native_bt.CTF_EVENT_CLASS_LOG_LEVEL_DEBUG
 
-    class _ByteOrder:
+    class ByteOrder:
         NATIVE = native_bt.CTF_BYTE_ORDER_NATIVE
         LITTLE_ENDIAN = native_bt.CTF_BYTE_ORDER_LITTLE_ENDIAN
         BIG_ENDIAN = native_bt.CTF_BYTE_ORDER_BIG_ENDIAN
         NETWORK = native_bt.CTF_BYTE_ORDER_NETWORK
 
-    class _Encoding:
+    class Encoding:
         NONE = native_bt.CTF_STRING_ENCODING_NONE
         UTF8 = native_bt.CTF_STRING_ENCODING_UTF8
         ASCII = native_bt.CTF_STRING_ENCODING_ASCII
 
-    class _Base:
+    class Base:
         BINARY = native_bt.CTF_INTEGER_BASE_BINARY
         OCTAL = native_bt.CTF_INTEGER_BASE_OCTAL
         DECIMAL = native_bt.CTF_INTEGER_BASE_DECIMAL

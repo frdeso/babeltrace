@@ -25,6 +25,9 @@ __all__ = ['StreamClass']
 from . import domain
 from bt2 import internal
 
+
 class StreamClass(internal._StreamClass, domain._DomainProvider):
     pass
+
+
 domain._Domain.StreamClass = StreamClass

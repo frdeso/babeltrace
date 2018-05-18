@@ -26,7 +26,9 @@ __all__ = ['Trace']
 from . import domain
 from bt2 import internal
 
+
 class Trace(internal._Trace, domain._DomainProvider):
     pass
+
 
 domain._Domain.Trace = Trace

@@ -20,7 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-__all__ = ['ByteOrder', 'Encoding', 'Base', '_FieldType', 'IntegerFieldType',
+__all__ = ['ByteOrder', 'Encoding', 'Base', 'FieldType', 'IntegerFieldType',
         'FloatingPointNumberFieldType', 'EnumerationFieldType',
         'StringFieldType', 'StructureFieldType', 'VariantFieldType',
         'ArrayFieldType', 'SequenceFieldType']
@@ -28,36 +28,92 @@ __all__ = ['ByteOrder', 'Encoding', 'Base', '_FieldType', 'IntegerFieldType',
 from . import domain
 from bt2 import internal
 
-ByteOrder = domain._Domain._ByteOrder
-Encoding = domain._Domain._Encoding
-Base = domain._Domain._Base
 
-class _FieldType(internal._FieldType, domain._DomainProvider):
+ByteOrder = domain._Domain.ByteOrder
+Encoding = domain._Domain.Encoding
+Base = domain._Domain.Base
+
+
+class FieldType():
     pass
 
-class IntegerFieldType(internal._IntegerFieldType, domain._DomainProvider):
+
+class IntegerFieldType(FieldType, internal._IntegerFieldType, domain._DomainProvider):
     pass
 
-class FloatingPointNumberFieldType(internal._FloatingPointNumberFieldType, domain._DomainProvider):
+
+class FloatingPointNumberFieldType(FieldType, internal._FloatingPointNumberFieldType, domain._DomainProvider):
     pass
 
-class EnumerationFieldType(internal._EnumerationFieldType, domain._DomainProvider):
+
+class _EnumerationFieldTypeMappingIterator(object._Object,
+                                           collections.abc.Iterator):
+    def __init__(self, enum_field_type, iter_ptr, is_signed):
+        super().__init__(iter_ptr)
+        self._enum_field_type = enum_field_type
+        self._is_signed = is_signed
+        self._done = (iter_ptr is None)
+
+    def __next__(self):
+        if self._done:
+            raise StopIteration
+
+        ret = self._enum_field_type._Domain.field_type_enumeration_mapping_iterator_next(self._ptr)
+        if ret < 0:
+            self._done = True
+            raise StopIteration
+
+        if self._is_signed:
+            ret, name, lower, upper = self._enum_field_type._Domain.field_type_enumeration_mapping_iterator_signed_get(self._ptr)
+        else:
+            ret, name, lower, upper = self._enum_field_type._Domain.field_type_enumeration_mapping_iterator_unsigned_get(self._ptr)
+
+        assert(ret == 0)
+        mapping = internal._EnumerationFieldTypeMapping(name, lower, upper)
+
+        return mapping
+
+
+class EnumerationFieldType(FieldType, internal._EnumerationFieldType, domain._DomainProvider):
+    def _get_mapping_iter(self, iter_ptr):
+        return _EnumerationFieldTypeMappingIterator(self, iter_ptr, self.is_signed)
+
+    def mappings_by_name(self, name):
+        utils._check_str(name)
+        iter_ptr = self._Domain.field_type_enumeration_find_mappings_by_name(self._ptr, name)
+        return self._get_mapping_iter(iter_ptr)
+
+    def mappings_by_value(self, value):
+        if self.is_signed:
+            utils._check_int64(value)
+            iter_ptr = self._Domain.field_type_enumeration_signed_find_mappings_by_value(self._ptr, value)
+        else:
+            utils._check_uint64(value)
+            iter_ptr = self._Domain.field_type_enumeration_unsigned_find_mappings_by_value(self._ptr, value)
+
+        return self._get_mapping_iter(iter_ptr)
+
+
+
+class StringFieldType(FieldType, internal._StringFieldType, domain._DomainProvider):
     pass
 
-class StringFieldType(internal._StringFieldType, domain._DomainProvider):
+
+class StructureFieldType(FieldType, internal._StructureFieldType, domain._DomainProvider):
     pass
 
-class StructureFieldType(internal._StructureFieldType, domain._DomainProvider):
+
+class VariantFieldType(FieldType, internal._VariantFieldType, domain._DomainProvider):
     pass
 
-class VariantFieldType(internal._VariantFieldType, domain._DomainProvider):
+
+class ArrayFieldType(FieldType, internal._ArrayFieldType, domain._DomainProvider):
     pass
 
-class ArrayFieldType(internal._ArrayFieldType, domain._DomainProvider):
+
+class SequenceFieldType(FieldType, internal._SequenceFieldType, domain._DomainProvider):
     pass
 
-class SequenceFieldType(internal._SequenceFieldType, domain._DomainProvider):
-    pass
 
 domain._Domain._FIELD_TYPE_ID_TO_OBJ = {
     domain._Domain.FIELD_TYPE_ID_INTEGER: IntegerFieldType,

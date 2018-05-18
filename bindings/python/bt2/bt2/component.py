@@ -24,7 +24,6 @@ import collections.abc
 import os
 import sys
 import traceback
-
 from bt2 import native_bt, utils
 from bt2.internal import object
 import bt2.notification_iterator

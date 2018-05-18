@@ -28,40 +28,47 @@ __all__ = ['IntegerFieldType', 'FloatingPointNumberFieldType',
 from . import domain
 from bt2 import internal
 
-ByteOrder = domain._Domain._ByteOrder
-Encoding = domain._Domain._Encoding
-Base = domain._Domain._Base
 
-class IntegerFieldType(internal._IntegerFieldType, domain._DomainProvider):
+ByteOrder = domain._Domain.ByteOrder
+Encoding = domain._Domain.Encoding
+Base = domain._Domain.Base
+
+
+class FieldType:
     pass
 
 
-class FloatingPointNumberFieldType(internal._FloatingPointNumberFieldType, domain._DomainProvider):
+class IntegerFieldType(FieldType, internal._IntegerFieldType, domain._DomainProvider):
     pass
 
 
-class EnumerationFieldType(internal._EnumerationFieldType, domain._DomainProvider):
+class FloatingPointNumberFieldType(FieldType, internal._FloatingPointNumberFieldType, domain._DomainProvider):
     pass
 
 
-class StringFieldType(internal._StringFieldType, domain._DomainProvider):
+class EnumerationFieldType(FieldType, internal._EnumerationFieldType, domain._DomainProvider):
     pass
 
 
-class StructureFieldType(internal._StructureFieldType, domain._DomainProvider):
+class StringFieldType(FieldType, internal._StringFieldType, domain._DomainProvider):
     pass
 
 
-class VariantFieldType(internal._VariantFieldType, domain._DomainProvider):
+class StructureFieldType(FieldType, internal._StructureFieldType, domain._DomainProvider):
     pass
 
 
-class ArrayFieldType(internal._ArrayFieldType, domain._DomainProvider):
+class VariantFieldType(FieldType, internal._VariantFieldType, domain._DomainProvider):
     pass
 
 
-class SequenceFieldType(internal._SequenceFieldType, domain._DomainProvider):
+class ArrayFieldType(FieldType, internal._ArrayFieldType, domain._DomainProvider):
     pass
+
+
+class SequenceFieldType(FieldType, internal._SequenceFieldType, domain._DomainProvider):
+    pass
+
 
 domain._Domain._FIELD_TYPE_ID_TO_OBJ = {
     domain._Domain.FIELD_TYPE_ID_INTEGER: IntegerFieldType,
@@ -82,4 +89,3 @@ domain._Domain.StructureFieldType = StructureFieldType
 domain._Domain.VariantFieldType = VariantFieldType
 domain._Domain.ArrayFieldType = ArrayFieldType
 domain._Domain.SequenceFieldType = SequenceFieldType
-

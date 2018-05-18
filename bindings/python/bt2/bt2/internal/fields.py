@@ -345,7 +345,11 @@ class _EnumerationField(_IntegerField):
         self.integer_field.value = value
 
     def _repr(self):
-        labels = [repr(v.name) for v in self.mappings]
+        labels = []
+        for mapping in self.field_type:
+            if self._value >= mapping.lower and self._value <= mapping.upper:
+                labels.append(mapping.name)
+
         return '{} ({})'.format(self._value, ', '.join(labels))
 
     value = property(fset=_set_value)

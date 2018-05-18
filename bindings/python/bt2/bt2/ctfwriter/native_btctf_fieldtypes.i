@@ -71,22 +71,11 @@ int bt_ctf_field_type_set_byte_order(
 		enum bt_ctf_byte_order byte_order);
 
 enum bt_ctf_integer_base {
-	/// Unknown, used for errors.
 	BT_CTF_INTEGER_BASE_UNKNOWN		= -1,
-
-	/// Unspecified by the tracer.
 	BT_CTF_INTEGER_BASE_UNSPECIFIED		= 0,
-
-	/// Binary.
 	BT_CTF_INTEGER_BASE_BINARY		= 2,
-
-	/// Octal.
 	BT_CTF_INTEGER_BASE_OCTAL		= 8,
-
-	/// Decimal.
 	BT_CTF_INTEGER_BASE_DECIMAL		= 10,
-
-	/// Hexadecimal.
 	BT_CTF_INTEGER_BASE_HEXADECIMAL		= 16,
 };
 

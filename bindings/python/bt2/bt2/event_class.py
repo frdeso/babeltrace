@@ -26,9 +26,12 @@ __all__ = ['EventClassLogLevel', 'EventClass']
 from . import domain
 from bt2 import internal
 
+
 EventClassLogLevel = domain._DomainProvider._Domain.EventClassLogLevel
+
 
 class EventClass(internal._EventClass, domain._DomainProvider):
     pass
+
 
 domain._Domain.EventClass = EventClass

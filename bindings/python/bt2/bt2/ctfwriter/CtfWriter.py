@@ -24,9 +24,9 @@ __all__ = ['CtfWriter']
 
 from bt2 import utils
 from bt2.internal import object
-
 import bt2
 import bt2.native_bt as native_bt
+
 
 class CtfWriter(object._Object):
     def __init__(self, path):

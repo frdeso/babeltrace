@@ -25,7 +25,6 @@ import itertools
 import datetime
 import collections.abc
 import numbers
-
 from bt2 import utils
 import bt2
 import bt2.notification_iterator
