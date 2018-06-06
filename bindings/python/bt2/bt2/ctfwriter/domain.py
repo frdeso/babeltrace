@@ -73,8 +73,8 @@ class _Domain(bt2.internal.domain._Domain):
     event_set_stream_event_context = native_bt.ctf_event_set_stream_event_context
     event_get_context = native_bt.ctf_event_get_context
     event_set_context = native_bt.ctf_event_set_context
-    event_get_payload = native_bt.ctf_event_get_payload
-    event_set_payload = native_bt.ctf_event_set_payload
+    event_get_payload = native_bt.ctf_event_get_payload_field
+    event_set_payload = native_bt.ctf_event_set_payload_field
 
     # Event Class
     event_class_create = native_bt.ctf_event_class_create
@@ -240,6 +240,10 @@ class _Domain(bt2.internal.domain._Domain):
     stream_class_get_event_class_by_index = native_bt.ctf_stream_class_get_event_class_by_index
     stream_class_get_event_class_by_id = native_bt.ctf_stream_class_get_event_class_by_id
     stream_class_add_event_class = native_bt.ctf_stream_class_add_event_class
+    stream_class_get_packet_context_field_type = native_bt.ctf_stream_class_get_packet_context_type
+    stream_class_set_packet_context_field_type = native_bt.ctf_stream_class_set_packet_context_type
+    stream_class_get_event_header_field_type =  native_bt.ctf_stream_class_get_event_header_type
+    stream_class_set_event_header_field_type =  native_bt.ctf_stream_class_set_event_header_type
 
     # Trace
     trace_get_name = native_bt.ctf_trace_get_name

@@ -20,14 +20,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-__all__ = ['CtfWriterClock']
+__all__ = ['Clock']
 
 from bt2 import object, utils, native_bt
 import bt2
 import uuid as uuidp
 
 
-class CtfWriterClock(object._Object):
+class Clock(object._Object):
     def __init__(self, name, description=None, frequency=None, precision=None,
                  offset=None, is_absolute=None, uuid=None):
         utils._check_str(name)

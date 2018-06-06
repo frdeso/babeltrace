@@ -24,11 +24,25 @@
 __all__ = ['StreamClass']
 
 from . import domain
-from bt2 import internal
+import bt2
+from bt2 import internal, native_bt, utils
 
 
 class StreamClass(internal._StreamClass, domain._DomainProvider):
-    pass
+    @property
+    def clock(self):
+        clock_ptr = native_bt.ctf_stream_class_get_clock(self._ptr)
+
+        if clock_ptr is None:
+            return
+
+        return bt2.ctfwriter.Clock._create_from_ptr(clock_ptr)
+
+    @clock.setter
+    def clock(self, clock):
+        utils._check_type(clock, bt2.ctfwriter.Clock)
+        ret = native_bt.ctf_stream_class_set_clock(self._ptr, clock._ptr)
+        utils._handle_ret(ret, "cannot set stream class object's CTF writer clock object")
 
 
 domain._Domain.StreamClass = StreamClass

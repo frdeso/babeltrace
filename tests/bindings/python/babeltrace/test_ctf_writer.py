@@ -35,7 +35,8 @@ class CtfWriterTestCase(unittest.TestCase):
         self._trace_path = tempfile.mkdtemp()
 
     def tearDown(self):
-        shutil.rmtree(self._trace_path)
+        pass
+        #shutil.rmtree(self._trace_path)
 
     def _create_trace(self):
         trace = btw.Writer(self._trace_path)
@@ -53,10 +54,11 @@ class CtfWriterTestCase(unittest.TestCase):
 
         stream = trace.create_stream(stream_class)
 
+        val = 0
         for j in range(2):
             for i in range(self._expected_event_count // 2):
-                val = i * (j + 1)
                 clock.time = val * 200
+                val += 1
                 event = btw.Event(event_class)
                 event.payload('int_field').value = val
                 stream.append_event(event)

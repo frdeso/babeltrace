@@ -26,6 +26,7 @@ from bt2 import utils
 from bt2.internal import object
 import bt2
 import bt2.native_bt as native_bt
+from . import Clock
 
 
 class CtfWriter(object._Object):
@@ -42,7 +43,7 @@ class CtfWriter(object._Object):
     def trace(self):
         trace_ptr = native_bt.ctf_writer_get_trace(self._ptr)
         assert(trace_ptr)
-        return bt2.Trace._create_from_ptr(trace_ptr)
+        return bt2.ctfwriter.Trace._create_from_ptr(trace_ptr)
 
     @property
     def metadata_string(self):
@@ -54,6 +55,6 @@ class CtfWriter(object._Object):
         native_bt.ctf_writer_flush_metadata(self._ptr)
 
     def add_clock(self, clock):
-        utils._check_type(clock, CtfWriterClock)
+        utils._check_type(clock, bt2.ctfwriter.Clock)
         ret = native_bt.ctf_writer_add_clock(self._ptr, clock._ptr)
         utils._handle_ret(ret, 'cannot add CTF writer clock object to CTF writer object')

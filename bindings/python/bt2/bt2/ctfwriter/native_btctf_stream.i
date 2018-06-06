@@ -48,3 +48,4 @@ struct bt_ctf_stream_class *bt_ctf_stream_get_class(
 		struct bt_ctf_stream *stream);
 const char *bt_ctf_stream_get_name(struct bt_ctf_stream *stream);
 int64_t bt_ctf_stream_get_id(struct bt_ctf_stream *stream);
+int bt_ctf_stream_flush(struct bt_ctf_stream *stream);

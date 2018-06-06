@@ -20,10 +20,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from .clock_class import *
 from .clock import *
+from .clock_class import *
 from .CtfWriter import *
+from .event import *
 from .event_class import *
+from .fields import *
 from .field_types import *
 from .stream_class import *
+from .stream import *
 from .trace import *

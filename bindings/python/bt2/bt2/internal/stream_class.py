@@ -136,27 +136,6 @@ class _StreamClass(object._Object, collections.abc.Mapping):
         utils._handle_ret(ret, "cannot set stream class object's ID")
 
     @property
-    def packet_context_field_type(self):
-        ft_ptr = self._Domain.stream_class_get_packet_context_field_type(self._ptr)
-
-        if ft_ptr is None:
-            return
-
-        return self._Domain.create_field_type_from_ptr(ft_ptr)
-
-    @packet_context_field_type.setter
-    def packet_context_field_type(self, packet_context_field_type):
-        packet_context_field_type_ptr = None
-
-        if packet_context_field_type is not None:
-            utils._check_type(packet_context_field_type, field_types._FieldType)
-            packet_context_field_type_ptr = packet_context_field_type._ptr
-
-        ret = self._Domain.stream_class_set_packet_context_field_type(self._ptr,
-                                                             packet_context_field_type_ptr)
-        utils._handle_ret(ret, "cannot set stream class object's packet context field type")
-
-    @property
     def event_header_field_type(self):
         ft_ptr = self._Domain.stream_class_get_event_header_field_type(self._ptr)
 

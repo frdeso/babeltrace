@@ -25,6 +25,7 @@ import bt2.native_bt as native_bt
 
 
 class _Domain(bt2.internal.domain._Domain):
+    # Field type id
     FIELD_TYPE_ID_INTEGER = native_bt.FIELD_TYPE_ID_INTEGER
     FIELD_TYPE_ID_FLOAT = native_bt.FIELD_TYPE_ID_FLOAT
     FIELD_TYPE_ID_ENUM = native_bt.FIELD_TYPE_ID_ENUM
@@ -34,6 +35,7 @@ class _Domain(bt2.internal.domain._Domain):
     FIELD_TYPE_ID_SEQUENCE = native_bt.FIELD_TYPE_ID_SEQUENCE
     FIELD_TYPE_ID_VARIANT = native_bt.FIELD_TYPE_ID_VARIANT
 
+    # Field id
     FIELD_ID_INTEGER = native_bt.FIELD_TYPE_ID_INTEGER
     FIELD_ID_FLOAT = native_bt.FIELD_TYPE_ID_FLOAT
     FIELD_ID_ENUM = native_bt.FIELD_TYPE_ID_ENUM

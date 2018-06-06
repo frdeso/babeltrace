@@ -60,7 +60,7 @@ class _ArrayField(internal._ArrayField, domain._DomainProvider):
     pass
 
 
-class _SequenceField(internal._SequenceField, _ArraySequenceField, domain._DomainProvider):
+class _SequenceField(internal._SequenceField, domain._DomainProvider):
     pass
 
 
@@ -70,9 +70,9 @@ domain._Domain._FIELD_ID_TO_OBJ = {
     domain._Domain.FIELD_ID_ENUM: _EnumerationField,
     domain._Domain.FIELD_ID_STRING: _StringField,
     domain._Domain.FIELD_ID_STRUCT: _StructureField,
+    domain._Domain.FIELD_ID_VARIANT: _VariantField,
     domain._Domain.FIELD_ID_ARRAY: _ArrayField,
     domain._Domain.FIELD_ID_SEQUENCE: _SequenceField,
-    domain._Domain.FIELD_ID_VARIANT: _VariantField,
 }
 
 domain._Domain.IntegerField = _IntegerField
