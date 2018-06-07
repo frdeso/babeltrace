@@ -6,7 +6,7 @@ SUBDIRS = dummy muxer counter .
 plugindir = "$(PLUGINSDIR)"
 plugin_LTLIBRARIES = babeltrace-plugin-utils.la
 
-babeltrace_plugin_utils_la_SOURCES = plugin.c
+babeltrace_plugin_utils_la_SOURCES = plugin.c fake.c noop.c
 babeltrace_plugin_utils_la_LDFLAGS = \
 	$(LT_NO_UNDEFINED) \
 	-avoid-version -module

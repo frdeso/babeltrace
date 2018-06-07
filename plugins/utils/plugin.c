@@ -26,6 +26,8 @@
 #include "trimmer/trimmer.h"
 #include "trimmer/iterator.h"
 #include "muxer/muxer.h"
+#include "fake.h"
+#include "noop.h"
 
 #ifndef BT_BUILT_IN_PLUGINS
 BT_PLUGIN_MODULE();
@@ -81,3 +83,20 @@ BT_PLUGIN_FILTER_COMPONENT_CLASS_NOTIFICATION_ITERATOR_INIT_METHOD(muxer,
 	muxer_notif_iter_init);
 BT_PLUGIN_FILTER_COMPONENT_CLASS_NOTIFICATION_ITERATOR_FINALIZE_METHOD(muxer,
 	muxer_notif_iter_finalize);
+
+/* fake source */
+BT_PLUGIN_SOURCE_COMPONENT_CLASS(fake, fake_notif_iter_next);
+BT_PLUGIN_SOURCE_COMPONENT_CLASS_INIT_METHOD(fake, fake_init);
+BT_PLUGIN_SOURCE_COMPONENT_CLASS_FINALIZE_METHOD(fake, fake_finalize);
+BT_PLUGIN_SOURCE_COMPONENT_CLASS_NOTIFICATION_ITERATOR_INIT_METHOD(fake,
+	fake_notif_iter_init);
+BT_PLUGIN_SOURCE_COMPONENT_CLASS_NOTIFICATION_ITERATOR_FINALIZE_METHOD(fake,
+	fake_notif_iter_finalize);
+
+/* noop filter */
+BT_PLUGIN_FILTER_COMPONENT_CLASS(noop, noop_notif_iter_next);
+BT_PLUGIN_FILTER_COMPONENT_CLASS_INIT_METHOD(noop, noop_init);
+BT_PLUGIN_FILTER_COMPONENT_CLASS_NOTIFICATION_ITERATOR_INIT_METHOD(noop,
+	noop_notif_iter_init);
+BT_PLUGIN_FILTER_COMPONENT_CLASS_PORT_CONNECTED_METHOD(noop,
+	noop_port_connected);
