@@ -17,8 +17,9 @@ SUBDIRS +=			\
 	cli			\
 	bindings		\
 	doc			\
-	extras			\
-	tests
+	extras
+
+#	tests
 
 dist_doc_DATA = ChangeLog LICENSE mit-license.txt gpl-2.0.txt \
 		std-ext-lib.txt README CONTRIBUTING.adoc
