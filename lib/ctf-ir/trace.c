@@ -374,6 +374,28 @@ struct bt_stream *bt_trace_borrow_stream_by_index(
 	return g_ptr_array_index(trace->streams, index);
 }
 
+struct bt_stream *bt_trace_borrow_stream_by_id(
+		struct bt_trace *trace, uint64_t id)
+{
+	struct bt_stream *stream = NULL;
+	uint64_t i;
+
+	BT_ASSERT_PRE_NON_NULL(trace, "Trace");
+
+	for (i = 0; i < trace->streams->len; i++) {
+		struct bt_stream *stream_candidate =
+			g_ptr_array_index(trace->streams, i);
+
+		if (stream_candidate->id == id) {
+			stream = stream_candidate;
+			goto end;
+		}
+	}
+
+end:
+	return stream;
+}
+
 uint64_t bt_trace_get_stream_class_count(struct bt_trace *trace)
 {
 	BT_ASSERT_PRE_NON_NULL(trace, "Trace");
@@ -386,6 +408,28 @@ struct bt_stream_class *bt_trace_borrow_stream_class_by_index(
 	BT_ASSERT_PRE_NON_NULL(trace, "Trace");
 	BT_ASSERT_PRE_VALID_INDEX(index, trace->stream_classes->len);
 	return g_ptr_array_index(trace->stream_classes, index);
+}
+
+struct bt_stream_class *bt_trace_borrow_stream_class_by_id(
+		struct bt_trace *trace, uint64_t id)
+{
+	struct bt_stream_class *stream_class = NULL;
+	uint64_t i;
+
+	BT_ASSERT_PRE_NON_NULL(trace, "Trace");
+
+	for (i = 0; i < trace->stream_classes->len; i++) {
+		struct bt_stream_class *stream_class_candidate =
+			g_ptr_array_index(trace->stream_classes, i);
+
+		if (stream_class_candidate->id == id) {
+			stream_class = stream_class_candidate;
+			goto end;
+		}
+	}
+
+end:
+	return stream_class;
 }
 
 struct bt_field_type *bt_trace_borrow_packet_header_field_type(

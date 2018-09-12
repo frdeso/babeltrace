@@ -82,9 +82,8 @@ extern int bt_field_string_set_value(struct bt_field *field, const char *value);
 
 extern int bt_field_string_append(struct bt_field *field, const char *value);
 
-extern int bt_field_string_append_with_length(
-		struct bt_field *field, const char *value,
-		uint64_t length);
+extern int bt_field_string_append_with_length(struct bt_field *field,
+		const char *value, uint64_t length);
 
 extern int bt_field_string_clear(struct bt_field *field);
 

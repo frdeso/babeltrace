@@ -256,6 +256,7 @@ struct bt_notif_iter_medium_ops ctf_fs_ds_file_medops = {
 	.seek = medop_seek,
 };
 
+#if 0
 static
 struct ctf_fs_ds_index *ctf_fs_ds_index_create(size_t length)
 {
@@ -279,8 +280,10 @@ error:
 	ctf_fs_ds_index_destroy(index);
 	goto end;
 }
+#endif
 
 /* Returns a new, zeroed, index entry. */
+#if 0
 static
 struct ctf_fs_ds_index_entry *ctf_fs_ds_index_add_new_entry(
 		struct ctf_fs_ds_index *index)
@@ -289,7 +292,9 @@ struct ctf_fs_ds_index_entry *ctf_fs_ds_index_add_new_entry(
 	return &g_array_index(index->entries, struct ctf_fs_ds_index_entry,
 			index->entries->len - 1);
 }
+#endif
 
+#if 0
 static
 struct bt_clock_class *borrow_field_mapped_clock_class(
 		struct bt_field *field)
@@ -311,7 +316,9 @@ struct bt_clock_class *borrow_field_mapped_clock_class(
 end:
 	return clock_class;
 }
+#endif
 
+#if 0
 static
 int borrow_packet_bounds_from_packet_context(
 		struct bt_field *packet_context,
@@ -367,7 +374,9 @@ int borrow_packet_bounds_from_packet_context(
 end:
 	return ret;
 }
+#endif
 
+#if 0
 static
 int borrow_ds_file_packet_bounds_clock_classes(struct ctf_fs_ds_file *ds_file,
 		struct bt_clock_class **timestamp_begin_cc,
@@ -391,14 +400,18 @@ int borrow_ds_file_packet_bounds_clock_classes(struct ctf_fs_ds_file *ds_file,
 end:
 	return ret;
 }
+#endif
 
+#if 0
 static
 int convert_cycles_to_ns(struct bt_clock_class *clock_class,
 		uint64_t cycles, int64_t *ns)
 {
 	return bt_clock_class_cycles_to_ns(clock_class, cycles, ns);
 }
+#endif
 
+#if 0
 static
 struct ctf_fs_ds_index *build_index_from_idx_file(
 		struct ctf_fs_ds_file *ds_file)
@@ -578,7 +591,9 @@ error:
 	index = NULL;
 	goto end;
 }
+#endif
 
+#if 0
 static
 int init_index_entry(struct ctf_fs_ds_index_entry *entry,
 		struct bt_field *packet_context, off_t packet_size,
@@ -636,7 +651,9 @@ int init_index_entry(struct ctf_fs_ds_index_entry *entry,
 end:
 	return ret;
 }
+#endif
 
+#if 0
 static
 struct ctf_fs_ds_index *build_index_from_stream_file(
 		struct ctf_fs_ds_file *ds_file)
@@ -733,6 +750,7 @@ error:
 	index = NULL;
 	goto end;
 }
+#endif
 
 BT_HIDDEN
 struct ctf_fs_ds_file *ctf_fs_ds_file_create(
@@ -764,7 +782,7 @@ struct ctf_fs_ds_file *ctf_fs_ds_file_create(
 	}
 
 	ds_file->notif_iter = notif_iter;
-	bt_notif_iter_set_medops_data(ds_file->notif_iter, ds_file);
+	//bt_notif_iter_set_medops_data(ds_file->notif_iter, ds_file);
 	if (!ds_file->notif_iter) {
 		goto error;
 	}
@@ -782,6 +800,7 @@ end:
 	return ds_file;
 }
 
+#if 0
 BT_HIDDEN
 struct ctf_fs_ds_index *ctf_fs_ds_file_build_index(
 		struct ctf_fs_ds_file *ds_file)
@@ -799,6 +818,7 @@ struct ctf_fs_ds_index *ctf_fs_ds_file_build_index(
 end:
 	return index;
 }
+#endif
 
 BT_HIDDEN
 void ctf_fs_ds_file_destroy(struct ctf_fs_ds_file *ds_file)
@@ -825,7 +845,7 @@ enum bt_notification_iterator_status ctf_fs_ds_file_next(
 {
 	enum bt_notif_iter_status notif_iter_status;
 	enum bt_notification_iterator_status status;
-
+#if 0
 	notif_iter_status = bt_notif_iter_get_next_notification(
 		ds_file->notif_iter, ds_file->pc_notif_iter, notif);
 
@@ -849,10 +869,12 @@ enum bt_notification_iterator_status ctf_fs_ds_file_next(
 		status = BT_NOTIFICATION_ITERATOR_STATUS_ERROR;
 		break;
 	}
-
 	return status;
+#endif
+	return 0;
 }
 
+#if 0
 BT_HIDDEN
 int ctf_fs_ds_file_borrow_packet_header_context_fields(
 		struct ctf_fs_ds_file *ds_file,
@@ -886,7 +908,9 @@ error:
 end:
 	return ret;
 }
+#endif
 
+#if 0
 BT_HIDDEN
 void ctf_fs_ds_index_destroy(struct ctf_fs_ds_index *index)
 {
@@ -899,3 +923,4 @@ void ctf_fs_ds_index_destroy(struct ctf_fs_ds_index *index)
 	}
 	g_free(index);
 }
+#endif

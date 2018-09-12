@@ -194,6 +194,7 @@ struct bt_stream_class *bt_stream_class_create(struct bt_trace *trace)
 struct bt_stream_class *bt_stream_class_create_with_id(
 		struct bt_trace *trace, uint64_t id)
 {
+	BT_ASSERT_PRE_NON_NULL(trace, "Trace");
 	BT_ASSERT_PRE(!trace->assigns_automatic_stream_class_id,
 		"Trace automatically assigns stream class IDs: "
 		"%![sc-]+t", trace);
@@ -243,6 +244,28 @@ struct bt_event_class *bt_stream_class_borrow_event_class_by_index(
 	BT_ASSERT_PRE_NON_NULL(stream_class, "Stream class");
 	BT_ASSERT_PRE_VALID_INDEX(index, stream_class->event_classes->len);
 	return g_ptr_array_index(stream_class->event_classes, index);
+}
+
+struct bt_event_class *bt_stream_class_borrow_event_class_by_id(
+		struct bt_stream_class *trace, uint64_t id)
+{
+	struct bt_event_class *event_class = NULL;
+	uint64_t i;
+
+	BT_ASSERT_PRE_NON_NULL(trace, "Trace");
+
+	for (i = 0; i < trace->event_classes->len; i++) {
+		struct bt_event_class *event_class_candidate =
+			g_ptr_array_index(trace->event_classes, i);
+
+		if (event_class_candidate->id == id) {
+			event_class = event_class_candidate;
+			goto end;
+		}
+	}
+
+end:
+	return event_class;
 }
 
 struct bt_field_type *bt_stream_class_borrow_packet_context_field_type(

@@ -73,12 +73,6 @@ enum bt_field_type_integer_preferred_display_base {
 extern enum bt_field_type_id bt_field_type_get_type_id(
 		struct bt_field_type *field_type);
 
-extern int bt_field_type_compare(struct bt_field_type *field_type_a,
-		struct bt_field_type *field_type_b);
-
-extern struct bt_field_type *bt_field_type_copy(
-		struct bt_field_type *field_type);
-
 extern struct bt_field_type *bt_field_type_unsigned_integer_create(void);
 
 extern struct bt_field_type *bt_field_type_signed_integer_create(void);
@@ -115,12 +109,12 @@ extern uint64_t bt_field_type_enumeration_get_mapping_count(
 
 extern void bt_field_type_unsigned_enumeration_borrow_mapping_by_index(
 		struct bt_field_type *field_type, uint64_t index,
-		const char **name,
+		const char **label,
 		struct bt_field_type_unsigned_enumeration_mapping_ranges **ranges);
 
 extern void bt_field_type_signed_enumeration_borrow_mapping_by_index(
 		struct bt_field_type *field_type, uint64_t index,
-		const char **name,
+		const char **label,
 		struct bt_field_type_signed_enumeration_mapping_ranges **ranges);
 
 extern uint64_t bt_field_type_unsigned_enumeration_mapping_ranges_get_range_count(

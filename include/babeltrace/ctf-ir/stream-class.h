@@ -110,6 +110,9 @@ extern uint64_t bt_stream_class_get_event_class_count(
 extern struct bt_event_class *bt_stream_class_borrow_event_class_by_index(
 		struct bt_stream_class *stream_class, uint64_t index);
 
+extern struct bt_event_class *bt_stream_class_borrow_event_class_by_id(
+		struct bt_stream_class *stream_class, uint64_t id);
+
 extern int bt_stream_class_set_default_clock_class(
 		struct bt_stream_class *stream_class,
 		struct bt_clock_class *clock_class);

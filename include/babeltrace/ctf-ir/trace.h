@@ -1,9 +1,9 @@
 #ifndef BABELTRACE_CTF_IR_TRACE_H
+#define BABELTRACE_CTF_IR_TRACE_H
 
 /*
  * BabelTrace - CTF IR: Trace
  *
-#define BABELTRACE_CTF_IR_TRACE_H
  * Copyright 2014 Jérémie Galarneau <jeremie.galarneau@efficios.com>
  *
  * Author: Jérémie Galarneau <jeremie.galarneau@efficios.com>
@@ -96,10 +96,16 @@ extern uint64_t bt_trace_get_stream_class_count(struct bt_trace *trace);
 extern struct bt_stream_class *bt_trace_borrow_stream_class_by_index(
 		struct bt_trace *trace, uint64_t index);
 
+extern struct bt_stream_class *bt_trace_borrow_stream_class_by_id(
+		struct bt_trace *trace, uint64_t id);
+
 extern uint64_t bt_trace_get_stream_count(struct bt_trace *trace);
 
 extern struct bt_stream *bt_trace_borrow_stream_by_index(
 		struct bt_trace *trace, uint64_t index);
+
+extern struct bt_stream *bt_trace_borrow_stream_by_id(
+		struct bt_trace *trace, uint64_t id);
 
 extern bt_bool bt_trace_is_static(struct bt_trace *trace);
 
