@@ -32,6 +32,8 @@
 #include <babeltrace/babeltrace.h>
 #include <babeltrace/babeltrace-internal.h>
 
+#include "../metadata/ctf-meta.h"
+
 /**
  * @file ctf-btr.h
  *
@@ -90,15 +92,13 @@ struct bt_btr_cbs {
 	 * a compound type begins/ends, or when a basic type is
 	 * completely decoded (along with its value).
 	 *
-	 * Each function also receives the CTF IR field type associated
+	 * Each function also receives the CTF field type associated
 	 * with the call, and user data (registered to the type reader
-	 * calling them). This field type is a weak reference; the
-	 * callback function must use bt_field_type_get() to keep
-	 * its own reference of it.
+	 * calling them).
 	 *
-	 * Actual CTF IR fields are \em not created here; this would be
-	 * the responsibility of a type reader's user (the provider of
-	 * those callback functions).
+	 * Actual trace IR fields are \em not created here; this would
+	 * be the responsibility of a type reader's user (the provider
+	 * of those callback functions).
 	 *
 	 * All the type callback functions return one of the following
 	 * values:
@@ -119,14 +119,13 @@ struct bt_btr_cbs {
 		 * indicate this).
 		 *
 		 * @param value		Signed integer value
-		 * @param type		Integer or enumeration type (weak
-		 *			reference)
+		 * @param type		Integer or enumeration type
 		 * @param data		User data
 		 * @returns		#BT_BTR_STATUS_OK or
 		 *			#BT_BTR_STATUS_ERROR
 		 */
 		enum bt_btr_status (* signed_int)(int64_t value,
-				struct bt_field_type *type, void *data);
+				struct ctf_field_type *type, void *data);
 
 		/**
 		 * Called when an unsigned integer type is completely
@@ -135,28 +134,26 @@ struct bt_btr_cbs {
 		 * indicate this).
 		 *
 		 * @param value		Unsigned integer value
-		 * @param type		Integer or enumeration type (weak
-		 *			reference)
+		 * @param type		Integer or enumeration type
 		 * @param data		User data
 		 * @returns		#BT_BTR_STATUS_OK or
 		 *			#BT_BTR_STATUS_ERROR
 		 */
 		enum bt_btr_status (* unsigned_int)(uint64_t value,
-				struct bt_field_type *type, void *data);
+				struct ctf_field_type *type, void *data);
 
 		/**
 		 * Called when a floating point number type is
 		 * completely decoded.
 		 *
 		 * @param value		Floating point number value
-		 * @param type		Floating point number type (weak
-		 *			reference)
+		 * @param type		Floating point number type
 		 * @param data		User data
 		 * @returns		#BT_BTR_STATUS_OK or
 		 *			#BT_BTR_STATUS_ERROR
 		 */
 		enum bt_btr_status (* floating_point)(double value,
-				struct bt_field_type *type, void *data);
+				struct ctf_field_type *type, void *data);
 
 		/**
 		 * Called when a string type begins.
@@ -166,13 +163,13 @@ struct bt_btr_cbs {
 		 * them providing one substring of the complete string
 		 * type's value.
 		 *
-		 * @param type		Beginning string type (weak reference)
+		 * @param type		Beginning string type
 		 * @param data		User data
 		 * @returns		#BT_BTR_STATUS_OK or
 		 *			#BT_BTR_STATUS_ERROR
 		 */
 		enum bt_btr_status (* string_begin)(
-				struct bt_field_type *type, void *data);
+				struct ctf_field_type *type, void *data);
 
 		/**
 		 * Called when a string type's substring is decoded
@@ -181,25 +178,25 @@ struct bt_btr_cbs {
 		 *
 		 * @param value		String value (\em not null-terminated)
 		 * @param len		String value length
-		 * @param type		String type (weak reference)
+		 * @param type		String type
 		 * @param data		User data
 		 * @returns		#BT_BTR_STATUS_OK or
 		 *			#BT_BTR_STATUS_ERROR
 		 */
 		enum bt_btr_status (* string)(const char *value,
-				size_t len, struct bt_field_type *type,
+				size_t len, struct ctf_field_type *type,
 				void *data);
 
 		/**
 		 * Called when a string type ends.
 		 *
-		 * @param type		Ending string type (weak reference)
+		 * @param type		Ending string type
 		 * @param data		User data
 		 * @returns		#BT_BTR_STATUS_OK or
 		 *			#BT_BTR_STATUS_ERROR
 		 */
 		enum bt_btr_status (* string_end)(
-				struct bt_field_type *type, void *data);
+				struct ctf_field_type *type, void *data);
 
 		/**
 		 * Called when a compound type begins.
@@ -215,24 +212,24 @@ struct bt_btr_cbs {
 		 * call indicates the selected type of this variant
 		 * type.
 		 *
-		 * @param type		Beginning compound type (weak reference)
+		 * @param type		Beginning compound type
 		 * @param data		User data
 		 * @returns		#BT_BTR_STATUS_OK or
 		 *			#BT_BTR_STATUS_ERROR
 		 */
 		enum bt_btr_status (* compound_begin)(
-				struct bt_field_type *type, void *data);
+				struct ctf_field_type *type, void *data);
 
 		/**
 		 * Called when a compound type ends.
 		 *
-		 * @param type		Ending compound type (weak reference)
+		 * @param type		Ending compound type
 		 * @param data		User data
 		 * @returns		#BT_BTR_STATUS_OK or
 		 *			#BT_BTR_STATUS_ERROR
 		 */
 		enum bt_btr_status (* compound_end)(
-				struct bt_field_type *type, void *data);
+				struct ctf_field_type *type, void *data);
 	} types;
 
 	/**
@@ -248,25 +245,25 @@ struct bt_btr_cbs {
 		 * Called to query the current length of a given sequence
 		 * type.
 		 *
-		 * @param type		Sequence type (weak reference)
+		 * @param type		Sequence type
 		 * @param data		User data
 		 * @returns		Sequence length or
 		 *			#BT_BTR_STATUS_ERROR on error
 		 */
-		int64_t (* get_sequence_length)(struct bt_field_type *type,
+		int64_t (* get_sequence_length)(struct ctf_field_type *type,
 				void *data);
 
 		/**
 		 * Called to query the current selected type of a given
 		 * variant type.
 		 *
-		 * @param type		Variant type (weak reference)
+		 * @param type		Variant type
 		 * @param data		User data
 		 * @returns		Current selected type (owned by
 		 *			this) or \c NULL on error
 		 */
-		struct bt_field_type * (* borrow_variant_field_type)(
-				struct bt_field_type *type, void *data);
+		struct ctf_field_type * (* borrow_variant_selected_field_type)(
+				struct ctf_field_type *type, void *data);
 	} query;
 };
 
@@ -308,7 +305,7 @@ void bt_btr_destroy(struct bt_btr *btr);
  * be called next, \em not bt_btr_decode().
  *
  * @param btr			Binary type reader
- * @param type			Type to decode (weak reference)
+ * @param type			Type to decode
  * @param buf			Buffer
  * @param offset		Offset of first bit from \p buf (bits)
  * @param packet_offset		Offset of \p offset within the CTF
@@ -318,7 +315,7 @@ void bt_btr_destroy(struct bt_btr *btr);
  * @returns			Number of consumed bits
  */
 size_t bt_btr_start(struct bt_btr *btr,
-		struct bt_field_type *type, const uint8_t *buf,
+		struct ctf_field_type *type, const uint8_t *buf,
 		size_t offset, size_t packet_offset, size_t sz,
 		enum bt_btr_status *status);
 
