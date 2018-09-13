@@ -1065,7 +1065,7 @@ int bt_field_type_dynamic_array_set_length_field_type(struct bt_field_type *ft,
 	BT_ASSERT_PRE_NON_NULL(length_ft, "Length field type");
 	BT_ASSERT_PRE_FT_HAS_ID(ft, BT_FIELD_TYPE_ID_DYNAMIC_ARRAY,
 		"Field type");
-	BT_ASSERT_PRE_FT_IS_ENUM(ft, "Length field type");
+	BT_ASSERT_PRE_FT_IS_UNSIGNED_INT(length_ft, "Length field type");
 	BT_ASSERT_PRE_FT_HOT(ft, "Dynamic array field type");
 	array_ft->length_ft = length_ft;
 	bt_field_type_freeze(length_ft);

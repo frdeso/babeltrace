@@ -62,6 +62,11 @@ enum ctf_encoding {
 struct ctf_field_type {
 	enum ctf_field_type_id id;
 	unsigned int alignment;
+	bool is_compound;
+
+	/* Weak, set during translation. NULL if `in_ir` is false below. */
+	struct bt_field_type *ir_ft;
+
 	bool in_ir;
 };
 
@@ -77,6 +82,8 @@ struct ctf_field_type_int {
 	bool is_signed;
 	enum bt_field_type_integer_preferred_display_base disp_base;
 	enum ctf_encoding encoding;
+
+	/* Owned by this */
 	struct bt_clock_class *mapped_clock_class;
 };
 
@@ -96,6 +103,8 @@ struct ctf_field_type_enum_mapping {
 
 struct ctf_field_type_enum {
 	struct ctf_field_type_int base;
+
+	/* Array of `struct ctf_field_type_enum_mapping` */
 	GArray *mappings;
 };
 
@@ -115,20 +124,31 @@ struct ctf_named_field_type {
 
 struct ctf_field_type_struct {
 	struct ctf_field_type base;
+
+	/* Array of `struct ctf_named_field_type` */
 	GArray *members;
-	unsigned int alignment;
 };
 
 struct ctf_field_path {
 	enum bt_scope root;
+
+	/* Array of `int64_t` */
 	GArray *path;
 };
 
 struct ctf_field_type_variant {
 	struct ctf_field_type base;
+
+	/* Array of `struct ctf_named_field_type` */
 	GArray *options;
+
 	GString *tag_ref;
 	struct ctf_field_path tag_path;
+
+	/*
+	 * If true, do not use `tag_path` to find the tag value in a
+	 * `bt_field` during decoding: use the current event class ID.
+	 */
 	bool tag_is_cur_event_class_id;
 };
 
@@ -148,6 +168,11 @@ struct ctf_field_type_sequence {
 	struct ctf_field_type_array_base base;
 	GString *length_ref;
 	struct ctf_field_path length_path;
+
+	/*
+	 * If true, do not use `length_path` to find the length value in
+	 * a `bt_field` during decoding: use the current event class ID.
+	 */
 	bool length_is_cur_event_class_id;
 };
 
@@ -166,8 +191,13 @@ struct ctf_stream_class {
 	struct ctf_field_type *packet_context_ft;
 	struct ctf_field_type *event_header_ft;
 	struct ctf_field_type *event_common_context_ft;
+
+	/* Array of `struct ctf_event_class *` */
 	GPtrArray *event_classes;
+
+	/* Owned by this */
 	struct bt_clock_class *default_clock_class;
+
 	bool is_translated;
 };
 
@@ -194,9 +224,16 @@ struct ctf_trace_class {
 	bool is_uuid_set;
 	enum ctf_byte_order default_byte_order;
 	struct ctf_field_type *packet_header_ft;
+
+	/* Array of `struct bt_clock_class *` (owned by this) */
 	GPtrArray *clock_classes;
+
+	/* Array of `struct ctf_stream_class *` */
 	GPtrArray *stream_classes;
+
+	/* Array of `struct ctf_trace_class_env_entry` */
 	GArray *env_entries;
+
 	bool is_translated;
 };
 
@@ -342,6 +379,7 @@ struct ctf_field_type_struct *ctf_field_type_struct_create(void)
 	ft->members = g_array_new(FALSE, TRUE,
 		sizeof(struct ctf_named_field_type));
 	BT_ASSERT(ft->members);
+	ft->base.is_compound = true;
 	return ft;
 }
 
@@ -359,6 +397,7 @@ struct ctf_field_type_variant *ctf_field_type_variant_create(void)
 	ft->tag_ref = g_string_new(NULL);
 	BT_ASSERT(ft->tag_ref);
 	ctf_field_path_init(&ft->tag_path);
+	ft->base.is_compound = true;
 	return ft;
 }
 
@@ -370,6 +409,7 @@ struct ctf_field_type_array *ctf_field_type_array_create(void)
 
 	BT_ASSERT(ft);
 	_ctf_field_type_init((void *) ft, CTF_FIELD_TYPE_ID_ARRAY, 1);
+	ft->base.base.is_compound = true;
 	return ft;
 }
 
@@ -384,6 +424,7 @@ struct ctf_field_type_sequence *ctf_field_type_sequence_create(void)
 	ft->length_ref = g_string_new(NULL);
 	BT_ASSERT(ft->length_ref);
 	ctf_field_path_init(&ft->length_path);
+	ft->base.base.is_compound = true;
 	return ft;
 }
 
@@ -632,13 +673,15 @@ end:
 }
 
 static inline
-struct ctf_field_type_int *ctf_field_type_struct_borrow_member_int_field_type_by_name(
+struct ctf_field_type_int *
+ctf_field_type_struct_borrow_member_int_field_type_by_name(
 		struct ctf_field_type_struct *struct_ft, const char *name)
 {
 	struct ctf_field_type_int *int_ft = NULL;
 
-	int_ft = (void *) ctf_field_type_struct_borrow_member_field_type_by_name(
-		struct_ft, name);
+	int_ft = (void *)
+		ctf_field_type_struct_borrow_member_field_type_by_name(
+			struct_ft, name);
 	if (!int_ft) {
 		goto end;
 	}
@@ -1013,6 +1056,7 @@ void ctf_field_path_copy_content(struct ctf_field_path *dst_fp,
 
 	BT_ASSERT(dst_fp);
 	BT_ASSERT(src_fp);
+	dst_fp->root = src_fp->root;
 	ctf_field_path_clear(dst_fp);
 
 	for (i = 0; i < src_fp->path->len; i++) {
@@ -1096,6 +1140,11 @@ struct ctf_field_type *ctf_field_type_copy(struct ctf_field_type *ft)
 	if (!ft) {
 		goto end;
 	}
+
+	/*
+	 * Translation should not have happened yet.
+	 */
+	BT_ASSERT(!ft->ir_ft);
 
 	switch (ft->id) {
 	case CTF_FIELD_TYPE_ID_INT:

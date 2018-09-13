@@ -26,19 +26,13 @@ libctf_ast_la_SOURCES = \
 	logging.c \
 	logging.h \
 	ctf-meta.h \
-	ctf-meta-validate.h \
+	ctf-meta-visitors.h \
 	ctf-meta-validate.c \
-	ctf-meta-update-meanings.h \
 	ctf-meta-update-meanings.c \
-	ctf-meta-update-in-ir.h \
 	ctf-meta-update-in-ir.c \
-	ctf-meta-update-default-clock-classes.h \
 	ctf-meta-update-default-clock-classes.c \
-	ctf-meta-update-text-array-sequence.h \
 	ctf-meta-update-text-array-sequence.c \
-	ctf-meta-translate.h \
 	ctf-meta-translate.c \
-	ctf-meta-resolve.h \
 	ctf-meta-resolve.c
 
 libctf_ast_la_LIBADD = $(UUID_LIBS)

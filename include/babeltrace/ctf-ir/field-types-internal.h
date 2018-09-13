@@ -44,6 +44,12 @@
 		((struct bt_field_type *) (_ft))->id == BT_FIELD_TYPE_ID_SIGNED_ENUMERATION, \
 		_name " is not an integer field type: %![ft-]+F", (_ft))
 
+#define BT_ASSERT_PRE_FT_IS_UNSIGNED_INT(_ft, _name)			\
+	BT_ASSERT_PRE(							\
+		((struct bt_field_type *) (_ft))->id == BT_FIELD_TYPE_ID_UNSIGNED_INTEGER || \
+		((struct bt_field_type *) (_ft))->id == BT_FIELD_TYPE_ID_UNSIGNED_ENUMERATION, \
+		_name " is not an unsigned integer field type: %![ft-]+F", (_ft))
+
 #define BT_ASSERT_PRE_FT_IS_ENUM(_ft, _name)				\
 	BT_ASSERT_PRE(							\
 		((struct bt_field_type *) (_ft))->id == BT_FIELD_TYPE_ID_UNSIGNED_ENUMERATION || \

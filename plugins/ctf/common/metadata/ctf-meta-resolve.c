@@ -28,7 +28,7 @@
 #include <stdlib.h>
 #include <glib.h>
 
-#include "ctf-meta-resolve.h"
+#include "ctf-meta-visitors.h"
 
 typedef GPtrArray field_type_stack;
 
@@ -86,7 +86,7 @@ static const char * const absolute_path_prefixes[] = {
 };
 
 /* Number of path tokens used for the absolute prefixes */
-static const int absolute_path_prefix_ptoken_counts[] = {
+static const uint64_t absolute_path_prefix_ptoken_counts[] = {
 	[BT_SCOPE_PACKET_HEADER]		= 3,
 	[BT_SCOPE_PACKET_CONTEXT]		= 3,
 	[BT_SCOPE_EVENT_HEADER]			= 3,
@@ -350,7 +350,7 @@ GList *pathstr_to_ptokens(const char *pathstr)
 			if (at == last) {
 				/* Error: empty token */
 				BT_LOGE("Empty path token: path=\"%s\", pos=%u",
-					pathstr, (int) (at - pathstr));
+					pathstr, (unsigned int) (at - pathstr));
 				goto error;
 			}
 
@@ -564,7 +564,7 @@ int relative_ptokens_to_field_path(GList *ptokens,
 		struct ctf_field_path *field_path, struct resolve_context *ctx)
 {
 	int ret = 0;
-	int parent_pos_in_stack;
+	int64_t parent_pos_in_stack;
 	struct ctf_field_path tail_field_path;
 
 	ctf_field_path_init(&tail_field_path);
@@ -574,11 +574,12 @@ int relative_ptokens_to_field_path(GList *ptokens,
 		struct ctf_field_type *parent_type =
 			field_type_stack_at(ctx->field_type_stack,
 				parent_pos_in_stack)->ft;
-		int cur_index = field_type_stack_at(ctx->field_type_stack,
+		int64_t cur_index = field_type_stack_at(ctx->field_type_stack,
 			parent_pos_in_stack)->index;
 
 		BT_LOGV("Locating target field type from current parent field type: "
-			"parent-pos=%d, parent-ft-addr=%p, cur-index=%d",
+			"parent-pos=%" PRId64 ", parent-ft-addr=%p, "
+			"cur-index=%" PRId64,
 			parent_pos_in_stack, parent_type, cur_index);
 
 		/* Locate target from current parent type */
@@ -710,7 +711,7 @@ static
 struct ctf_field_type *field_path_to_field_type(
 		struct ctf_field_path *field_path, struct resolve_context *ctx)
 {
-	int i;
+	uint64_t i;
 	struct ctf_field_type *ft;
 
 	/* Start with root type */

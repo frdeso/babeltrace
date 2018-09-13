@@ -23,10 +23,13 @@
 #include <string.h>
 #include <inttypes.h>
 
-#include "ctf-meta-translate.h"
+#include "ctf-meta-visitors.h"
 
 static inline
-struct bt_field_type *ctf_field_type_to_ir(struct ctf_field_type *ft);
+struct bt_field_type *ctf_field_type_to_ir(struct ctf_field_type *ft,
+		struct ctf_trace_class *tc,
+		struct ctf_stream_class *sc,
+		struct ctf_event_class *ec);
 
 static inline
 void ctf_field_type_int_set_props(struct ctf_field_type_int *ft,
@@ -124,7 +127,10 @@ struct bt_field_type *ctf_field_type_string_to_ir(
 
 static inline
 struct bt_field_type *ctf_field_type_struct_to_ir(
-		struct ctf_field_type_struct *ft)
+		struct ctf_field_type_struct *ft,
+		struct ctf_trace_class *tc,
+		struct ctf_stream_class *sc,
+		struct ctf_event_class *ec)
 {
 	int ret;
 	struct bt_field_type *ir_ft = bt_field_type_structure_create();
@@ -141,7 +147,7 @@ struct bt_field_type *ctf_field_type_struct_to_ir(
 			continue;
 		}
 
-		member_ir_ft = ctf_field_type_to_ir(named_ft->ft);
+		member_ir_ft = ctf_field_type_to_ir(named_ft->ft, tc, sc, ec);
 		BT_ASSERT(member_ir_ft);
 		ret = bt_field_type_structure_append_member(ir_ft,
 			named_ft->name->str, member_ir_ft);
@@ -153,16 +159,75 @@ struct bt_field_type *ctf_field_type_struct_to_ir(
 }
 
 static inline
+struct bt_field_type *borrow_ir_ft_from_field_path(
+		struct ctf_field_path *field_path,
+		struct ctf_trace_class *tc,
+		struct ctf_stream_class *sc,
+		struct ctf_event_class *ec)
+{
+	uint64_t i;
+	struct ctf_field_type *ft;
+	struct bt_field_type *ir_ft = NULL;
+
+	switch (field_path->root) {
+	case BT_SCOPE_PACKET_HEADER:
+		ft = tc->packet_header_ft;
+		break;
+	case BT_SCOPE_PACKET_CONTEXT:
+		ft = sc->packet_context_ft;
+		break;
+	case BT_SCOPE_EVENT_HEADER:
+		ft = sc->event_header_ft;
+		break;
+	case BT_SCOPE_EVENT_COMMON_CONTEXT:
+		ft = sc->event_common_context_ft;
+		break;
+	case BT_SCOPE_EVENT_SPECIFIC_CONTEXT:
+		ft = ec->spec_context_ft;
+		break;
+	case BT_SCOPE_EVENT_PAYLOAD:
+		ft = ec->payload_ft;
+		break;
+	default:
+		abort();
+	}
+
+	BT_ASSERT(ft);
+
+	for (i = 0; i < field_path->path->len; i++) {
+		int64_t child_index =
+			ctf_field_path_borrow_index_by_index(field_path, i);
+		struct ctf_field_type *child_ft =
+			ctf_field_type_compound_borrow_field_type_by_index(
+				ft, child_index);
+		BT_ASSERT(child_ft);
+		ft = child_ft;
+	}
+
+	BT_ASSERT(ft);
+
+	if (ft->in_ir) {
+		ir_ft = ft->ir_ft;
+	}
+
+	return ir_ft;
+}
+
+static inline
 struct bt_field_type *ctf_field_type_variant_to_ir(
-		struct ctf_field_type_variant *ft)
+		struct ctf_field_type_variant *ft,
+		struct ctf_trace_class *tc,
+		struct ctf_stream_class *sc,
+		struct ctf_event_class *ec)
 {
 	int ret;
 	struct bt_field_type *ir_ft = bt_field_type_variant_create();
 	uint64_t i;
 
 	BT_ASSERT(ir_ft);
-
-	// TODO: set selector field type
+	ret = bt_field_type_variant_set_selector_field_type(ir_ft,
+		borrow_ir_ft_from_field_path(&ft->tag_path, tc, sc, ec));
+	BT_ASSERT(ret == 0);
 
 	for (i = 0; i < ft->options->len; i++) {
 		struct ctf_named_field_type *named_ft =
@@ -170,7 +235,7 @@ struct bt_field_type *ctf_field_type_variant_to_ir(
 		struct bt_field_type *option_ir_ft;
 
 		BT_ASSERT(named_ft->ft->in_ir);
-		option_ir_ft = ctf_field_type_to_ir(named_ft->ft);
+		option_ir_ft = ctf_field_type_to_ir(named_ft->ft, tc, sc, ec);
 		BT_ASSERT(option_ir_ft);
 		ret = bt_field_type_variant_append_option(ir_ft,
 			named_ft->name->str, option_ir_ft);
@@ -183,7 +248,10 @@ struct bt_field_type *ctf_field_type_variant_to_ir(
 
 static inline
 struct bt_field_type *ctf_field_type_array_to_ir(
-		struct ctf_field_type_array *ft)
+		struct ctf_field_type_array *ft,
+		struct ctf_trace_class *tc,
+		struct ctf_stream_class *sc,
+		struct ctf_event_class *ec)
 {
 	struct bt_field_type *ir_ft;
 	struct bt_field_type *elem_ir_ft;
@@ -194,7 +262,7 @@ struct bt_field_type *ctf_field_type_array_to_ir(
 		goto end;
 	}
 
-	elem_ir_ft = ctf_field_type_to_ir(ft->base.elem_ft);
+	elem_ir_ft = ctf_field_type_to_ir(ft->base.elem_ft, tc, sc, ec);
 	BT_ASSERT(elem_ir_ft);
 	ir_ft = bt_field_type_static_array_create(elem_ir_ft, ft->length);
 	BT_ASSERT(ir_ft);
@@ -206,8 +274,12 @@ end:
 
 static inline
 struct bt_field_type *ctf_field_type_sequence_to_ir(
-		struct ctf_field_type_sequence *ft)
+		struct ctf_field_type_sequence *ft,
+		struct ctf_trace_class *tc,
+		struct ctf_stream_class *sc,
+		struct ctf_event_class *ec)
 {
+	int ret;
 	struct bt_field_type *ir_ft;
 	struct bt_field_type *elem_ir_ft;
 
@@ -217,18 +289,25 @@ struct bt_field_type *ctf_field_type_sequence_to_ir(
 		goto end;
 	}
 
-	elem_ir_ft = ctf_field_type_to_ir(ft->base.elem_ft);
+	elem_ir_ft = ctf_field_type_to_ir(ft->base.elem_ft, tc, sc, ec);
 	BT_ASSERT(elem_ir_ft);
 	ir_ft = bt_field_type_dynamic_array_create(elem_ir_ft);
 	BT_ASSERT(ir_ft);
 	bt_put(elem_ir_ft);
+	BT_ASSERT(ir_ft);
+	ret = bt_field_type_dynamic_array_set_length_field_type(ir_ft,
+		borrow_ir_ft_from_field_path(&ft->length_path, tc, sc, ec));
+	BT_ASSERT(ret == 0);
 
 end:
 	return ir_ft;
 }
 
 static inline
-struct bt_field_type *ctf_field_type_to_ir(struct ctf_field_type *ft)
+struct bt_field_type *ctf_field_type_to_ir(struct ctf_field_type *ft,
+		struct ctf_trace_class *tc,
+		struct ctf_stream_class *sc,
+		struct ctf_event_class *ec)
 {
 	struct bt_field_type *ir_ft = NULL;
 
@@ -249,21 +328,22 @@ struct bt_field_type *ctf_field_type_to_ir(struct ctf_field_type *ft)
 		ir_ft = ctf_field_type_string_to_ir((void *) ft);
 		break;
 	case CTF_FIELD_TYPE_ID_STRUCT:
-		ir_ft = ctf_field_type_struct_to_ir((void *) ft);
+		ir_ft = ctf_field_type_struct_to_ir((void *) ft, tc, sc, ec);
 		break;
 	case CTF_FIELD_TYPE_ID_ARRAY:
-		ir_ft = ctf_field_type_array_to_ir((void *) ft);
+		ir_ft = ctf_field_type_array_to_ir((void *) ft, tc, sc, ec);
 		break;
 	case CTF_FIELD_TYPE_ID_SEQUENCE:
-		ir_ft = ctf_field_type_sequence_to_ir((void *) ft);
+		ir_ft = ctf_field_type_sequence_to_ir((void *) ft, tc, sc, ec);
 		break;
 	case CTF_FIELD_TYPE_ID_VARIANT:
-		ir_ft = ctf_field_type_variant_to_ir((void *) ft);
+		ir_ft = ctf_field_type_variant_to_ir((void *) ft, tc, sc, ec);
 		break;
 	default:
 		abort();
 	}
 
+	ft->ir_ft = ir_ft;
 	return ir_ft;
 }
 
@@ -276,8 +356,7 @@ bool ctf_field_type_struct_has_immediate_member_in_ir(
 
 	for (i = 0; i < ft->members->len; i++) {
 		struct ctf_named_field_type *named_ft =
-			&g_array_index(ft->members,
-				struct ctf_named_field_type, i);
+			ctf_field_type_struct_borrow_member_by_index(ft, i);
 
 		if (named_ft->ft->in_ir) {
 			has_immediate_member_in_ir = true;
@@ -290,7 +369,10 @@ end:
 }
 
 static inline
-struct bt_field_type *scope_ctf_field_type_to_ir(struct ctf_field_type *ft)
+struct bt_field_type *scope_ctf_field_type_to_ir(struct ctf_field_type *ft,
+	struct ctf_trace_class *tc,
+	struct ctf_stream_class *sc,
+	struct ctf_event_class *ec)
 {
 	struct bt_field_type *ir_ft = NULL;
 
@@ -308,7 +390,7 @@ struct bt_field_type *scope_ctf_field_type_to_ir(struct ctf_field_type *ft)
 		goto end;
 	}
 
-	ir_ft = ctf_field_type_to_ir(ft);
+	ir_ft = ctf_field_type_to_ir(ft, tc, sc, ec);
 
 end:
 	return ir_ft;
@@ -343,7 +425,8 @@ end:
 
 static inline
 struct bt_event_class *ctf_event_class_to_ir(struct ctf_event_class *ec,
-		struct bt_stream_class *ir_sc)
+		struct bt_stream_class *ir_sc, struct ctf_trace_class *tc,
+		struct ctf_stream_class *sc)
 {
 	int ret;
 	struct bt_event_class *ir_ec = NULL;
@@ -361,7 +444,7 @@ struct bt_event_class *ctf_event_class_to_ir(struct ctf_event_class *ec,
 
 	if (ec->spec_context_ft) {
 		struct bt_field_type *ir_ft = scope_ctf_field_type_to_ir(
-			ec->spec_context_ft);
+			ec->spec_context_ft, tc, sc, ec);
 
 		if (ir_ft) {
 			ret = bt_event_class_set_specific_context_field_type(
@@ -373,7 +456,7 @@ struct bt_event_class *ctf_event_class_to_ir(struct ctf_event_class *ec,
 
 	if (ec->payload_ft) {
 		struct bt_field_type *ir_ft = scope_ctf_field_type_to_ir(
-			ec->payload_ft);
+			ec->payload_ft, tc, sc, ec);
 
 		if (ir_ft) {
 			ret = bt_event_class_set_payload_field_type(ir_ec,
@@ -407,7 +490,7 @@ end:
 
 static inline
 struct bt_stream_class *ctf_stream_class_to_ir(struct ctf_stream_class *sc,
-		struct bt_trace *ir_trace)
+		struct bt_trace *ir_trace, struct ctf_trace_class *tc)
 {
 	int ret;
 	struct bt_stream_class *ir_sc = NULL;
@@ -425,7 +508,7 @@ struct bt_stream_class *ctf_stream_class_to_ir(struct ctf_stream_class *sc,
 
 	if (sc->packet_context_ft) {
 		struct bt_field_type *ir_ft = scope_ctf_field_type_to_ir(
-			sc->packet_context_ft);
+			sc->packet_context_ft, tc, sc, NULL);
 
 		if (ir_ft) {
 			ret = bt_stream_class_set_packet_context_field_type(
@@ -437,7 +520,7 @@ struct bt_stream_class *ctf_stream_class_to_ir(struct ctf_stream_class *sc,
 
 	if (sc->event_header_ft) {
 		struct bt_field_type *ir_ft = scope_ctf_field_type_to_ir(
-			sc->event_header_ft);
+			sc->event_header_ft, tc, sc, NULL);
 
 		if (ir_ft) {
 			ret = bt_stream_class_set_event_header_field_type(ir_sc,
@@ -449,7 +532,7 @@ struct bt_stream_class *ctf_stream_class_to_ir(struct ctf_stream_class *sc,
 
 	if (sc->event_common_context_ft) {
 		struct bt_field_type *ir_ft = scope_ctf_field_type_to_ir(
-			sc->event_common_context_ft);
+			sc->event_common_context_ft, tc, sc, NULL);
 
 		if (ir_ft) {
 			ret = bt_stream_class_set_event_common_context_field_type(
@@ -530,7 +613,7 @@ int ctf_trace_class_to_ir(struct bt_trace *ir_trace,
 
 	if (tc->packet_header_ft) {
 		struct bt_field_type *ir_ft = scope_ctf_field_type_to_ir(
-			tc->packet_header_ft);
+			tc->packet_header_ft, tc, NULL, NULL);
 
 		if (ir_ft) {
 			ret = bt_trace_set_packet_header_field_type(ir_trace,
@@ -607,7 +690,7 @@ int ctf_trace_class_translate(struct bt_trace *ir_trace,
 		struct ctf_stream_class *sc = tc->stream_classes->pdata[i];
 		struct bt_stream_class *ir_sc;
 
-		ir_sc = ctf_stream_class_to_ir(sc, ir_trace);
+		ir_sc = ctf_stream_class_to_ir(sc, ir_trace, tc);
 		if (!ir_sc) {
 			ret = -1;
 			goto end;
@@ -617,7 +700,7 @@ int ctf_trace_class_translate(struct bt_trace *ir_trace,
 			struct ctf_event_class *ec = sc->event_classes->pdata[i];
 			struct bt_event_class *ir_ec;
 
-			ir_ec = ctf_event_class_to_ir(ec, ir_sc);
+			ir_ec = ctf_event_class_to_ir(ec, ir_sc, tc, sc);
 			if (!ir_ec) {
 				ret = -1;
 				goto end;

@@ -23,7 +23,7 @@
 #include <string.h>
 #include <inttypes.h>
 
-#include "ctf-meta-update-default-clock-classes.h"
+#include "ctf-meta-visitors.h"
 
 static inline
 int find_mapped_clock_class(struct ctf_field_type *ft,

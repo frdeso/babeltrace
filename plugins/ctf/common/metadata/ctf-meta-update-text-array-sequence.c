@@ -23,7 +23,7 @@
 #include <string.h>
 #include <inttypes.h>
 
-#include "ctf-meta-update-text-array-sequence.h"
+#include "ctf-meta-visitors.h"
 
 static inline
 int set_text_array_sequence_field_type(struct ctf_field_type *ft)

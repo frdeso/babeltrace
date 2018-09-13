@@ -50,13 +50,7 @@
 #include "ast.h"
 #include "decoder.h"
 #include "ctf-meta.h"
-#include "ctf-meta-validate.h"
-#include "ctf-meta-update-meanings.h"
-#include "ctf-meta-update-in-ir.h"
-#include "ctf-meta-update-default-clock-classes.h"
-#include "ctf-meta-update-text-array-sequence.h"
-#include "ctf-meta-resolve.h"
-#include "ctf-meta-translate.h"
+#include "ctf-meta-visitors.h"
 
 /* Bit value (left shift) */
 #define _BV(_val)		(1 << (_val))

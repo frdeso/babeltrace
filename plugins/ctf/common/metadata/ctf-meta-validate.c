@@ -23,7 +23,7 @@
 #include <string.h>
 #include <inttypes.h>
 
-#include "ctf-meta-validate.h"
+#include "ctf-meta-visitors.h"
 
 static
 int validate_stream_class(struct ctf_stream_class *sc)

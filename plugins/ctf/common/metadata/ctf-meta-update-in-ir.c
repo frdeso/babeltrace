@@ -23,7 +23,7 @@
 #include <string.h>
 #include <inttypes.h>
 
-#include "ctf-meta-update-in-ir.h"
+#include "ctf-meta-visitors.h"
 
 static
 int update_field_type_in_ir(struct ctf_field_type *ft)

@@ -23,7 +23,7 @@
 #include <string.h>
 #include <inttypes.h>
 
-#include "ctf-meta-update-meanings.h"
+#include "ctf-meta-visitors.h"
 
 static
 int set_int_field_type_clock_update_meaning(struct ctf_field_type *ft)
