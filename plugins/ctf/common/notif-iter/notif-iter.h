@@ -32,6 +32,8 @@
 #include <babeltrace/babeltrace.h>
 #include <babeltrace/babeltrace-internal.h>
 
+#include "../metadata/ctf-meta.h"
+
 /**
  * @file ctf-notif-iter.h
  *
@@ -277,7 +279,7 @@ struct bt_notif_iter_notif_event {
  *				success, or \c NULL on error
  */
 BT_HIDDEN
-struct bt_notif_iter *bt_notif_iter_create(struct bt_trace *trace,
+struct bt_notif_iter *bt_notif_iter_create(struct ctf_trace_class *tc,
 	size_t max_request_sz, struct bt_notif_iter_medium_ops medops,
 	void *medops_data);
 

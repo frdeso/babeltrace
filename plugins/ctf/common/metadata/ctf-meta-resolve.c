@@ -67,12 +67,6 @@ struct resolve_context {
 	enum bt_scope root_scope;
 	field_type_stack *field_type_stack;
 	struct ctf_field_type *cur_ft;
-
-	/* `id` member of event header, if any */
-	struct ctf_field_type *eh_id_ft;
-
-	/* Field types having `eh_id_ft` as their length/tag */
-	GPtrArray *eh_id_referring_fts;
 };
 
 /* TSDL dynamic scope prefixes as defined in CTF Section 7.3.2 */
@@ -1037,11 +1031,7 @@ int resolve_sequence_or_variant_field_type(struct ctf_field_type *ft,
 
 		ctf_field_path_copy_content(&seq_ft->length_path,
 			&target_field_path);
-
-		if (target_ft == ctx->eh_id_ft) {
-			seq_ft->length_is_cur_event_class_id = true;
-		}
-
+		seq_ft->length_ft = (void *) target_ft;
 		break;
 	}
 	case CTF_FIELD_TYPE_ID_VARIANT:
@@ -1050,29 +1040,13 @@ int resolve_sequence_or_variant_field_type(struct ctf_field_type *ft,
 
 		ctf_field_path_copy_content(&var_ft->tag_path,
 			&target_field_path);
-
-		if (target_ft == ctx->eh_id_ft) {
-			var_ft->tag_is_cur_event_class_id = true;
-		}
-
+		ctf_field_type_variant_set_tag_field_type(var_ft,
+			(void *) target_ft);
 		break;
 	}
 	default:
 		abort();
 	}
-
-	if (target_ft == ctx->eh_id_ft) {
-		/*
-		 * The target field type is the `id` field type of the
-		 * event header: add the source field type to the array
-		 * of referring field types to possibly reset the target
-		 * field type's `in_ir` state later.
-		 */
-		g_ptr_array_add(ctx->eh_id_referring_fts, ft);
-	}
-
-	/* Make target field type part of IR because we need its value */
-	target_ft->in_ir = true;
 
 end:
 	if (target_field_path_pretty) {
@@ -1223,105 +1197,6 @@ end:
 }
 
 static
-void set_event_header_id_ft(struct resolve_context *ctx)
-{
-	if (!ctx->scopes.event_header) {
-		goto end;
-	}
-
-	ctx->eh_id_ft = ctf_field_type_struct_borrow_member_field_type_by_name(
-		(void *) ctx->scopes.event_header, "id");
-	g_ptr_array_set_size(ctx->eh_id_referring_fts, 0);
-
-end:
-	return;
-}
-
-static
-void set_parent_in_ir_recursive(struct ctf_field_type *ft)
-{
-	uint64_t i;
-	struct ctf_named_field_type *named_ft;
-
-	if (!ft) {
-		goto end;
-	}
-
-	switch (ft->id) {
-	case CTF_FIELD_TYPE_ID_STRUCT:
-	{
-		struct ctf_field_type_struct *struct_ft = (void *) ft;
-		bool in_ir = false;
-
-		for (i = 0; i < struct_ft->members->len; i++) {
-			named_ft =
-				ctf_field_type_struct_borrow_member_by_index(
-					struct_ft, i);
-
-			set_parent_in_ir_recursive(named_ft->ft);
-
-			if (named_ft->ft->in_ir) {
-				in_ir = true;
-			}
-		}
-
-		ft->in_ir = in_ir;
-		break;
-	}
-	case CTF_FIELD_TYPE_ID_VARIANT:
-	{
-		struct ctf_field_type_variant *var_ft = (void *) ft;
-		bool in_ir = false;
-
-		for (i = 0; i < var_ft->options->len; i++) {
-			named_ft =
-				ctf_field_type_variant_borrow_option_by_index(
-					var_ft, i);
-
-			set_parent_in_ir_recursive(named_ft->ft);
-
-			if (named_ft->ft->in_ir) {
-				in_ir = true;
-			}
-		}
-
-		ft->in_ir = in_ir;
-
-		if (in_ir) {
-			/*
-			 * At least one option will make it to IR. In
-			 * this case, make all options part of IR
-			 * because the variant's tag could still select
-			 * a removed option. This can mean having an
-			 * empty structure as an option, but at least
-			 * the option exists.
-			 */
-			for (i = 0; i < var_ft->options->len; i++) {
-				ctf_field_type_variant_borrow_option_by_index(
-					var_ft, i)->ft->in_ir = true;
-			}
-		}
-
-		break;
-	}
-	case CTF_FIELD_TYPE_ID_ARRAY:
-	case CTF_FIELD_TYPE_ID_SEQUENCE:
-	{
-		struct ctf_field_type_array_base *array_ft = (void *) ft;
-
-		set_parent_in_ir_recursive(array_ft->elem_ft);
-		ft->in_ir = array_ft->elem_ft->in_ir;
-		break;
-	}
-	default:
-		break;
-	}
-
-end:
-	return;
-}
-
-static
 int resolve_stream_class_field_types(struct resolve_context *ctx,
 		struct ctf_stream_class *sc)
 {
@@ -1343,7 +1218,6 @@ int resolve_stream_class_field_types(struct resolve_context *ctx,
 		}
 
 		ctx->scopes.event_header = sc->event_header_ft;
-		set_event_header_id_ft(ctx);
 		ret = resolve_root_type(BT_SCOPE_EVENT_HEADER, ctx);
 		if (ret) {
 			BT_LOGE("Cannot resolve event header field type: "
@@ -1376,42 +1250,10 @@ int resolve_stream_class_field_types(struct resolve_context *ctx,
 		}
 	}
 
-	if (!sc->is_translated && ctx->eh_id_ft) {
-		/*
-		 * If we have at least one field type referring to the
-		 * `id` field type which is part of IR, then this `id`
-		 * field type needs to exist. Otherwise, do not make it
-		 * part of IR.
-		 */
-		bool one_in_ir = false;
-
-		for (i = 0; i < ctx->eh_id_referring_fts->len; i++) {
-			struct ctf_field_type *ft =
-				ctx->eh_id_referring_fts->pdata[i];
-
-			if (ft->in_ir) {
-				one_in_ir = true;
-				break;
-			}
-		}
-
-		if (!one_in_ir) {
-			ctx->eh_id_ft->in_ir = false;
-		}
-
-		/*
-		 * Make sure that parent field types are synchronized
-		 * with their children regarding "in IR" properties.
-		 */
-		set_parent_in_ir_recursive(ctx->scopes.event_header);
-	}
-
 end:
 	ctx->scopes.packet_context = NULL;
 	ctx->scopes.event_header = NULL;
 	ctx->scopes.event_common_context = NULL;
-	ctx->eh_id_ft = NULL;
-	g_ptr_array_set_size(ctx->eh_id_referring_fts, 0);
 	ctx->sc = NULL;
 	return ret;
 }
@@ -1435,7 +1277,6 @@ int ctf_trace_class_resolve_field_types(struct ctf_trace_class *tc)
 		},
 		.root_scope = BT_SCOPE_PACKET_HEADER,
 		.cur_ft = NULL,
-		.eh_id_ft = NULL,
 	};
 
 	/* Initialize type stack */
@@ -1445,9 +1286,6 @@ int ctf_trace_class_resolve_field_types(struct ctf_trace_class *tc)
 		ret = -1;
 		goto end;
 	}
-
-	ctx.eh_id_referring_fts = g_ptr_array_new();
-	BT_ASSERT(ctx.eh_id_referring_fts);
 
 	if (!tc->is_translated) {
 		ctx.scopes.packet_header = tc->packet_header_ft;
@@ -1474,10 +1312,5 @@ int ctf_trace_class_resolve_field_types(struct ctf_trace_class *tc)
 
 end:
 	field_type_stack_destroy(ctx.field_type_stack);
-
-	if (ctx.eh_id_referring_fts) {
-		g_ptr_array_free(ctx.eh_id_referring_fts, TRUE);
-	}
-
 	return ret;
 }

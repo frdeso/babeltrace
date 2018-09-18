@@ -83,11 +83,11 @@ struct bt_field_type *ctf_field_type_enum_to_ir(struct ctf_field_type_enum *ft)
 		if (ft->base.is_signed) {
 			ret = bt_field_type_signed_enumeration_map_range(
 				ir_ft, mapping->label->str,
-				mapping->lower.i, mapping->upper.i);
+				mapping->range.lower.i, mapping->range.upper.i);
 		} else {
 			ret = bt_field_type_unsigned_enumeration_map_range(
 				ir_ft, mapping->label->str,
-				mapping->lower.u, mapping->upper.u);
+				mapping->range.lower.u, mapping->range.upper.u);
 		}
 
 		BT_ASSERT(ret == 0);
@@ -165,44 +165,9 @@ struct bt_field_type *borrow_ir_ft_from_field_path(
 		struct ctf_stream_class *sc,
 		struct ctf_event_class *ec)
 {
-	uint64_t i;
-	struct ctf_field_type *ft;
 	struct bt_field_type *ir_ft = NULL;
-
-	switch (field_path->root) {
-	case BT_SCOPE_PACKET_HEADER:
-		ft = tc->packet_header_ft;
-		break;
-	case BT_SCOPE_PACKET_CONTEXT:
-		ft = sc->packet_context_ft;
-		break;
-	case BT_SCOPE_EVENT_HEADER:
-		ft = sc->event_header_ft;
-		break;
-	case BT_SCOPE_EVENT_COMMON_CONTEXT:
-		ft = sc->event_common_context_ft;
-		break;
-	case BT_SCOPE_EVENT_SPECIFIC_CONTEXT:
-		ft = ec->spec_context_ft;
-		break;
-	case BT_SCOPE_EVENT_PAYLOAD:
-		ft = ec->payload_ft;
-		break;
-	default:
-		abort();
-	}
-
-	BT_ASSERT(ft);
-
-	for (i = 0; i < field_path->path->len; i++) {
-		int64_t child_index =
-			ctf_field_path_borrow_index_by_index(field_path, i);
-		struct ctf_field_type *child_ft =
-			ctf_field_type_compound_borrow_field_type_by_index(
-				ft, child_index);
-		BT_ASSERT(child_ft);
-		ft = child_ft;
-	}
+	struct ctf_field_type *ft = ctf_field_path_borrow_field_type(
+		field_path, tc, sc, ec);
 
 	BT_ASSERT(ft);
 
@@ -482,6 +447,7 @@ struct bt_event_class *ctf_event_class_to_ir(struct ctf_event_class *ec,
 	}
 
 	ec->is_translated = true;
+	ec->ir_ec = ir_ec;
 
 end:
 	return ir_ec;
@@ -557,7 +523,7 @@ struct bt_stream_class *ctf_stream_class_to_ir(struct ctf_stream_class *sc,
 	int_ft = borrow_named_int_field_type((void *) sc->packet_context_ft,
 		"events_discarded");
 	if (int_ft) {
-		if (int_ft->meaning & CTF_FIELD_TYPE_MEANING_DISC_EV_REC_COUNTER_SNAPSHOT) {
+		if (int_ft->meaning == CTF_FIELD_TYPE_MEANING_DISC_EV_REC_COUNTER_SNAPSHOT) {
 			ret = bt_stream_class_set_packets_have_discarded_event_counter_snapshot(
 				ir_sc, BT_TRUE);
 			BT_ASSERT(ret == 0);
@@ -567,7 +533,7 @@ struct bt_stream_class *ctf_stream_class_to_ir(struct ctf_stream_class *sc,
 	int_ft = borrow_named_int_field_type((void *) sc->packet_context_ft,
 		"packet_seq_num");
 	if (int_ft) {
-		if (int_ft->meaning & CTF_FIELD_TYPE_MEANING_PACKET_COUNTER_SNAPSHOT) {
+		if (int_ft->meaning == CTF_FIELD_TYPE_MEANING_PACKET_COUNTER_SNAPSHOT) {
 			ret = bt_stream_class_set_packets_have_packet_counter_snapshot(
 				ir_sc, BT_TRUE);
 			BT_ASSERT(ret == 0);
@@ -577,7 +543,7 @@ struct bt_stream_class *ctf_stream_class_to_ir(struct ctf_stream_class *sc,
 	int_ft = borrow_named_int_field_type((void *) sc->packet_context_ft,
 		"timestamp_begin");
 	if (int_ft) {
-		if (int_ft->meaning & CTF_FIELD_TYPE_MEANING_PACKET_BEGINNING_TIME) {
+		if (int_ft->meaning == CTF_FIELD_TYPE_MEANING_PACKET_BEGINNING_TIME) {
 			ret = bt_stream_class_set_packets_have_default_beginning_clock_value(
 				ir_sc, BT_TRUE);
 			BT_ASSERT(ret == 0);
@@ -587,7 +553,7 @@ struct bt_stream_class *ctf_stream_class_to_ir(struct ctf_stream_class *sc,
 	int_ft = borrow_named_int_field_type((void *) sc->packet_context_ft,
 		"timestamp_end");
 	if (int_ft) {
-		if (int_ft->meaning & CTF_FIELD_TYPE_MEANING_PACKET_END_TIME) {
+		if (int_ft->meaning == CTF_FIELD_TYPE_MEANING_PACKET_END_TIME) {
 			ret = bt_stream_class_set_packets_have_default_end_clock_value(
 				ir_sc, BT_TRUE);
 			BT_ASSERT(ret == 0);
@@ -595,6 +561,7 @@ struct bt_stream_class *ctf_stream_class_to_ir(struct ctf_stream_class *sc,
 	}
 
 	sc->is_translated = true;
+	sc->ir_sc = ir_sc;
 
 end:
 	return ir_sc;
@@ -668,6 +635,7 @@ int ctf_trace_class_to_ir(struct bt_trace *ir_trace,
 	}
 
 	tc->is_translated = true;
+	tc->ir_tc = ir_trace;
 
 end:
 	return ret;

@@ -5142,15 +5142,15 @@ int ctf_visitor_generate_ir_visit_node(struct ctf_visitor_generate_ir *visitor,
 		goto end;
 	}
 
-	/* Update "in IR" for field types */
-	ret = ctf_trace_class_update_in_ir(ctx->ctf_tc);
+	/* Resolve sequence lengths and variant tags */
+	ret = ctf_trace_class_resolve_field_types(ctx->ctf_tc);
 	if (ret) {
 		ret = -EINVAL;
 		goto end;
 	}
 
-	/* Resolve sequence lengths and variant tags */
-	ret = ctf_trace_class_resolve_field_types(ctx->ctf_tc);
+	/* Update "in IR" for field types */
+	ret = ctf_trace_class_update_in_ir(ctx->ctf_tc);
 	if (ret) {
 		ret = -EINVAL;
 		goto end;

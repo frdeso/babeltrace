@@ -35,17 +35,16 @@ enum ctf_field_type_id {
 
 enum ctf_field_type_meaning {
 	CTF_FIELD_TYPE_MEANING_NONE,
-	CTF_FIELD_TYPE_MEANING_CLOCK_SNAPSHOT			= 0x002,
-	CTF_FIELD_TYPE_MEANING_PACKET_BEGINNING_TIME		= 0x004,
-	CTF_FIELD_TYPE_MEANING_PACKET_END_TIME			= 0x008,
-	CTF_FIELD_TYPE_MEANING_CLASS_ID				= 0x010,
-	CTF_FIELD_TYPE_MEANING_DATA_STREAM_ID			= 0x020,
-	CTF_FIELD_TYPE_MEANING_MAGIC				= 0x040,
-	CTF_FIELD_TYPE_MEANING_PACKET_COUNTER_SNAPSHOT		= 0x080,
-	CTF_FIELD_TYPE_MEANING_DISC_EV_REC_COUNTER_SNAPSHOT	= 0x100,
-	CTF_FIELD_TYPE_MEANING_EXP_PACKET_TOTAL_SIZE		= 0x200,
-	CTF_FIELD_TYPE_MEANING_EXP_PACKET_CONTENT_SIZE		= 0x400,
-	CTF_FIELD_TYPE_MEANING_UUID				= 0x800,
+	CTF_FIELD_TYPE_MEANING_PACKET_BEGINNING_TIME,
+	CTF_FIELD_TYPE_MEANING_PACKET_END_TIME,
+	CTF_FIELD_TYPE_MEANING_CLASS_ID,
+	CTF_FIELD_TYPE_MEANING_DATA_STREAM_ID,
+	CTF_FIELD_TYPE_MEANING_MAGIC,
+	CTF_FIELD_TYPE_MEANING_PACKET_COUNTER_SNAPSHOT,
+	CTF_FIELD_TYPE_MEANING_DISC_EV_REC_COUNTER_SNAPSHOT,
+	CTF_FIELD_TYPE_MEANING_EXP_PACKET_TOTAL_SIZE,
+	CTF_FIELD_TYPE_MEANING_EXP_PACKET_CONTENT_SIZE,
+	CTF_FIELD_TYPE_MEANING_UUID,
 };
 
 enum ctf_byte_order {
@@ -82,14 +81,13 @@ struct ctf_field_type_int {
 	bool is_signed;
 	enum bt_field_type_integer_preferred_display_base disp_base;
 	enum ctf_encoding encoding;
+	int64_t storing_index;
 
 	/* Owned by this */
 	struct bt_clock_class *mapped_clock_class;
 };
 
-struct ctf_field_type_enum_mapping {
-	GString *label;
-
+struct ctf_range {
 	union {
 		uint64_t u;
 		int64_t i;
@@ -99,6 +97,11 @@ struct ctf_field_type_enum_mapping {
 		uint64_t u;
 		int64_t i;
 	} upper;
+};
+
+struct ctf_field_type_enum_mapping {
+	GString *label;
+	struct ctf_range range;
 };
 
 struct ctf_field_type_enum {
@@ -136,20 +139,24 @@ struct ctf_field_path {
 	GArray *path;
 };
 
+struct ctf_field_type_variant_range {
+	struct ctf_range range;
+	uint64_t option_index;
+};
+
 struct ctf_field_type_variant {
 	struct ctf_field_type base;
 
 	/* Array of `struct ctf_named_field_type` */
 	GArray *options;
 
-	GString *tag_ref;
-	struct ctf_field_path tag_path;
+	/* Array of `struct ctf_field_type_variant_range` */
+	GArray *ranges;
 
-	/*
-	 * If true, do not use `tag_path` to find the tag value in a
-	 * `bt_field` during decoding: use the current event class ID.
-	 */
-	bool tag_is_cur_event_class_id;
+	GString *tag_ref;
+	struct ctf_field_type_enum *tag_ft;
+	struct ctf_field_path tag_path;
+	uint64_t stored_tag_index;
 };
 
 struct ctf_field_type_array_base {
@@ -167,13 +174,9 @@ struct ctf_field_type_array {
 struct ctf_field_type_sequence {
 	struct ctf_field_type_array_base base;
 	GString *length_ref;
+	struct ctf_field_type_enum *length_ft;
 	struct ctf_field_path length_path;
-
-	/*
-	 * If true, do not use `length_path` to find the length value in
-	 * a `bt_field` during decoding: use the current event class ID.
-	 */
-	bool length_is_cur_event_class_id;
+	uint64_t stored_length_index;
 };
 
 struct ctf_event_class {
@@ -184,6 +187,9 @@ struct ctf_event_class {
 	struct ctf_field_type *spec_context_ft;
 	struct ctf_field_type *payload_ft;
 	bool is_translated;
+
+	/* Weak, set during translation */
+	struct bt_event_class *ir_ec;
 };
 
 struct ctf_stream_class {
@@ -199,6 +205,9 @@ struct ctf_stream_class {
 	struct bt_clock_class *default_clock_class;
 
 	bool is_translated;
+
+	/* Weak, set during translation */
+	struct bt_stream_class *ir_sc;
 };
 
 enum ctf_trace_class_env_entry_type {
@@ -224,6 +233,7 @@ struct ctf_trace_class {
 	bool is_uuid_set;
 	enum ctf_byte_order default_byte_order;
 	struct ctf_field_type *packet_header_ft;
+	uint64_t stored_index_count;
 
 	/* Array of `struct bt_clock_class *` (owned by this) */
 	GPtrArray *clock_classes;
@@ -235,6 +245,9 @@ struct ctf_trace_class {
 	GArray *env_entries;
 
 	bool is_translated;
+
+	/* Weak, set during translation */
+	struct bt_trace *ir_tc;
 };
 
 static inline
@@ -247,7 +260,7 @@ void _ctf_field_type_init(struct ctf_field_type *ft, enum ctf_field_type_id id,
 	BT_ASSERT(ft);
 	ft->id = id;
 	ft->alignment = alignment;
-	ft->in_ir = true;
+	ft->in_ir = false;
 }
 
 static inline
@@ -263,6 +276,7 @@ void _ctf_field_type_int_init(struct ctf_field_type_int *ft,
 {
 	_ctf_field_type_bit_array_init((void *) ft, id);
 	ft->meaning = CTF_FIELD_TYPE_MEANING_NONE;
+	ft->storing_index = -1;
 }
 
 static inline
@@ -394,6 +408,9 @@ struct ctf_field_type_variant *ctf_field_type_variant_create(void)
 	ft->options = g_array_new(FALSE, TRUE,
 		sizeof(struct ctf_named_field_type));
 	BT_ASSERT(ft->options);
+	ft->ranges = g_array_new(FALSE, TRUE,
+		sizeof(struct ctf_field_type_variant_range));
+	BT_ASSERT(ft->ranges);
 	ft->tag_ref = g_string_new(NULL);
 	BT_ASSERT(ft->tag_ref);
 	ctf_field_path_init(&ft->tag_path);
@@ -543,6 +560,10 @@ void _ctf_field_type_variant_destroy(struct ctf_field_type_variant *ft)
 		g_array_free(ft->options, TRUE);
 	}
 
+	if (ft->ranges) {
+		g_array_free(ft->ranges, TRUE);
+	}
+
 	if (ft->tag_ref) {
 		g_string_free(ft->tag_ref, TRUE);
 	}
@@ -602,8 +623,8 @@ void ctf_field_type_enum_append_mapping(struct ctf_field_type_enum *ft,
 		struct ctf_field_type_enum_mapping, ft->mappings->len - 1);
 	_ctf_field_type_enum_mapping_init(mapping);
 	g_string_assign(mapping->label, label);
-	mapping->lower.u = u_lower;
-	mapping->upper.u = u_upper;
+	mapping->range.lower.u = u_lower;
+	mapping->range.upper.u = u_upper;
 }
 
 static inline
@@ -767,6 +788,41 @@ void ctf_field_type_variant_append_option(struct ctf_field_type_variant *ft,
 	_ctf_named_field_type_init(named_ft);
 	g_string_assign(named_ft->name, name);
 	named_ft->ft = option_ft;
+}
+
+static inline
+void ctf_field_type_variant_set_tag_field_type(
+		struct ctf_field_type_variant *ft,
+		struct ctf_field_type_enum *tag_ft)
+{
+	uint64_t option_i;
+
+	BT_ASSERT(ft);
+	BT_ASSERT(tag_ft);
+	ft->tag_ft = tag_ft;
+
+	for (option_i = 0; option_i < ft->options->len; option_i++) {
+		uint64_t mapping_i;
+		struct ctf_named_field_type *named_ft =
+			ctf_field_type_variant_borrow_option_by_index(
+				ft, option_i);
+
+		for (mapping_i = 0; mapping_i < tag_ft->mappings->len;
+				mapping_i++) {
+			struct ctf_field_type_enum_mapping *mapping =
+				ctf_field_type_enum_borrow_mapping_by_index(
+					tag_ft, mapping_i);
+
+			if (strcmp(named_ft->name->str,
+					mapping->label->str) == 0) {
+				struct ctf_field_type_variant_range range;
+
+				range.range = mapping->range;
+				range.option_index = option_i;
+				g_array_append_val(ft->ranges, range);
+			}
+		}
+	}
 }
 
 static inline
@@ -946,6 +1002,55 @@ end:
 }
 
 static inline
+struct ctf_field_type *ctf_field_path_borrow_field_type(
+		struct ctf_field_path *field_path,
+		struct ctf_trace_class *tc,
+		struct ctf_stream_class *sc,
+		struct ctf_event_class *ec)
+{
+	uint64_t i;
+	struct ctf_field_type *ft;
+
+	switch (field_path->root) {
+	case BT_SCOPE_PACKET_HEADER:
+		ft = tc->packet_header_ft;
+		break;
+	case BT_SCOPE_PACKET_CONTEXT:
+		ft = sc->packet_context_ft;
+		break;
+	case BT_SCOPE_EVENT_HEADER:
+		ft = sc->event_header_ft;
+		break;
+	case BT_SCOPE_EVENT_COMMON_CONTEXT:
+		ft = sc->event_common_context_ft;
+		break;
+	case BT_SCOPE_EVENT_SPECIFIC_CONTEXT:
+		ft = ec->spec_context_ft;
+		break;
+	case BT_SCOPE_EVENT_PAYLOAD:
+		ft = ec->payload_ft;
+		break;
+	default:
+		abort();
+	}
+
+	BT_ASSERT(ft);
+
+	for (i = 0; i < field_path->path->len; i++) {
+		int64_t child_index =
+			ctf_field_path_borrow_index_by_index(field_path, i);
+		struct ctf_field_type *child_ft =
+			ctf_field_type_compound_borrow_field_type_by_index(
+				ft, child_index);
+		BT_ASSERT(child_ft);
+		ft = child_ft;
+	}
+
+	BT_ASSERT(ft);
+	return ft;
+}
+
+static inline
 struct ctf_field_type *ctf_field_type_copy(struct ctf_field_type *ft);
 
 static inline
@@ -970,6 +1075,7 @@ void ctf_field_type_int_copy_content(
 	dst_ft->disp_base = src_ft->disp_base;
 	dst_ft->encoding = src_ft->encoding;
 	dst_ft->mapped_clock_class = bt_get(src_ft->mapped_clock_class);
+	dst_ft->storing_index = src_ft->storing_index;
 }
 
 static inline
@@ -999,7 +1105,7 @@ struct ctf_field_type_enum *_ctf_field_type_enum_copy(
 				struct ctf_field_type_enum_mapping, i);
 
 		ctf_field_type_enum_append_mapping(copy_ft, mapping->label->str,
-			mapping->lower.u, mapping->upper.u);
+			mapping->range.lower.u, mapping->range.upper.u);
 	}
 
 	return copy_ft;
@@ -1087,9 +1193,17 @@ struct ctf_field_type_variant *_ctf_field_type_variant_copy(
 			ctf_field_type_copy(named_ft->ft));
 	}
 
+	for (i = 0; i < ft->ranges->len; i++) {
+		struct ctf_field_type_variant_range *range =
+			&g_array_index(ft->ranges,
+				struct ctf_field_type_variant_range, i);
+
+		g_array_append_val(copy_ft->ranges, *range);
+	}
+
 	ctf_field_path_copy_content(&copy_ft->tag_path, &ft->tag_path);
 	g_string_assign(copy_ft->tag_ref, ft->tag_ref->str);
-	copy_ft->tag_is_cur_event_class_id = ft->tag_is_cur_event_class_id;
+	copy_ft->stored_tag_index = ft->stored_tag_index;
 	return copy_ft;
 }
 
@@ -1127,8 +1241,7 @@ struct ctf_field_type_sequence *_ctf_field_type_sequence_copy(
 	ctf_field_type_array_base_copy_content((void *) copy_ft, (void *) ft);
 	ctf_field_path_copy_content(&copy_ft->length_path, &ft->length_path);
 	g_string_assign(copy_ft->length_ref, ft->length_ref->str);
-	copy_ft->length_is_cur_event_class_id =
-		ft->length_is_cur_event_class_id;
+	copy_ft->stored_length_index = ft->stored_length_index;
 	return copy_ft;
 }
 

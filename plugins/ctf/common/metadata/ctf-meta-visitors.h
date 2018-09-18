@@ -41,6 +41,9 @@ BT_HIDDEN
 int ctf_trace_class_update_text_array_sequence(struct ctf_trace_class *ctf_tc);
 
 BT_HIDDEN
+int ctf_trace_class_update_saving_indexes(struct ctf_trace_class *ctf_tc);
+
+BT_HIDDEN
 int ctf_trace_class_validate(struct ctf_trace_class *ctf_tc);
 
 #endif /* _CTF_META_VISITORS_H */
