@@ -37,7 +37,8 @@ enum ctf_field_type_meaning {
 	CTF_FIELD_TYPE_MEANING_NONE,
 	CTF_FIELD_TYPE_MEANING_PACKET_BEGINNING_TIME,
 	CTF_FIELD_TYPE_MEANING_PACKET_END_TIME,
-	CTF_FIELD_TYPE_MEANING_CLASS_ID,
+	CTF_FIELD_TYPE_MEANING_EVENT_CLASS_ID,
+	CTF_FIELD_TYPE_MEANING_STREAM_CLASS_ID,
 	CTF_FIELD_TYPE_MEANING_DATA_STREAM_ID,
 	CTF_FIELD_TYPE_MEANING_MAGIC,
 	CTF_FIELD_TYPE_MEANING_PACKET_COUNTER_SNAPSHOT,
@@ -62,11 +63,10 @@ struct ctf_field_type {
 	enum ctf_field_type_id id;
 	unsigned int alignment;
 	bool is_compound;
+	bool in_ir;
 
 	/* Weak, set during translation. NULL if `in_ir` is false below. */
 	struct bt_field_type *ir_ft;
-
-	bool in_ir;
 };
 
 struct ctf_field_type_bit_array {
@@ -122,6 +122,8 @@ struct ctf_field_type_string {
 
 struct ctf_named_field_type {
 	GString *name;
+
+	/* Owned by this */
 	struct ctf_field_type *ft;
 };
 
@@ -146,6 +148,9 @@ struct ctf_field_type_variant_range {
 
 struct ctf_field_type_variant {
 	struct ctf_field_type base;
+	GString *tag_ref;
+	struct ctf_field_path tag_path;
+	uint64_t stored_tag_index;
 
 	/* Array of `struct ctf_named_field_type` */
 	GArray *options;
@@ -153,10 +158,8 @@ struct ctf_field_type_variant {
 	/* Array of `struct ctf_field_type_variant_range` */
 	GArray *ranges;
 
-	GString *tag_ref;
+	/* Weak */
 	struct ctf_field_type_enum *tag_ft;
-	struct ctf_field_path tag_path;
-	uint64_t stored_tag_index;
 };
 
 struct ctf_field_type_array_base {
@@ -174,9 +177,11 @@ struct ctf_field_type_array {
 struct ctf_field_type_sequence {
 	struct ctf_field_type_array_base base;
 	GString *length_ref;
-	struct ctf_field_type_enum *length_ft;
 	struct ctf_field_path length_path;
 	uint64_t stored_length_index;
+
+	/* Weak */
+	struct ctf_field_type_int *length_ft;
 };
 
 struct ctf_event_class {
@@ -184,9 +189,13 @@ struct ctf_event_class {
 	uint64_t id;
 	GString *emf_uri;
 	enum bt_event_class_log_level log_level;
-	struct ctf_field_type *spec_context_ft;
-	struct ctf_field_type *payload_ft;
 	bool is_translated;
+
+	/* Owned by this */
+	struct ctf_field_type *spec_context_ft;
+
+	/* Owned by this */
+	struct ctf_field_type *payload_ft;
 
 	/* Weak, set during translation */
 	struct bt_event_class *ir_ec;
@@ -194,17 +203,28 @@ struct ctf_event_class {
 
 struct ctf_stream_class {
 	uint64_t id;
+	bool is_translated;
+
+	/* Owned by this */
 	struct ctf_field_type *packet_context_ft;
+
+	/* Owned by this */
 	struct ctf_field_type *event_header_ft;
+
+	/* Owned by this */
 	struct ctf_field_type *event_common_context_ft;
 
-	/* Array of `struct ctf_event_class *` */
+	/* Array of `struct ctf_event_class *`, owned by this */
 	GPtrArray *event_classes;
+
+	/*
+	 * Hash table mapping event class IDs to `struct ctf_event_class *`,
+	 * weak.
+	 */
+	GHashTable *event_classes_by_id;
 
 	/* Owned by this */
 	struct bt_clock_class *default_clock_class;
-
-	bool is_translated;
 
 	/* Weak, set during translation */
 	struct bt_stream_class *ir_sc;
@@ -232,8 +252,11 @@ struct ctf_trace_class {
 	uint8_t uuid[16];
 	bool is_uuid_set;
 	enum ctf_byte_order default_byte_order;
+
+	/* Owned by this */
 	struct ctf_field_type *packet_header_ft;
-	uint64_t stored_index_count;
+
+	uint64_t stored_value_count;
 
 	/* Array of `struct bt_clock_class *` (owned by this) */
 	GPtrArray *clock_classes;
@@ -771,6 +794,17 @@ struct ctf_named_field_type *ctf_field_type_variant_borrow_option_by_name(
 
 end:
 	return ret_named_ft;
+}
+
+static inline
+struct ctf_field_type_variant_range *
+ctf_field_type_variant_borrow_range_by_index(
+		struct ctf_field_type_variant *ft, uint64_t index)
+{
+	BT_ASSERT(ft);
+	BT_ASSERT(index < ft->ranges->len);
+	return &g_array_index(ft->ranges, struct ctf_field_type_variant_range,
+		index);
 }
 
 static inline
@@ -1339,6 +1373,9 @@ struct ctf_stream_class *ctf_stream_class_create(void)
 	sc->event_classes = g_ptr_array_new_with_free_func(
 		(GDestroyNotify) ctf_event_class_destroy);
 	BT_ASSERT(sc->event_classes);
+	sc->event_classes_by_id = g_hash_table_new(g_direct_hash,
+		g_direct_equal);
+	BT_ASSERT(sc->event_classes_by_id);
 	return sc;
 }
 
@@ -1353,6 +1390,10 @@ void ctf_stream_class_destroy(struct ctf_stream_class *sc)
 		g_ptr_array_free(sc->event_classes, TRUE);
 	}
 
+	if (sc->event_classes_by_id) {
+		g_hash_table_destroy(sc->event_classes_by_id);
+	}
+
 	ctf_field_type_destroy(sc->packet_context_ft);
 	ctf_field_type_destroy(sc->event_header_ft);
 	ctf_field_type_destroy(sc->event_common_context_ft);
@@ -1361,25 +1402,21 @@ void ctf_stream_class_destroy(struct ctf_stream_class *sc)
 }
 
 static inline
+void ctf_stream_class_append_event_class(struct ctf_stream_class *sc,
+		struct ctf_event_class *ec)
+{
+	g_ptr_array_add(sc->event_classes, ec);
+	g_hash_table_insert(sc->event_classes_by_id,
+		GUINT_TO_POINTER((guint) ec->id), ec);
+}
+
+static inline
 struct ctf_event_class *ctf_stream_class_borrow_event_class_by_id(
 		struct ctf_stream_class *sc, uint64_t id)
 {
-	uint64_t i;
-	struct ctf_event_class *ret_ec = NULL;
-
 	BT_ASSERT(sc);
-
-	for (i = 0; i < sc->event_classes->len; i++) {
-		struct ctf_event_class *ec = sc->event_classes->pdata[i];
-
-		if (ec->id == id) {
-			ret_ec = ec;
-			goto end;
-		}
-	}
-
-end:
-	return ret_ec;
+	return g_hash_table_lookup(sc->event_classes_by_id,
+		GUINT_TO_POINTER((guint) id));
 }
 
 static inline

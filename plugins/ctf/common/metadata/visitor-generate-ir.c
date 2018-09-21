@@ -3546,9 +3546,7 @@ int visit_event_decl(struct ctx *ctx, struct ctf_node *node)
 		goto error;
 	}
 
-	// TODO: resolve lengths/tags
-
-	g_ptr_array_add(stream_class->event_classes, event_class);
+	ctf_stream_class_append_event_class(stream_class, event_class);
 	event_class = NULL;
 	goto end;
 
@@ -3964,8 +3962,6 @@ int visit_stream_decl(struct ctx *ctx, struct ctf_node *node)
 		goto error;
 	}
 
-	// TODO: resolve lengths/tags
-
 	g_ptr_array_add(ctx->ctf_tc->stream_classes, stream_class);
 	stream_class = NULL;
 	goto end;
@@ -4187,8 +4183,6 @@ int visit_trace_decl(struct ctx *ctx, struct ctf_node *node)
 		ret = -EPERM;
 		goto error;
 	}
-
-	// TODO: resolve lengths/tags
 
 	ctx->is_trace_visited = true;
 
@@ -5151,6 +5145,13 @@ int ctf_visitor_generate_ir_visit_node(struct ctf_visitor_generate_ir *visitor,
 
 	/* Update "in IR" for field types */
 	ret = ctf_trace_class_update_in_ir(ctx->ctf_tc);
+	if (ret) {
+		ret = -EINVAL;
+		goto end;
+	}
+
+	/* Update saved value indexes */
+	ret = ctf_trace_class_update_value_storing_indexes(ctx->ctf_tc);
 	if (ret) {
 		ret = -EINVAL;
 		goto end;

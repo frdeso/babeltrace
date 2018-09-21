@@ -26,8 +26,9 @@
 #include "ctf-meta-visitors.h"
 
 static
-int set_int_field_type_class_id_meaning(struct ctf_field_type *ft,
-		const char *field_name, const char *id_name)
+int set_int_field_type_meaning_by_name(struct ctf_field_type *ft,
+		const char *field_name, const char *id_name,
+		enum ctf_field_type_meaning meaning)
 {
 	int ret = 0;
 	uint64_t i;
@@ -43,7 +44,7 @@ int set_int_field_type_class_id_meaning(struct ctf_field_type *ft,
 		struct ctf_field_type_int *int_ft = (void *) ft;
 
 		if (field_name && strcmp(field_name, id_name) == 0) {
-			int_ft->meaning = CTF_FIELD_TYPE_MEANING_CLASS_ID;
+			int_ft->meaning = meaning;
 		}
 
 		break;
@@ -57,8 +58,8 @@ int set_int_field_type_class_id_meaning(struct ctf_field_type *ft,
 				ctf_field_type_struct_borrow_member_by_index(
 					struct_ft, i);
 
-			ret = set_int_field_type_class_id_meaning(named_ft->ft,
-				named_ft->name->str, id_name);
+			ret = set_int_field_type_meaning_by_name(named_ft->ft,
+				named_ft->name->str, id_name, meaning);
 			if (ret) {
 				goto end;
 			}
@@ -75,8 +76,8 @@ int set_int_field_type_class_id_meaning(struct ctf_field_type *ft,
 				ctf_field_type_variant_borrow_option_by_index(
 					var_ft, i);
 
-			ret = set_int_field_type_class_id_meaning(named_ft->ft,
-				NULL, id_name);
+			ret = set_int_field_type_meaning_by_name(named_ft->ft,
+				NULL, id_name, meaning);
 			if (ret) {
 				goto end;
 			}
@@ -89,8 +90,8 @@ int set_int_field_type_class_id_meaning(struct ctf_field_type *ft,
 	{
 		struct ctf_field_type_array_base *array_ft = (void *) ft;
 
-		ret = set_int_field_type_class_id_meaning(array_ft->elem_ft,
-			NULL, id_name);
+		ret = set_int_field_type_meaning_by_name(array_ft->elem_ft,
+			NULL, id_name, meaning);
 		if (ret) {
 			goto end;
 		}
@@ -150,8 +151,9 @@ int update_stream_class_meanings(struct ctf_stream_class *sc)
 			int_ft->meaning = CTF_FIELD_TYPE_MEANING_EXP_PACKET_CONTENT_SIZE;
 		}
 
-		ret = set_int_field_type_class_id_meaning(
-			sc->event_header_ft, NULL, "id");
+		ret = set_int_field_type_meaning_by_name(
+			sc->event_header_ft, NULL, "id",
+			CTF_FIELD_TYPE_MEANING_EVENT_CLASS_ID);
 		if (ret) {
 			goto end;
 		}
@@ -187,7 +189,7 @@ int ctf_trace_class_update_meanings(struct ctf_trace_class *ctf_tc)
 		int_ft = ctf_field_type_struct_borrow_member_int_field_type_by_name(
 			(void *) ctf_tc->packet_header_ft, "stream_id");
 		if (int_ft) {
-			int_ft->meaning = CTF_FIELD_TYPE_MEANING_CLASS_ID;
+			int_ft->meaning = CTF_FIELD_TYPE_MEANING_STREAM_CLASS_ID;
 		}
 
 		int_ft = ctf_field_type_struct_borrow_member_int_field_type_by_name(

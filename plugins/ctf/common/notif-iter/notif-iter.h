@@ -236,32 +236,6 @@ struct bt_notif_iter_medium_ops {
 /** CTF notification iterator. */
 struct bt_notif_iter;
 
-// TODO: Replace by the real thing
-enum bt_notif_iter_notif_type {
-	BT_NOTIF_ITER_NOTIF_NEW_PACKET,
-	BT_NOTIF_ITER_NOTIF_END_OF_PACKET,
-	BT_NOTIF_ITER_NOTIF_EVENT,
-};
-
-struct bt_notif_iter_notif {
-	enum bt_notif_iter_notif_type type;
-};
-
-struct bt_notif_iter_notif_new_packet {
-	struct bt_notif_iter_notif base;
-	struct bt_packet *packet;
-};
-
-struct bt_notif_iter_notif_end_of_packet {
-	struct bt_notif_iter_notif base;
-	struct bt_packet *packet;
-};
-
-struct bt_notif_iter_notif_event {
-	struct bt_notif_iter_notif base;
-	struct bt_event *event;
-};
-
 /**
  * Creates a CTF notification iterator.
  *
@@ -363,6 +337,13 @@ off_t bt_notif_iter_get_current_packet_size(
  */
 BT_HIDDEN
 void bt_notif_iter_reset(struct bt_notif_iter *notit);
+
+/*
+ * Notify the iterator that the trace class changed somehow (new
+ * stream/event classes).
+ */
+BT_HIDDEN
+void bt_notif_trace_class_changed(struct bt_notif_iter *notit);
 
 static inline
 const char *bt_notif_iter_medium_status_string(

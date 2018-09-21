@@ -33,8 +33,8 @@ int update_field_type_stored_value_index(struct ctf_field_type *ft,
 {
 	int ret = 0;
 	uint64_t i;
-	uint64_t stored_index_count = tc->stored_index_count;
 	struct ctf_field_path *field_path = NULL;
+	struct ctf_field_type_int *tgt_ft = NULL;
 	uint64_t *stored_value_index = NULL;
 
 	if (!ft) {
@@ -48,6 +48,7 @@ int update_field_type_stored_value_index(struct ctf_field_type *ft,
 
 		field_path = &var_ft->tag_path;
 		stored_value_index = &var_ft->stored_tag_index;
+		tgt_ft = (void *) var_ft->tag_ft;
 		break;
 	}
 	case CTF_FIELD_TYPE_ID_SEQUENCE:
@@ -56,6 +57,7 @@ int update_field_type_stored_value_index(struct ctf_field_type *ft,
 
 		field_path = &seq_ft->length_path;
 		stored_value_index = &seq_ft->stored_length_index;
+		tgt_ft = seq_ft->length_ft;
 		break;
 	}
 	default:
@@ -63,22 +65,17 @@ int update_field_type_stored_value_index(struct ctf_field_type *ft,
 	}
 
 	if (field_path) {
-		struct ctf_field_type_int *tgt_ft =
-			(void *) ctf_field_path_borrow_field_type(field_path,
-				tc, sc, ec);
-		uint64_t storing_index;
-
 		BT_ASSERT(tgt_ft);
 		BT_ASSERT(tgt_ft->base.base.id == CTF_FIELD_TYPE_ID_INT ||
 			tgt_ft->base.base.id == CTF_FIELD_TYPE_ID_ENUM);
 		if (tgt_ft->storing_index >= 0) {
-			storing_index = (uint64_t) tgt_ft->storing_index;
+			/* Already storing its value */
+			*stored_value_index = (uint64_t) tgt_ft->storing_index;
 		} else {
-			storing_index = stored_index_count;
-			stored_index_count++;
+			/* Not storing its value: allocate new index */
+			*stored_value_index = tc->stored_value_count;
+			tc->stored_value_count++;
 		}
-
-		*stored_value_index = storing_index;
 	}
 
 	switch (ft->id) {
@@ -140,7 +137,7 @@ end:
 }
 
 BT_HIDDEN
-int ctf_trace_class_update_saving_indexes(struct ctf_trace_class *ctf_tc)
+int ctf_trace_class_update_value_storing_indexes(struct ctf_trace_class *ctf_tc)
 {
 	uint64_t i;
 
