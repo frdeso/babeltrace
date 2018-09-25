@@ -311,6 +311,7 @@ bool lca_is_structure_field_type(struct bt_field_path *src_field_path,
 	bool is_valid = true;
 	struct bt_field_type *src_ft;
 	struct bt_field_type *tgt_ft;
+	struct bt_field_type *prev_ft = NULL;
 	uint64_t src_i = 0, tgt_i = 0;
 
 	if (src_field_path->root != tgt_field_path->root) {
@@ -330,16 +331,24 @@ bool lca_is_structure_field_type(struct bt_field_path *src_field_path,
 		uint64_t tgt_index = bt_field_path_get_index_by_index_inline(
 			tgt_field_path, tgt_i);
 
-		if (src_ft == tgt_ft) {
-			if (src_ft->id != BT_FIELD_TYPE_ID_STRUCTURE) {
-				is_valid = false;
-				goto end;
+		if (src_ft != tgt_ft) {
+			if (!prev_ft) {
+				/*
+				 * This is correct: the LCA is the root
+				 * scope field type, which must be a
+				 * structure field type.
+				 */
+				break;
 			}
-		} else {
-			/* End of common path */
+
+			if (prev_ft->id != BT_FIELD_TYPE_ID_STRUCTURE) {
+				is_valid = false;
+			}
+
 			break;
 		}
 
+		prev_ft = src_ft;
 		src_ft = borrow_child_field_type(src_ft, src_index, &advance);
 
 		if (advance) {

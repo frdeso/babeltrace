@@ -665,7 +665,7 @@ int ctf_trace_class_translate(struct bt_trace *ir_trace,
 		}
 
 		for (j = 0; j < sc->event_classes->len; j++) {
-			struct ctf_event_class *ec = sc->event_classes->pdata[i];
+			struct ctf_event_class *ec = sc->event_classes->pdata[j];
 			struct bt_event_class *ir_ec;
 
 			ir_ec = ctf_event_class_to_ir(ec, ir_sc, tc, sc);

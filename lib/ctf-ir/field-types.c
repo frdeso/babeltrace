@@ -889,7 +889,7 @@ int bt_field_type_variant_set_selector_field_type(
 	BT_ASSERT_PRE_NON_NULL(ft, "Variant field type");
 	BT_ASSERT_PRE_NON_NULL(selector_ft, "Selector field type");
 	BT_ASSERT_PRE_FT_HAS_ID(ft, BT_FIELD_TYPE_ID_VARIANT, "Field type");
-	BT_ASSERT_PRE_FT_IS_ENUM(ft, "Selector field type");
+	BT_ASSERT_PRE_FT_IS_ENUM(selector_ft, "Selector field type");
 	BT_ASSERT_PRE_FT_HOT(ft, "Variant field type");
 	var_ft->selector_ft = selector_ft;
 	bt_field_type_freeze(selector_ft);

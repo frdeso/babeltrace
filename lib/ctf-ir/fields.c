@@ -678,7 +678,6 @@ uint64_t bt_field_array_get_length(struct bt_field *field)
 	struct bt_field_array *array_field = (void *) field;
 
 	BT_ASSERT_PRE_NON_NULL(field, "Field");
-	BT_ASSERT_PRE_FIELD_IS_SET(field, "Field");
 	BT_ASSERT_PRE_FIELD_IS_ARRAY(field, "Field");
 	return array_field->length;
 }

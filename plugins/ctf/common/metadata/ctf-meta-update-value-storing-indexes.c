@@ -73,7 +73,8 @@ int update_field_type_stored_value_index(struct ctf_field_type *ft,
 			*stored_value_index = (uint64_t) tgt_ft->storing_index;
 		} else {
 			/* Not storing its value: allocate new index */
-			*stored_value_index = tc->stored_value_count;
+			tgt_ft->storing_index = tc->stored_value_count;
+			*stored_value_index = (uint64_t) tgt_ft->storing_index;
 			tc->stored_value_count++;
 		}
 	}

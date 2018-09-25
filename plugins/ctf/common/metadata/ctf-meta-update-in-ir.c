@@ -42,8 +42,8 @@ void update_field_type_in_ir(struct ctf_field_type *ft,
 	{
 		struct ctf_field_type_int *int_ft = (void *) ft;
 
-		if (int_ft->mapped_clock_class &&
-				int_ft->meaning == CTF_FIELD_TYPE_MEANING_NONE &&
+		if (int_ft->mapped_clock_class ||
+				int_ft->meaning == CTF_FIELD_TYPE_MEANING_NONE ||
 				bt_g_hash_table_contains(ft_dependents, ft)) {
 			/*
 			 * Field type does not update a clock, has no
@@ -194,7 +194,7 @@ int ctf_trace_class_update_in_ir(struct ctf_trace_class *ctf_tc)
 		uint64_t j;
 
 		for (j = 0; j < sc->event_classes->len; j++) {
-			struct ctf_event_class *ec = sc->event_classes->pdata[i];
+			struct ctf_event_class *ec = sc->event_classes->pdata[j];
 
 			if (ec->is_translated) {
 				continue;

@@ -245,11 +245,62 @@ int stack_push(struct stack *stack, struct ctf_field_type *base_type,
 	return 0;
 }
 
+static inline
+int64_t get_compound_field_type_length(struct bt_btr *btr,
+		struct ctf_field_type *ft)
+{
+	int64_t length;
+
+	switch (ft->id) {
+	case CTF_FIELD_TYPE_ID_STRUCT:
+	{
+		struct ctf_field_type_struct *struct_ft = (void *) ft;
+
+		length = (int64_t) struct_ft->members->len;
+		break;
+	}
+	case CTF_FIELD_TYPE_ID_VARIANT:
+	{
+		/* Variant field types always "contain" a single type */
+		length = 1;
+		break;
+	}
+	case CTF_FIELD_TYPE_ID_ARRAY:
+	{
+		struct ctf_field_type_array *array_ft = (void *) ft;
+
+		length = (int64_t) array_ft->length;
+		break;
+	}
+	case CTF_FIELD_TYPE_ID_SEQUENCE:
+		length = btr->user.cbs.query.get_sequence_length(ft,
+			btr->user.data);
+		break;
+	default:
+		abort();
+	}
+
+	return length;
+}
+
 static
 int stack_push_with_len(struct bt_btr *btr, struct ctf_field_type *base_type)
 {
-	return stack_push(btr->stack, base_type,
-		(size_t) ctf_field_type_compound_get_field_type_count(base_type));
+	int ret;
+	int64_t length = get_compound_field_type_length(btr, base_type);
+
+	if (length < 0) {
+		BT_LOGW("Cannot get compound field type's field count: "
+			"btr-addr=%p, ft-addr=%p, ft-id=%d",
+			btr, base_type, base_type->id);
+		ret = BT_BTR_STATUS_ERROR;
+		goto end;
+	}
+
+	ret = stack_push(btr->stack, base_type, (size_t) length);
+
+end:
+	return ret;
 }
 
 static inline
@@ -1017,6 +1068,7 @@ enum bt_btr_status next_field_state(struct bt_btr *btr)
 			(void *) top->base_type, (uint64_t) top->index)->ft;
 		break;
 	case CTF_FIELD_TYPE_ID_ARRAY:
+	case CTF_FIELD_TYPE_ID_SEQUENCE:
 	{
 		struct ctf_field_type_array_base *array_ft =
 			(void *) top->base_type;
@@ -1117,6 +1169,7 @@ enum bt_btr_status handle_state(struct bt_btr *btr)
 	return status;
 }
 
+BT_HIDDEN
 struct bt_btr *bt_btr_create(struct bt_btr_cbs cbs, void *data)
 {
 	struct bt_btr *btr;
@@ -1145,6 +1198,7 @@ end:
 	return btr;
 }
 
+BT_HIDDEN
 void bt_btr_destroy(struct bt_btr *btr)
 {
 	if (btr->stack) {
@@ -1175,6 +1229,7 @@ void update_packet_offset(struct bt_btr *btr)
 	btr->buf.packet_offset += btr->buf.at;
 }
 
+BT_HIDDEN
 size_t bt_btr_start(struct bt_btr *btr,
 	struct ctf_field_type *type, const uint8_t *buf,
 	size_t offset, size_t packet_offset, size_t sz,
@@ -1246,6 +1301,7 @@ end:
 	return btr->buf.at;
 }
 
+BT_HIDDEN
 size_t bt_btr_continue(struct bt_btr *btr, const uint8_t *buf, size_t sz,
 		enum bt_btr_status *status)
 {
@@ -1276,4 +1332,13 @@ size_t bt_btr_continue(struct bt_btr *btr, const uint8_t *buf, size_t sz,
 	/* Update packet offset for next time */
 	update_packet_offset(btr);
 	return btr->buf.at;
+}
+
+BT_HIDDEN
+void bt_btr_set_unsigned_int_cb(struct bt_btr *btr,
+		bt_btr_unsigned_int_cb_func cb)
+{
+	BT_ASSERT(btr);
+	BT_ASSERT(cb);
+	btr->user.cbs.types.unsigned_int = cb;
 }

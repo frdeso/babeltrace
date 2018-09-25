@@ -100,7 +100,7 @@ void set_base_offset(struct bt_clock_class *clock_class)
 	offset_cycles_ns = bt_util_ns_from_value(clock_class->frequency,
 		clock_class->offset_cycles);
 	BT_ASSERT(offset_cycles_ns < 1000000000);
-	clock_class->base_offset.value_ns = (int64_t) offset_cycles_ns;
+	clock_class->base_offset.value_ns += (int64_t) offset_cycles_ns;
 	clock_class->base_offset.overflows = false;
 
 end:

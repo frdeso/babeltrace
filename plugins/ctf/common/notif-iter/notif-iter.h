@@ -230,7 +230,7 @@ struct bt_notif_iter_medium_ops {
 	 */
 	struct bt_stream * (* borrow_stream)(
 			struct bt_stream_class *stream_class,
-			uint64_t stream_id, void *data);
+			int64_t stream_id, void *data);
 };
 
 /** CTF notification iterator. */
@@ -307,6 +307,25 @@ enum bt_notif_iter_status bt_notif_iter_borrow_packet_header_context_fields(
 		struct bt_notif_iter *notit,
 		struct bt_field **packet_header_field,
 		struct bt_field **packet_context_field);
+
+struct bt_notif_iter_packet_properties {
+	uint64_t exp_packet_total_size;
+	uint64_t exp_packet_content_size;
+	uint64_t stream_class_id;
+	int64_t data_stream_id;
+
+	struct {
+		uint64_t discarded_events;
+		uint64_t packets;
+		uint64_t beginning_clock;
+		uint64_t end_clock;
+	} snapshots;
+};
+
+BT_HIDDEN
+enum bt_notif_iter_status bt_notif_iter_get_packet_properties(
+		struct bt_notif_iter *notit,
+		struct bt_notif_iter_packet_properties *props);
 
 BT_HIDDEN
 void bt_notif_iter_set_medops_data(struct bt_notif_iter *notit,

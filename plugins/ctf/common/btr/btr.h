@@ -80,6 +80,9 @@ enum bt_btr_status {
 /** Type reader. */
 struct bt_btr;
 
+typedef enum bt_btr_status (* bt_btr_unsigned_int_cb_func)(uint64_t,
+		struct ctf_field_type *, void *);
+
 /*
  * Type reader user callback functions.
  */
@@ -139,8 +142,7 @@ struct bt_btr_cbs {
 		 * @returns		#BT_BTR_STATUS_OK or
 		 *			#BT_BTR_STATUS_ERROR
 		 */
-		enum bt_btr_status (* unsigned_int)(uint64_t value,
-				struct ctf_field_type *type, void *data);
+		bt_btr_unsigned_int_cb_func unsigned_int;
 
 		/**
 		 * Called when a floating point number type is
@@ -274,6 +276,7 @@ struct bt_btr_cbs {
  * @param data		User data (passed to user callback functions)
  * @returns		New binary type reader on success, or \c NULL on error
  */
+BT_HIDDEN
 struct bt_btr *bt_btr_create(struct bt_btr_cbs cbs, void *data);
 
 /**
@@ -281,6 +284,7 @@ struct bt_btr *bt_btr_create(struct bt_btr_cbs cbs, void *data);
  *
  * @param btr	Binary type reader
  */
+BT_HIDDEN
 void bt_btr_destroy(struct bt_btr *btr);
 
 /**
@@ -314,6 +318,7 @@ void bt_btr_destroy(struct bt_btr *btr);
  * @param status		Returned status (see description above)
  * @returns			Number of consumed bits
  */
+BT_HIDDEN
 size_t bt_btr_start(struct bt_btr *btr,
 		struct ctf_field_type *type, const uint8_t *buf,
 		size_t offset, size_t packet_offset, size_t sz,
@@ -342,9 +347,14 @@ size_t bt_btr_start(struct bt_btr *btr,
  * @param status	Returned status (see description above)
  * @returns		Number of consumed bits
  */
+BT_HIDDEN
 size_t bt_btr_continue(struct bt_btr *btr,
 		const uint8_t *buf, size_t sz,
 		enum bt_btr_status *status);
+
+BT_HIDDEN
+void bt_btr_set_unsigned_int_cb(struct bt_btr *btr,
+		bt_btr_unsigned_int_cb_func cb);
 
 static inline
 const char *bt_btr_status_string(enum bt_btr_status status)

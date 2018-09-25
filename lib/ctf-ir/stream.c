@@ -70,14 +70,19 @@ void bt_stream_free_packet(struct bt_packet *packet, struct bt_stream *stream)
 }
 
 BT_ASSERT_PRE_FUNC
-static
-bool stream_id_is_unique(struct bt_trace *trace, uint64_t id)
+static inline
+bool stream_id_is_unique(struct bt_trace *trace,
+		struct bt_stream_class *stream_class, uint64_t id)
 {
 	uint64_t i;
 	bool is_unique = true;
 
 	for (i = 0; i < trace->streams->len; i++) {
 		struct bt_stream *stream = trace->streams->pdata[i];
+
+		if (stream->class != stream_class) {
+			continue;
+		}
 
 		if (stream->id == id) {
 			is_unique = false;
@@ -99,7 +104,7 @@ struct bt_stream *create_stream_with_id(struct bt_stream_class *stream_class,
 
 	BT_ASSERT(stream_class);
 	trace = bt_stream_class_borrow_trace_inline(stream_class);
-	BT_ASSERT_PRE(stream_id_is_unique(trace, id),
+	BT_ASSERT_PRE(stream_id_is_unique(trace, stream_class, id),
 		"Duplicate stream ID: %![trace-]+t, id=%" PRIu64, trace, id);
 	BT_ASSERT_PRE(!trace->is_static,
 		"Trace is static: %![trace-]+t", trace);
