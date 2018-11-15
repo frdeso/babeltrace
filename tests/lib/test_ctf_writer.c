@@ -2141,7 +2141,7 @@ int main(int argc, char **argv)
 
 	validate_trace(argv[1], trace_path);
 
-	recursive_rmdir(trace_path);
+	//recursive_rmdir(trace_path);
 	g_free(trace_path);
 	g_free(metadata_path);
 
