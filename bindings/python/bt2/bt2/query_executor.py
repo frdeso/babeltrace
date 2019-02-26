@@ -20,12 +20,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from bt2 import native_bt, object, utils
+from bt2 import native_bt, utils, object
 import bt2.component
 import bt2
 
 
-class QueryExecutor(object._Object):
+class QueryExecutor(object._SharedObject):
     def _handle_status(self, status, gen_error_msg):
         if status == native_bt.QUERY_STATUS_AGAIN:
             raise bt2.TryAgain
@@ -88,9 +88,3 @@ class QueryExecutor(object._Object):
         self._handle_status(status, 'cannot query component class')
         assert(result_ptr)
         return bt2.values._create_from_ptr(result_ptr)
-
-    def __eq__(self, other):
-        if type(other) is not type(self):
-            return False
-
-        return self.addr == other.addr

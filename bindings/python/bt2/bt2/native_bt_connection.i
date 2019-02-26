@@ -26,6 +26,7 @@
 struct bt_connection;
 struct bt_private_connection;
 
+
 /* Status */
 enum bt_connection_status {
 	BT_CONNECTION_STATUS_GRAPH_IS_CANCELED = 125,
@@ -44,8 +45,19 @@ struct bt_port *bt_connection_get_upstream_port(
 int bt_connection_is_ended(struct bt_connection *connection);
 
 /* Functions (private) */
-struct bt_connection *bt_connection_from_private(
+struct bt_connection *bt_connection_borrow_from_private(
 		struct bt_private_connection *private_connection);
+enum bt_connection_status
+bt_private_connection_create_notification_iterator(
+		struct bt_private_connection *private_connection,
+		struct bt_notification_iterator **iterator);
+struct bt_component *bt_private_connection_notification_iterator_get_component(
+		struct bt_notification_iterator *iterator);
+
+enum bt_notification_iterator_status
+bt_private_connection_notification_iterator_next(
+		struct bt_notification_iterator *iterator,
+		bt_notification_array *notifs, uint64_t *count);
 
 /* Helper functions for Python */
 %typemap(out) struct bt_py3_create_notif_iter_ret {

@@ -275,7 +275,7 @@ static enum bt_component_status bt_py3_cc_init(
 		struct bt_value *params, void *init_method_data)
 {
 	struct bt_component *comp =
-		bt_component_from_private(priv_comp);
+		bt_component_borrow_from_private(priv_comp);
 	struct bt_component_class *comp_cls = bt_component_get_class(comp);
 	enum bt_component_status status = BT_COMPONENT_STATUS_OK;
 	PyObject *py_cls = NULL;
@@ -353,7 +353,6 @@ error:
 
 end:
 	bt_put(comp_cls);
-	bt_put(comp);
 	Py_XDECREF(py_comp);
 	Py_XDECREF(py_params_ptr);
 	Py_XDECREF(py_comp_ptr);
@@ -463,11 +462,12 @@ end:
 	return status;
 }
 
-static void bt_py3_cc_port_connected(
+static enum bt_component_status bt_py3_cc_port_connected(
 		struct bt_private_component *priv_comp,
 		struct bt_private_port *self_priv_port,
 		struct bt_port *other_port)
 {
+	enum bt_component_status status;
 	PyObject *py_comp = NULL;
 	PyObject *py_self_port_ptr = NULL;
 	PyObject *py_other_port_ptr = NULL;
@@ -496,6 +496,9 @@ static void bt_py3_cc_port_connected(
 	Py_XDECREF(py_self_port_ptr);
 	Py_XDECREF(py_other_port_ptr);
 	Py_XDECREF(py_method_result);
+	status = BT_COMPONENT_STATUS_OK;
+	/* TODO: should we return something instead of abort ?*/
+	return status;
 }
 
 static void bt_py3_cc_port_disconnected(
@@ -757,14 +760,15 @@ static void bt_py3_cc_notification_iterator_finalize(
 	Py_DECREF(py_notif_iter);
 }
 
-static struct bt_notification_iterator_next_method_return
+static enum bt_notification_iterator_status
 bt_py3_cc_notification_iterator_next(
-			struct bt_private_connection_private_notification_iterator *priv_notif_iter)
+			struct bt_private_connection_private_notification_iterator *priv_notif_iter,
+			bt_notification_array notifs, uint64_t capacity,
+			uint64_t *count)
 {
-	struct bt_notification_iterator_next_method_return next_ret = {
-		.status = BT_NOTIFICATION_ITERATOR_STATUS_OK,
-		.notification = NULL,
-	};
+	enum bt_notification_iterator_status status;
+
+	status = BT_NOTIFICATION_ITERATOR_STATUS_OK;
 	PyObject *py_notif_iter =
 		bt_private_connection_private_notification_iterator_get_user_data(priv_notif_iter);
 	PyObject *py_method_result = NULL;
@@ -773,8 +777,8 @@ bt_py3_cc_notification_iterator_next(
 	py_method_result = PyObject_CallMethod(py_notif_iter,
 		"_next_from_native", NULL);
 	if (!py_method_result) {
-		next_ret.status = bt_py3_exc_to_notif_iter_status();
-		BT_ASSERT(next_ret.status != BT_NOTIFICATION_ITERATOR_STATUS_OK);
+		status = bt_py3_exc_to_notif_iter_status();
+		BT_ASSERT(status != BT_NOTIFICATION_ITERATOR_STATUS_OK);
 		goto end;
 	}
 
@@ -783,18 +787,18 @@ bt_py3_cc_notification_iterator_next(
 	 * (PyLong) containing the address of a native notification
 	 * object (which is now ours).
 	 */
-	next_ret.notification =
+	notifs[0] =
 		(struct bt_notification *) PyLong_AsUnsignedLongLong(
 			py_method_result);
+	*count = 1;
 
 	/* Clear potential overflow error; should never happen */
 	BT_ASSERT(!PyErr_Occurred());
-	BT_ASSERT(next_ret.notification);
 	goto end;
 
 end:
 	Py_XDECREF(py_method_result);
-	return next_ret;
+	return status;
 }
 
 static enum bt_component_status bt_py3_cc_sink_consume(

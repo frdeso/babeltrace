@@ -23,18 +23,37 @@
  */
 
 /* Type */
+struct bt_event;
+struct bt_event_header_field;
+struct bt_clock_value;
+struct bt_event_class;
+struct bt_field;
 struct bt_packet;
 
+enum bt_clock_value_status;
+
 /* Functions */
-struct bt_packet *bt_packet_create(
-		struct bt_stream *stream);
-struct bt_stream *bt_packet_get_stream(
-		struct bt_packet *packet);
-struct bt_field *bt_packet_get_header(
-		struct bt_packet *packet);
-int bt_packet_set_header(
-		struct bt_packet *packet, struct bt_field *header);
-struct bt_field *bt_packet_get_context(
-		struct bt_packet *packet);
-int bt_packet_set_context(
-		struct bt_packet *packet, struct bt_field *context);
+struct bt_event_class *bt_event_borrow_class(struct bt_event *event);
+
+struct bt_packet *bt_event_borrow_packet(struct bt_event *event);
+
+struct bt_stream *bt_event_borrow_stream(struct bt_event *event);
+
+struct bt_field *bt_event_borrow_header_field(struct bt_event *event);
+
+int bt_event_move_header(struct bt_event *event,
+		struct bt_event_header_field *header);
+
+struct bt_field *bt_event_borrow_common_context_field(
+		struct bt_event *event);
+
+struct bt_field *bt_event_borrow_specific_context_field(
+		struct bt_event *event);
+
+struct bt_field *bt_event_borrow_payload_field(struct bt_event *event);
+
+int bt_event_set_default_clock_value(struct bt_event *event,
+		uint64_t value_cycles);
+
+enum bt_clock_value_status bt_event_borrow_default_clock_value(
+		struct bt_event *event, struct bt_clock_value **BTOUTCLOCKVALUE);

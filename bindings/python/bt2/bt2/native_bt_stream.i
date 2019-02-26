@@ -23,38 +23,14 @@
  */
 
 /* Type */
-struct bt_event;
+struct bt_stream;
+struct bt_stream_class;
 
 /* Functions */
-struct bt_event *bt_event_create(
-		struct bt_event_class *event_class);
-struct bt_event_class *bt_event_get_class(
-		struct bt_event *event);
-struct bt_packet *bt_event_get_packet(
-		struct bt_event *event);
-int bt_event_set_packet(struct bt_event *event,
-		struct bt_packet *packet);
-struct bt_stream *bt_event_get_stream(
-		struct bt_event *event);
-struct bt_field *bt_event_get_header(
-		struct bt_event *event);
-int bt_event_set_header(struct bt_event *event,
-		struct bt_field *header);
-struct bt_field *bt_event_get_stream_event_context(
-		struct bt_event *event);
-int bt_event_set_stream_event_context(struct bt_event *event,
-		struct bt_field *context);
-struct bt_field *bt_event_get_event_context(
-		struct bt_event *event);
-int bt_event_set_event_context(struct bt_event *event,
-		struct bt_field *context);
-struct bt_field *bt_event_get_event_payload(
-		struct bt_event *event);
-int bt_event_set_event_payload(struct bt_event *event,
-		struct bt_field *payload);
-struct bt_clock_value *bt_event_get_clock_value(
-		struct bt_event *event,
-		struct bt_clock_class *clock_class);
-int bt_event_set_clock_value(
-		struct bt_event *event,
-		struct bt_clock_value *clock_value);
+struct bt_stream *bt_stream_create(struct bt_stream_class *stream_class);
+struct bt_stream *bt_stream_create_with_id(
+		struct bt_stream_class *stream_class, uint64_t id);
+struct bt_stream_class *bt_stream_borrow_class(struct bt_stream *stream);
+const char *bt_stream_get_name(struct bt_stream *stream);
+int bt_stream_set_name(struct bt_stream *stream, const char *name);
+uint64_t bt_stream_get_id(struct bt_stream *stream);

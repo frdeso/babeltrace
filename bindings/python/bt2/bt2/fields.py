@@ -20,47 +20,38 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from bt2 import native_bt, object, utils
-import bt2.field_types
-import collections.abc
-import functools
-import numbers
-import math
+__all__ = ['_StaticArrayField', '_DynamicArrayField', '_UnsignedEnumerationField',
+        '_UnsignedEnumerationField', '_Field' ,'_RealField', '_IntegerField',
+        '_StringField', '_StructureField', '_VariantField']
+
+from bt2 import field_types, native_bt, utils
 import abc
 import bt2
+import collections.abc
+import functools
+import math
+import numbers
 
+def _create_field_from_ptr(ptr, owner_ptr):
+    # recreate the field wrapper of this field's type (the identity
+    # could be different, but the underlying address should be the
+    # same)
+    field_type_ptr = native_bt.field_borrow_type(ptr)
+    native_bt.get(field_type_ptr)
+    utils._handle_ptr(field_type_ptr, "cannot get field object's type")
+    field_type = bt2.field_types._create_field_type_from_ptr(field_type_ptr)
+    typeid = native_bt.field_type_get_type_id(field_type._ptr)
+    field = _FIELD_ID_TO_OBJ[typeid]._create_from_ptr(ptr, owner_ptr)
+    field._field_type = field_type
+    return field
 
 def _get_leaf_field(obj):
-    if type(obj) is not _VariantField:
+    if not isinstance(obj, _VariantField):
         return obj
 
     return _get_leaf_field(obj.selected_field)
 
-
-def _create_from_ptr(ptr):
-    # recreate the field type wrapper of this field's type (the identity
-    # could be different, but the underlying address should be the
-    # same)
-    field_type_ptr = native_bt.field_get_type(ptr)
-    utils._handle_ptr(field_type_ptr, "cannot get field object's type")
-    field_type = bt2.field_types._create_from_ptr(field_type_ptr)
-    typeid = native_bt.field_type_get_type_id(field_type._ptr)
-    field = _TYPE_ID_TO_OBJ[typeid]._create_from_ptr(ptr)
-    field._field_type = field_type
-    return field
-
-
-class _Field(object._Object, metaclass=abc.ABCMeta):
-    def __copy__(self):
-        ptr = native_bt.field_copy(self._ptr)
-        utils._handle_ptr(ptr, 'cannot copy {} field object'.format(self._NAME.lower()))
-        return _create_from_ptr(ptr)
-
-    def __deepcopy__(self, memo):
-        cpy = self.__copy__()
-        memo[id(self)] = cpy
-        return cpy
-
+class _Field(bt2.object._UniqueObject):
     def __eq__(self, other):
         other = _get_leaf_field(other)
         return self._spec_eq(other)
@@ -74,7 +65,6 @@ class _Field(object._Object, metaclass=abc.ABCMeta):
 
     def __repr__(self):
         return self._repr()
-
 
 @functools.total_ordering
 class _NumericField(_Field):
@@ -93,6 +83,9 @@ class _NumericField(_Field):
             return complex(other)
 
         raise TypeError("'{}' object is not a number object".format(other.__class__.__name__))
+
+    def __hash__(self):
+        return self._value.__hash__()
 
     def __int__(self):
         return int(self._value)
@@ -119,7 +112,7 @@ class _NumericField(_Field):
 
     def _spec_eq(self, other):
         if not isinstance(other, numbers.Number):
-            return False
+            return NotImplemented
 
         return self._value == complex(other)
 
@@ -267,53 +260,55 @@ class _IntegralField(_NumericField, numbers.Integral):
         return self
 
 
-class _RealField(_NumericField, numbers.Real):
-    pass
-
-
-class _IntegerField(_IntegralField):
+class _IntegerField(_IntegralField, _Field):
     _NAME = 'Integer'
 
+
+
+class _UnsignedIntegerField(_IntegerField, _Field):
     def _value_to_int(self, value):
         if not isinstance(value, numbers.Real):
             raise TypeError('expecting a real number object')
 
         value = int(value)
-
-        if self.field_type.is_signed:
-            utils._check_int64(value)
-        else:
-            utils._check_uint64(value)
+        utils._check_uint64(value)
 
         return value
 
     @property
     def _value(self):
-        if self.field_type.is_signed:
-            ret, value = native_bt.field_signed_integer_get_value(self._ptr)
-        else:
-            ret, value = native_bt.field_unsigned_integer_get_value(self._ptr)
-
-        if ret < 0:
-            utils._handle_ret(ret, "cannot get integer field's value")
-
-        return value
+        return native_bt.field_unsigned_integer_get_value(self._ptr)
 
     def _set_value(self, value):
         value = self._value_to_int(value)
-
-        if self.field_type.is_signed:
-            ret = native_bt.field_signed_integer_set_value(self._ptr, value)
-        else:
-            ret = native_bt.field_unsigned_integer_set_value(self._ptr, value)
-
-        utils._handle_ret(ret, "cannot set integer field object's value")
+        native_bt.field_unsigned_integer_set_value(self._ptr, value)
 
     value = property(fset=_set_value)
 
 
-class _FloatingPointNumberField(_RealField):
-    _NAME = 'Floating point number'
+class _SignedIntegerField(_IntegerField, _Field):
+    def _value_to_int(self, value):
+        if not isinstance(value, numbers.Real):
+            raise TypeError('expecting a real number object')
+
+        value = int(value)
+        utils._check_int64(value)
+
+        return value
+
+    @property
+    def _value(self):
+        return native_bt.field_signed_integer_get_value(self._ptr)
+
+    def _set_value(self, value):
+        value = self._value_to_int(value)
+        native_bt.field_signed_integer_set_value(self._ptr, value)
+
+    value = property(fset=_set_value)
+
+
+class _RealField(_NumericField, numbers.Real):
+    _NAME = 'Real number'
 
     def _value_to_float(self, value):
         if not isinstance(value, numbers.Real):
@@ -323,17 +318,11 @@ class _FloatingPointNumberField(_RealField):
 
     @property
     def _value(self):
-        ret, value = native_bt.field_floating_point_get_value(self._ptr)
-
-        if ret < 0:
-            utils._handle_ret(ret, "cannot get floating point number field's value")
-
-        return value
+        return native_bt.field_real_get_value(self._ptr)
 
     def _set_value(self, value):
         value = self._value_to_float(value)
-        ret = native_bt.field_floating_point_set_value(self._ptr, value)
-        utils._handle_ret(ret, "cannot set floating point number field object's value")
+        native_bt.field_real_set_value(self._ptr, value)
 
     value = property(fset=_set_value)
 
@@ -341,35 +330,20 @@ class _FloatingPointNumberField(_RealField):
 class _EnumerationField(_IntegerField):
     _NAME = 'Enumeration'
 
-    @property
-    def integer_field(self):
-        int_field_ptr = native_bt.field_enumeration_get_container(self._ptr)
-        assert(int_field_ptr)
-        return _create_from_ptr(int_field_ptr)
-
-    def _set_value(self, value):
-        self.integer_field.value = value
-
     def _repr(self):
-        labels = [repr(v.name) for v in self.mappings]
-        return '{} ({})'.format(self._value, ', '.join(labels))
-
-    value = property(fset=_set_value)
+        return '{} ({})'.format(self._value, ', '.join(self.labels))
 
     @property
-    def _value(self):
-        return self.integer_field._value
+    def labels(self):
+        return self.field_type.labels_by_value(self._value)
 
-    @property
-    def mappings(self):
-        iter_ptr = native_bt.field_enumeration_get_mappings(self._ptr)
-        assert(iter_ptr)
-        return bt2.field_types._EnumerationFieldTypeMappingIterator(iter_ptr,
-                                                                    self.field_type.is_signed)
+class _UnsignedEnumerationField(_EnumerationField, _UnsignedIntegerField):
+    _NAME = 'Enumeration'
 
+class _SignedEnumerationField(_EnumerationField, _SignedIntegerField):
+    _NAME = 'Enumeration'
 
-@functools.total_ordering
-class _StringField(_Field, collections.abc.Sequence):
+class _StringField(_Field):
     _NAME = 'String'
 
     def _value_to_str(self, value):
@@ -383,13 +357,11 @@ class _StringField(_Field, collections.abc.Sequence):
 
     @property
     def _value(self):
-        value = native_bt.field_string_get_value(self._ptr)
-        return value
+        return native_bt.field_string_get_value(self._ptr)
 
     def _set_value(self, value):
         value = self._value_to_str(value)
-        ret = native_bt.field_string_set_value(self._ptr, value)
-        utils._handle_ret(ret, "cannot set string field object's value")
+        native_bt.field_string_set_value(self._ptr, value)
 
     value = property(fset=_set_value)
 
@@ -428,7 +400,6 @@ class _StringField(_Field, collections.abc.Sequence):
         utils._handle_ret(ret, "cannot append to string field object's value")
         return self
 
-
 class _ContainerField(_Field):
     def __bool__(self):
         return len(self) != 0
@@ -448,15 +419,6 @@ class _StructureField(_ContainerField, collections.abc.MutableMapping):
     def _count(self):
         return len(self.field_type)
 
-    def __getitem__(self, key):
-        utils._check_str(key)
-        ptr = native_bt.field_structure_get_field_by_name(self._ptr, key)
-
-        if ptr is None:
-            raise KeyError(key)
-
-        return _create_from_ptr(ptr)
-
     def __setitem__(self, key, value):
         # raises if key is somehow invalid
         field = self[key]
@@ -464,16 +426,6 @@ class _StructureField(_ContainerField, collections.abc.MutableMapping):
         # the field's property does the appropriate conversion or raises
         # the appropriate exception
         field.value = value
-
-    def at_index(self, index):
-        utils._check_uint64(index)
-
-        if index >= len(self):
-            raise IndexError
-
-        field_ptr = native_bt.field_structure_get_field_by_index(self._ptr, index)
-        assert(field_ptr)
-        return _create_from_ptr(field_ptr)
 
     def __iter__(self):
         # same name iterator
@@ -502,13 +454,11 @@ class _StructureField(_ContainerField, collections.abc.MutableMapping):
         return {key: value._value for key, value in self.items()}
 
     def _set_value(self, values):
-        original_values = self._value
 
         try:
             for key, value in values.items():
                 self[key].value = value
         except:
-            self.value = original_values
             raise
 
     value = property(fset=_set_value)
@@ -517,38 +467,50 @@ class _StructureField(_ContainerField, collections.abc.MutableMapping):
         items = ['{}: {}'.format(repr(k), repr(v)) for k, v in self.items()]
         return '{{{}}}'.format(', '.join(items))
 
-
-class _VariantField(_Field):
-    _NAME = 'Variant'
-
-    @property
-    def tag_field(self):
-        field_ptr = native_bt.field_variant_get_tag(self._ptr)
+    def __getitem__(self, key):
+        utils._check_str(key)
+        field_ptr = native_bt.field_structure_borrow_member_field_by_name(self._ptr, key)
 
         if field_ptr is None:
-            return
+            raise KeyError(key)
 
-        return _create_from_ptr(field_ptr)
+        return _create_field_from_ptr(field_ptr, self._owning_ptr)
+
+    def at_index(self, index):
+        utils._check_uint64(index)
+
+        if index >= len(self):
+            raise IndexError
+
+        field_ptr = native_bt.field_structure_borrow_member_field_by_index(self._ptr, index)
+        assert(field_ptr)
+        return _create_field_from_ptr(field_ptr, self._owning_ptr)
+
+
+class _VariantField(_ContainerField, _Field):
+    _NAME = 'Variant'
+
+    def field(self):
+        field_ptr = native_bt.field_variant_borrow_selected_option_field(self._ptr)
+        utils._handle_ptr(field_ptr, "cannot select variant field object's field")
+
+        return _create_field_from_ptr(field_ptr, self._owning_ptr)
+
+    @property
+    def selected_index(self):
+        return native_bt.field_variant_get_selected_option_field(self._ptr)
+
+    @selected_index.setter
+    def selected_index(self, index):
+        native_bt.field_variant_select_option_field(self._ptr, index)
 
     @property
     def selected_field(self):
         return self.field()
 
-    def field(self, tag_field=None):
-        if tag_field is None:
-            field_ptr = native_bt.field_variant_get_current_field(self._ptr)
-
-            if field_ptr is None:
-                return
-        else:
-            utils._check_type(tag_field, _EnumerationField)
-            field_ptr = native_bt.field_variant_get_field(self._ptr, tag_field._ptr)
-            utils._handle_ptr(field_ptr, "cannot select variant field object's field")
-
-        return _create_from_ptr(field_ptr)
-
     def _spec_eq(self, other):
-        return _get_leaf_field(self) == other
+        new_self = _get_leaf_field(self)
+        return new_self == other
 
     def __bool__(self):
         return bool(self.selected_field)
@@ -570,7 +532,8 @@ class _VariantField(_Field):
     value = property(fset=_set_value)
 
 
-class _ArraySequenceField(_ContainerField, collections.abc.MutableSequence):
+class _ArrayField(_ContainerField, _Field):
+
     def __getitem__(self, index):
         if not isinstance(index, numbers.Integral):
             raise TypeError("'{}' is not an integral number object: invalid index".format(index.__class__.__name__))
@@ -580,9 +543,9 @@ class _ArraySequenceField(_ContainerField, collections.abc.MutableSequence):
         if index < 0 or index >= len(self):
             raise IndexError('{} field object index is out of range'.format(self._NAME))
 
-        field_ptr = self._get_field_ptr_at_index(index)
+        field_ptr = native_bt.field_array_borrow_element_field_by_index(self._ptr, index)
         assert(field_ptr)
-        return _create_from_ptr(field_ptr)
+        return _create_field_from_ptr(field_ptr, self._owning_ptr)
 
     def __setitem__(self, index, value):
         # we can only set numbers and strings
@@ -622,93 +585,67 @@ class _ArraySequenceField(_ContainerField, collections.abc.MutableSequence):
     def _repr(self):
         return '[{}]'.format(', '.join([repr(v) for v in self]))
 
-
-class _ArrayField(_ArraySequenceField):
-    _NAME = 'Array'
+class _StaticArrayField(_ArrayField, _Field):
+    _NAME = 'StaticArray'
 
     def _count(self):
         return self.field_type.length
-
-    def _get_field_ptr_at_index(self, index):
-        return native_bt.field_array_get_field(self._ptr, index)
 
     def _set_value(self, values):
         if len(self) != len(values):
             raise ValueError(
                 'expected length of value and array field to match')
 
-        original_values = self._value
         try:
             for index, value in enumerate(values):
                 if value is not None:
                     self[index].value = value
-                else:
-                    self[index].reset()
         except:
-            self.value = original_values
             raise
 
     value = property(fset=_set_value)
 
-
-class _SequenceField(_ArraySequenceField):
-    _NAME = 'Sequence'
+class _DynamicArrayField(_ArrayField, _Field):
+    _NAME = 'DynamicArray'
 
     def _count(self):
-        return int(self.length_field)
+        return self.length
 
     @property
-    def length_field(self):
-        field_ptr = native_bt.field_sequence_get_length(self._ptr)
-        if field_ptr is None:
-            return
-        return _create_from_ptr(field_ptr)
+    def length(self):
+        return native_bt.field_array_get_length(self._ptr)
 
-    @length_field.setter
-    def length_field(self, length_field):
-        utils._check_type(length_field, _IntegerField)
-        ret = native_bt.field_sequence_set_length(self._ptr, length_field._ptr)
-        utils._handle_ret(ret, "cannot set sequence field object's length field")
-
-    def _get_field_ptr_at_index(self, index):
-        return native_bt.field_sequence_get_field(self._ptr, index)
+    @length.setter
+    def length(self, length):
+        # should we check the return value of this call
+        native_bt.field_dynamic_array_set_length(self._ptr, length)
 
     def _set_value(self, values):
-        original_length_field = self.length_field
-        if original_length_field is not None:
-            original_values = self._value
+        original_length_field = self.length
 
-        if len(values) != self.length_field:
-            if self.length_field is not None:
-                length_ft = self.length_field.field_type
-            else:
-                length_ft = bt2.IntegerFieldType(size=64, is_signed=False)
-            self.length_field = length_ft(len(values))
+        if len(values) != self.length:
+            self.length = len(values)
 
         try:
             for index, value in enumerate(values):
                 if value is not None:
                     self[index].value = value
-                else:
-                    self[index].reset()
         except:
-            if original_length_field is not None:
-                self.length_field = original_length_field
-                self.value = original_values
-            else:
-                self.reset()
+            self.length = original_length_field
             raise
 
     value = property(fset=_set_value)
 
 
-_TYPE_ID_TO_OBJ = {
-    native_bt.FIELD_TYPE_ID_INTEGER: _IntegerField,
-    native_bt.FIELD_TYPE_ID_FLOAT: _FloatingPointNumberField,
-    native_bt.FIELD_TYPE_ID_ENUM: _EnumerationField,
+_FIELD_ID_TO_OBJ = {
+    native_bt.FIELD_TYPE_ID_UNSIGNED_INTEGER: _UnsignedIntegerField,
+    native_bt.FIELD_TYPE_ID_SIGNED_INTEGER: _SignedIntegerField,
+    native_bt.FIELD_TYPE_ID_REAL: _RealField,
+    native_bt.FIELD_TYPE_ID_UNSIGNED_ENUMERATION: _UnsignedEnumerationField,
+    native_bt.FIELD_TYPE_ID_SIGNED_ENUMERATION: _SignedEnumerationField,
     native_bt.FIELD_TYPE_ID_STRING: _StringField,
-    native_bt.FIELD_TYPE_ID_STRUCT: _StructureField,
-    native_bt.FIELD_TYPE_ID_ARRAY: _ArrayField,
-    native_bt.FIELD_TYPE_ID_SEQUENCE: _SequenceField,
+    native_bt.FIELD_TYPE_ID_STRUCTURE: _StructureField,
+    native_bt.FIELD_TYPE_ID_STATIC_ARRAY: _StaticArrayField,
+    native_bt.FIELD_TYPE_ID_DYNAMIC_ARRAY: _DynamicArrayField,
     native_bt.FIELD_TYPE_ID_VARIANT: _VariantField,
 }

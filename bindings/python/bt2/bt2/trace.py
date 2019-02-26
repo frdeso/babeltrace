@@ -1,6 +1,7 @@
 # The MIT License (MIT)
 #
 # Copyright (c) 2017 Philippe Proulx <pproulx@efficios.com>
+# Copyright (c) 2018 Francis Deslauriers <francis.deslauriers@efficios.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -20,14 +21,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from bt2 import native_bt, object, utils
-import bt2.field_types
-import collections.abc
-import bt2.values
-import bt2.stream
-import copy
-import bt2
+__all__ = ['Trace']
 
+import collections.abc
+
+import uuid as uuidp
+from bt2 import utils, native_bt
+import bt2
+from . import object, field_types, stream_class
 
 class _StreamClassIterator(collections.abc.Iterator):
     def __init__(self, trace):
@@ -38,11 +39,10 @@ class _StreamClassIterator(collections.abc.Iterator):
         if self._at == len(self._trace):
             raise StopIteration
 
-        sc_ptr = native_bt.trace_get_stream_class_by_index(self._trace._ptr,
+        sc_ptr = native_bt.trace_borrow_stream_class_by_index(self._trace._ptr,
                                                            self._at)
         assert(sc_ptr)
         id = native_bt.stream_class_get_id(sc_ptr)
-        native_bt.put(sc_ptr)
         assert(id >= 0)
         self._at += 1
         return id
@@ -63,51 +63,11 @@ class _TraceStreams(collections.abc.Sequence):
         if index >= len(self):
             raise IndexError
 
-        stream_ptr = native_bt.trace_get_stream_by_index(self._trace._ptr,
+        stream_ptr = native_bt.trace_borrow_stream_by_index(self._trace._ptr,
                                                          index)
         assert(stream_ptr)
-        return bt2.stream._create_from_ptr(stream_ptr)
-
-
-class _TraceClockClassesIterator(collections.abc.Iterator):
-    def __init__(self, trace_clock_classes):
-        self._trace_clock_classes = trace_clock_classes
-        self._at = 0
-
-    def __next__(self):
-        if self._at == len(self._trace_clock_classes):
-            raise StopIteration
-
-        trace_ptr = self._trace_clock_classes._trace._ptr
-        cc_ptr = native_bt.trace_get_clock_class_by_index(trace_ptr, self._at)
-        assert(cc_ptr)
-        name = native_bt.clock_class_get_name(cc_ptr)
-        native_bt.put(cc_ptr)
-        assert(name is not None)
-        self._at += 1
-        return name
-
-
-class _TraceClockClasses(collections.abc.Mapping):
-    def __init__(self, trace):
-        self._trace = trace
-
-    def __getitem__(self, key):
-        utils._check_str(key)
-        cc_ptr = native_bt.trace_get_clock_class_by_name(self._trace._ptr, key)
-
-        if cc_ptr is None:
-            raise KeyError(key)
-
-        return bt2.ClockClass._create_from_ptr(cc_ptr)
-
-    def __len__(self):
-        count = native_bt.trace_get_clock_class_count(self._trace._ptr)
-        assert(count >= 0)
-        return count
-
-    def __iter__(self):
-        return _TraceClockClassesIterator(self)
+        native_bt.get(stream_ptr)
+        return bt2.stream._create_stream_from_ptr(stream_ptr)
 
 
 class _TraceEnvIterator(collections.abc.Iterator):
@@ -120,8 +80,8 @@ class _TraceEnvIterator(collections.abc.Iterator):
             raise StopIteration
 
         trace_ptr = self._trace_env._trace._ptr
-        entry_name = native_bt.trace_get_environment_field_name_by_index(trace_ptr,
-                                                                         self._at)
+        entry_name, value = native_bt.trace_borrow_environment_entry_by_index(trace_ptr,
+                                                                     self._at)
         assert(entry_name is not None)
         self._at += 1
         return entry_name
@@ -133,26 +93,34 @@ class _TraceEnv(collections.abc.MutableMapping):
 
     def __getitem__(self, key):
         utils._check_str(key)
-        value_ptr = native_bt.trace_get_environment_field_value_by_name(self._trace._ptr,
-                                                                        key)
 
-        if value_ptr is None:
-            raise KeyError(key)
+        for idx, entry in enumerate(self):
+            if entry == key:
+                entry_name, value_ptr = native_bt.trace_borrow_environment_entry_by_index(self._trace._ptr,
+                                                                        idx)
+                native_bt.get(value_ptr)
+                return bt2.values._create_from_ptr(value_ptr)
 
-        return bt2.values._create_from_ptr(value_ptr)
+        raise KeyError(key)
 
     def __setitem__(self, key, value):
-        utils._check_str(key)
-        value = bt2.create_value(value)
-        ret = native_bt.trace_set_environment_field(self._trace._ptr,
-                                                    key, value._ptr)
+        if isinstance(value, (str, int)) == False:
+            abort();
+
+        if isinstance(value, str):
+            set_env_entry_fn = native_bt.trace_set_environment_entry_string
+        elif isinstance(value, int):
+            set_env_entry_fn = native_bt.trace_set_environment_entry_integer
+
+        ret = set_env_entry_fn(self._trace._ptr, key, value)
+
         utils._handle_ret(ret, "cannot set trace class object's environment entry")
 
     def __delitem__(self, key):
         raise NotImplementedError
 
     def __len__(self):
-        count = native_bt.trace_get_environment_field_count(self._trace._ptr)
+        count = native_bt.trace_get_environment_entry_count(self._trace._ptr)
         assert(count >= 0)
         return count
 
@@ -160,10 +128,10 @@ class _TraceEnv(collections.abc.MutableMapping):
         return _TraceEnvIterator(self)
 
 
-class Trace(object._Object, collections.abc.Mapping):
-    def __init__(self, name=None, native_byte_order=None, env=None,
-                 packet_header_field_type=None, clock_classes=None,
-                 stream_classes=None):
+class Trace(object._SharedObject, collections.abc.Mapping):
+    def __init__(self, name=None, uuid=None, env=None,
+                 packet_header_field_type=None, automatic_stream_class_id=None):
+
         ptr = native_bt.trace_create()
 
         if ptr is None:
@@ -174,8 +142,8 @@ class Trace(object._Object, collections.abc.Mapping):
         if name is not None:
             self.name = name
 
-        if native_byte_order is not None:
-            self.native_byte_order = native_byte_order
+        if uuid is not None:
+            self.uuid = uuid
 
         if packet_header_field_type is not None:
             self.packet_header_field_type = packet_header_field_type
@@ -184,22 +152,20 @@ class Trace(object._Object, collections.abc.Mapping):
             for key, value in env.items():
                 self.env[key] = value
 
-        if clock_classes is not None:
-            for clock_class in clock_classes:
-                self.add_clock_class(clock_class)
-
-        if stream_classes is not None:
-            for stream_class in stream_classes:
-                self.add_stream_class(stream_class)
+        if automatic_stream_class_id is not None:
+            self.assign_automatic_stream_class_id = automatic_stream_class_id
 
     def __getitem__(self, key):
         utils._check_int64(key)
-        sc_ptr = native_bt.trace_get_stream_class_by_id(self._ptr, key)
 
-        if sc_ptr is None:
-            raise KeyError(key)
+        for idx, sc_id in enumerate(self):
+            if sc_id == key:
+                sc_ptr = native_bt.trace_borrow_stream_class_by_index(self._ptr, idx)
+                native_bt.get(sc_ptr)
+                return bt2.stream_class._StreamClass._create_from_ptr(sc_ptr)
 
-        return bt2.StreamClass._create_from_ptr(sc_ptr)
+        raise KeyError(key)
+
 
     def __len__(self):
         count = native_bt.trace_get_stream_class_count(self._ptr)
@@ -209,10 +175,56 @@ class Trace(object._Object, collections.abc.Mapping):
     def __iter__(self):
         return _StreamClassIterator(self)
 
-    def add_stream_class(self, stream_class):
-        utils._check_type(stream_class, bt2.StreamClass)
-        ret = native_bt.trace_add_stream_class(self._ptr, stream_class._ptr)
-        utils._handle_ret(ret, "cannot add stream class object to trace class object")
+    def create_stream_class(self, id=None, event_header_ft=None, packet_context_ft=None,
+                event_common_context_ft=None, default_clock_class=None, default_clock_always_known=None,
+                packets_have_discarded_event_counter_snapshot=None, packets_have_packet_counter_snapshot=None,
+                packets_have_default_beginning_clock_value=None, packets_have_default_end_clock_value=None,
+                automatic_event_class_id=None, automatic_stream_id=None):
+
+        if self.assign_automatic_stream_class_id:
+            sc_ptr = native_bt.stream_class_create(self._ptr)
+        else:
+            if id is None:
+                raise bt2.CreationError('cannot create stream class object')
+            sc_ptr = native_bt.stream_class_create_with_id(self._ptr, id)
+
+        sc = bt2.stream_class._StreamClass._create_from_ptr(sc_ptr)
+
+        if event_header_ft is not None:
+            sc.event_header_field_type = event_header_ft
+
+        if packet_context_ft is not None:
+            sc.packet_context_field_type = packet_context_ft
+
+        if event_common_context_ft is not None:
+            sc.event_common_context_field_type = event_common_context_ft
+
+        if default_clock_class is not None:
+            sc.default_clock_class = default_clock_class
+
+        if default_clock_always_known is not None:
+            # Ignored for now
+            pass
+
+        if packets_have_discarded_event_counter_snapshot is not None:
+            sc.packets_have_discarded_event_counter_snapshot = packets_have_discarded_event_counter_snapshot
+
+        if packets_have_packet_counter_snapshot is not None:
+            sc.packets_have_packet_counter_snapshot = packets_have_packet_counter_snapshot
+
+        if packets_have_default_beginning_clock_value is not None:
+            sc.packets_have_default_beginning_clock_value = packets_have_default_beginning_clock_value
+
+        if packets_have_default_end_clock_value is not None:
+            sc.packets_have_default_end_clock_value = packets_have_default_end_clock_value
+
+        if automatic_event_class_id is not None:
+            sc.assigns_automatic_event_class_id = automatic_event_class_id
+
+        if automatic_stream_id is not None:
+            sc.assigns_automatic_stream_id = automatic_stream_id
+
+        return sc 
 
     @property
     def name(self):
@@ -225,38 +237,31 @@ class Trace(object._Object, collections.abc.Mapping):
         utils._handle_ret(ret, "cannot set trace class object's name")
 
     @property
-    def native_byte_order(self):
-        bo = native_bt.trace_get_native_byte_order(self._ptr)
-        assert(bo >= 0)
-        return bo
+    def uuid(self):
+        uuid_bytes = native_bt.trace_get_uuid(self._ptr)
+        if uuid_bytes is None:
+            return
 
-    @native_byte_order.setter
-    def native_byte_order(self, native_byte_order):
-        utils._check_int(native_byte_order)
-        ret = native_bt.trace_set_native_byte_order(self._ptr, native_byte_order)
-        utils._handle_ret(ret, "cannot set trace class object's native byte order")
+        return uuidp.UUID(bytes=uuid_bytes)
 
-    @property
-    def is_static(self):
-        is_static = native_bt.trace_is_static(self._ptr)
-        return is_static > 0
-
-    def set_is_static(self):
-        ret = native_bt.trace_set_is_static(self._ptr)
-        utils._handle_ret(ret, "cannot set trace object as static")
+    @uuid.setter
+    def uuid(self, uuid):
+        utils._check_type(uuid, uuidp.UUID)
+        ret = native_bt.trace_set_uuid(self._ptr, uuid.bytes)
+        utils._handle_ret(ret, "cannot set trace class object's uuid")
 
     @property
     def env(self):
         return _TraceEnv(self)
 
     @property
-    def clock_classes(self):
-        return _TraceClockClasses(self)
+    def assign_automatic_stream_class_id(self):
+        return native_bt.trace_assigns_automatic_stream_class_id(self._ptr)
 
-    def add_clock_class(self, clock_class):
-        utils._check_type(clock_class, bt2.ClockClass)
-        ret = native_bt.trace_add_clock_class(self._ptr, clock_class._ptr)
-        utils._handle_ret(ret, "cannot add clock class object to trace class object")
+    @assign_automatic_stream_class_id.setter
+    def assign_automatic_stream_class_id(self, auto_id):
+        utils._check_bool(auto_id)
+        return native_bt.trace_set_assigns_automatic_stream_class_id(self._ptr, auto_id)
 
     @property
     def streams(self):
@@ -264,80 +269,31 @@ class Trace(object._Object, collections.abc.Mapping):
 
     @property
     def packet_header_field_type(self):
-        ft_ptr = native_bt.trace_get_packet_header_type(self._ptr)
+        ft_ptr = native_bt.trace_borrow_packet_header_field_type(self._ptr)
 
         if ft_ptr is None:
             return
+        native_bt.get(ft_ptr)
 
-        return bt2.field_types._create_from_ptr(ft_ptr)
+        return bt2.field_types._create_field_type_from_ptr(ft_ptr)
 
     @packet_header_field_type.setter
     def packet_header_field_type(self, packet_header_field_type):
         packet_header_field_type_ptr = None
 
         if packet_header_field_type is not None:
-            utils._check_type(packet_header_field_type, bt2.field_types._FieldType)
+            utils._check_type(packet_header_field_type, field_types._FieldType)
             packet_header_field_type_ptr = packet_header_field_type._ptr
 
-        ret = native_bt.trace_set_packet_header_type(self._ptr,
+        ret = native_bt.trace_set_packet_header_field_type(self._ptr,
                                                      packet_header_field_type_ptr)
         utils._handle_ret(ret, "cannot set trace class object's packet header field type")
 
-    def __eq__(self, other):
-        if type(other) is not type(self):
-            # not comparing apples to apples
-            return False
+    @property
+    def is_static(self):
+        is_static = native_bt.trace_is_static(self._ptr)
+        return is_static > 0
 
-        if self.addr == other.addr:
-            return True
-
-        self_stream_classes = list(self.values())
-        self_clock_classes = list(self.clock_classes.values())
-        self_env = {key: val for key, val in self.env.items()}
-        other_stream_classes = list(other.values())
-        other_clock_classes = list(other.clock_classes.values())
-        other_env = {key: val for key, val in other.env.items()}
-        self_props = (
-            self_stream_classes,
-            self_clock_classes,
-            self_env,
-            self.name,
-            self.native_byte_order,
-            self.packet_header_field_type,
-        )
-        other_props = (
-            other_stream_classes,
-            other_clock_classes,
-            other_env,
-            other.name,
-            other.native_byte_order,
-            other.packet_header_field_type,
-        )
-        return self_props == other_props
-
-    def _copy(self, gen_copy_func, sc_copy_func):
-        cpy = Trace()
-
-        if self.name is not None:
-            cpy.name = self.name
-
-        cpy.packet_header_field_type = gen_copy_func(self.packet_header_field_type)
-
-        for key, val in self.env.items():
-            cpy.env[key] = gen_copy_func(val)
-
-        for clock_class in self.clock_classes.values():
-            cpy.add_clock_class(gen_copy_func(clock_class))
-
-        for stream_class in self.values():
-            cpy.add_stream_class(sc_copy_func(stream_class))
-
-        return cpy
-
-    def __copy__(self):
-        return self._copy(lambda obj: obj, copy.copy)
-
-    def __deepcopy__(self, memo):
-        cpy = self._copy(copy.deepcopy, copy.deepcopy)
-        memo[id(self)] = cpy
-        return cpy
+    def make_static(self):
+        ret = native_bt.trace_make_static(self._ptr)
+        utils._handle_ret(ret, "cannot set trace object as static")

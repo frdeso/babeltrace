@@ -20,10 +20,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from bt2 import native_bt, object, utils
+import functools
+from bt2 import native_bt, utils
 import bt2.connection
 import bt2.component
-import functools
 import bt2.port
 import bt2
 
@@ -86,7 +86,7 @@ def _graph_ports_disconnected_listener_from_native(user_listener,
         pass
 
 
-class Graph(object._Object):
+class Graph(bt2.object._SharedObject):
     def __init__(self):
         ptr = native_bt.graph_create()
 
@@ -106,8 +106,6 @@ class Graph(object._Object):
             raise bt2.TryAgain
         elif status == native_bt.GRAPH_STATUS_NO_SINK:
             raise bt2.NoSinkComponent
-        elif status == native_bt.GRAPH_STATUS_CANNOT_CONSUME:
-            raise bt2.CannotConsumeGraph
         elif status < 0:
             raise bt2.Error(gen_error_msg)
 
@@ -187,9 +185,3 @@ class Graph(object._Object):
         is_canceled = native_bt.graph_is_canceled(self._ptr)
         assert(is_canceled >= 0)
         return is_canceled > 0
-
-    def __eq__(self, other):
-        if type(other) is not type(self):
-            return False
-
-        return self.addr == other.addr

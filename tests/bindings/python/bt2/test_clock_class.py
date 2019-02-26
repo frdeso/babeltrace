@@ -2,7 +2,10 @@ import unittest
 import uuid
 import copy
 import bt2
+from collections import OrderedDict
 
+#Raise "create a graph to generate event notification so we can change and test the clock value using the 
+#Bt_event_set_clock_value"
 
 class ClockClassOffsetTestCase(unittest.TestCase):
     def test_create_default(self):
@@ -57,23 +60,23 @@ class ClockClassTestCase(unittest.TestCase):
     def test_create_default(self):
         self.assertEqual(self._cc.name, 'salut')
 
-    def test_create_invalid_no_name(self):
-        with self.assertRaises(TypeError):
-            bt2.ClockClass()
-
     def test_create_full(self):
         my_uuid = uuid.uuid1()
         cc = bt2.ClockClass(name='name', description='some description',
                             frequency=1001, precision=176,
-                            offset=bt2.ClockClassOffset(45, 3003),
+                            offset=bt2.ClockClassOffset(45, 3),
                             is_absolute=True, uuid=my_uuid)
         self.assertEqual(cc.name, 'name')
         self.assertEqual(cc.description, 'some description')
         self.assertEqual(cc.frequency, 1001)
         self.assertEqual(cc.precision, 176)
-        self.assertEqual(cc.offset, bt2.ClockClassOffset(45, 3003))
+        self.assertEqual(cc.offset, bt2.ClockClassOffset(45, 3))
         self.assertEqual(cc.is_absolute, True)
         self.assertEqual(cc.uuid, copy.deepcopy(my_uuid))
+
+    def test_create_no_uuid(self):
+        cc = bt2.ClockClass()
+        self.assertIsNone(cc.uuid)
 
     def test_assign_name(self):
         self._cc.name = 'the_clock'
@@ -119,6 +122,10 @@ class ClockClassTestCase(unittest.TestCase):
         self._cc.is_absolute = True
         self.assertTrue(self._cc.is_absolute)
 
+    def test_assign_not_absolute(self):
+        self._cc.is_absolute = False
+        self.assertFalse(self._cc.is_absolute)
+
     def test_assign_invalid_absolute(self):
         with self.assertRaises(TypeError):
             self._cc.is_absolute = 23
@@ -132,127 +139,57 @@ class ClockClassTestCase(unittest.TestCase):
         with self.assertRaises(TypeError):
             self._cc.uuid = object()
 
-    def test_create_clock_value(self):
-        cv = self._cc(756)
-        self.assertEqual(cv.clock_class.addr, self._cc.addr)
-
-    def _test_copy(self, cpy):
-        self.assertIsNot(cpy, self._cc)
-        self.assertNotEqual(cpy.addr, self._cc.addr)
-        self.assertEqual(cpy, self._cc)
-
-    def test_copy(self):
-        cpy = copy.copy(self._cc)
-        self._test_copy(cpy)
-
-    def test_deepcopy(self):
-        cpy = copy.deepcopy(self._cc)
-        self._test_copy(cpy)
-
-    def test_eq(self):
-        my_uuid = uuid.uuid1()
-        cc1 = bt2.ClockClass(name='name', description='some description',
-                             frequency=1001, precision=176,
-                             offset=bt2.ClockClassOffset(45, 3003),
-                             is_absolute=True, uuid=my_uuid)
-        cc2 = bt2.ClockClass(name='name', description='some description',
-                             frequency=1001, precision=176,
-                             offset=bt2.ClockClassOffset(45, 3003),
-                             is_absolute=True, uuid=my_uuid)
-        self.assertEqual(cc1, cc2)
-
-    def test_ne_name(self):
-        my_uuid = uuid.uuid1()
-        cc1 = bt2.ClockClass(name='mane', description='some description',
-                             frequency=1001, precision=176,
-                             offset=bt2.ClockClassOffset(45, 3003),
-                             is_absolute=True, uuid=my_uuid)
-        cc2 = bt2.ClockClass(name='name', description='some description',
-                             frequency=1001, precision=176,
-                             offset=bt2.ClockClassOffset(45, 3003),
-                             is_absolute=True, uuid=my_uuid)
-        self.assertNotEqual(cc1, cc2)
-
-    def test_ne_description(self):
-        my_uuid = uuid.uuid1()
-        cc1 = bt2.ClockClass(name='name', description='some descripti2',
-                             frequency=1001, precision=176,
-                             offset=bt2.ClockClassOffset(45, 3003),
-                             is_absolute=True, uuid=my_uuid)
-        cc2 = bt2.ClockClass(name='name', description='some description',
-                             frequency=1001, precision=176,
-                             offset=bt2.ClockClassOffset(45, 3003),
-                             is_absolute=True, uuid=my_uuid)
-        self.assertNotEqual(cc1, cc2)
-
-    def test_ne_frequency(self):
-        my_uuid = uuid.uuid1()
-        cc1 = bt2.ClockClass(name='name', description='some description',
-                             frequency=1003, precision=176,
-                             offset=bt2.ClockClassOffset(45, 3003),
-                             is_absolute=True, uuid=my_uuid)
-        cc2 = bt2.ClockClass(name='name', description='some description',
-                             frequency=1001, precision=176,
-                             offset=bt2.ClockClassOffset(45, 3003),
-                             is_absolute=True, uuid=my_uuid)
-        self.assertNotEqual(cc1, cc2)
-
-    def test_ne_precision(self):
-        my_uuid = uuid.uuid1()
-        cc1 = bt2.ClockClass(name='name', description='some description',
-                             frequency=1001, precision=171,
-                             offset=bt2.ClockClassOffset(45, 3003),
-                             is_absolute=True, uuid=my_uuid)
-        cc2 = bt2.ClockClass(name='name', description='some description',
-                             frequency=1001, precision=176,
-                             offset=bt2.ClockClassOffset(45, 3003),
-                             is_absolute=True, uuid=my_uuid)
-        self.assertNotEqual(cc1, cc2)
-
-    def test_ne_offset(self):
-        my_uuid = uuid.uuid1()
-        cc1 = bt2.ClockClass(name='name', description='some description',
-                             frequency=1001, precision=176,
-                             offset=bt2.ClockClassOffset(45, 3001),
-                             is_absolute=True, uuid=my_uuid)
-        cc2 = bt2.ClockClass(name='name', description='some description',
-                             frequency=1001, precision=176,
-                             offset=bt2.ClockClassOffset(45, 3003),
-                             is_absolute=True, uuid=my_uuid)
-        self.assertNotEqual(cc1, cc2)
-
-    def test_ne_absolute(self):
-        my_uuid = uuid.uuid1()
-        cc1 = bt2.ClockClass(name='name', description='some description',
-                             frequency=1001, precision=176,
-                             offset=bt2.ClockClassOffset(45, 3003),
-                             is_absolute=True, uuid=my_uuid)
-        cc2 = bt2.ClockClass(name='name', description='some description',
-                             frequency=1001, precision=176,
-                             offset=bt2.ClockClassOffset(45, 3003),
-                             is_absolute=False, uuid=my_uuid)
-        self.assertNotEqual(cc1, cc2)
-
-    def test_ne_uuid(self):
-        cc1 = bt2.ClockClass(name='name', description='some description',
-                             frequency=1001, precision=176,
-                             offset=bt2.ClockClassOffset(45, 3003),
-                             is_absolute=True, uuid=uuid.uuid1())
-        cc2 = bt2.ClockClass(name='name', description='some description',
-                             frequency=1001, precision=176,
-                             offset=bt2.ClockClassOffset(45, 3003),
-                             is_absolute=True, uuid=uuid.uuid1())
-        self.assertNotEqual(cc1, cc2)
-
-    def test_eq_invalid(self):
-        self.assertFalse(self._cc == 23)
-
 
 class ClockValueTestCase(unittest.TestCase):
     def setUp(self):
-        self._cc = bt2.ClockClass('salut', 1000,
-                                  offset=bt2.ClockClassOffset(45, 354))
-        self._cv = self._cc(123)
+        _cc = bt2.ClockClass('my_cc', 1000, offset=bt2.ClockClassOffset(45, 354))
+        _trace = bt2.Trace()
+        _sc = _trace.create_stream_class()
+        _sc.default_clock_class = _cc
+        _ec = _sc.create_event_class()
+        _ec.name = 'salut'
+        _stream = _sc()
+        _packet = _stream.create_packet()
+        self._packet = _packet
+        self._stream = _stream
+        self._ec = _ec
+        self._cc = _cc
+
+        class MyIter(bt2._UserNotificationIterator):
+            def __init__(self):
+                self._at = 0
+
+            def __next__(self):
+                if self._at == 0:
+                    notif = self._create_stream_beginning_notification(_stream)
+                elif self._at == 1:
+                    notif = self._create_packet_beginning_notification(_packet)
+                elif self._at == 2:
+                    notif = self._create_event_notification(_ec, _packet)
+                    notif.event.default_clock_value = 123
+                elif self._at == 3:
+                    notif = self._create_packet_end_notification(_packet)
+                elif self._at == 4:
+                    notif = self._create_stream_end_notification(_stream)
+                else:
+                    raise bt2.Stop
+
+                self._at += 1
+                return notif
+
+
+        class MySrc(bt2._UserSourceComponent, notification_iterator_class=MyIter):
+            def __init__(self, params):
+                self._add_output_port('out')
+
+        self._graph = bt2.Graph()
+        self._src_comp = self._graph.add_component(MySrc, 'my_source')
+        self._notif_iter = self._src_comp.output_ports['out'].create_notification_iterator()
+
+        for i, notif in enumerate(self._notif_iter):
+            if i == 2:
+                self._cv = notif.event.default_clock_value
+                break
 
     def tearDown(self):
         del self._cc
@@ -262,48 +199,20 @@ class ClockValueTestCase(unittest.TestCase):
         self.assertEqual(self._cv.clock_class.addr, self._cc.addr)
         self.assertEqual(self._cv.cycles, 123)
 
+    def test_clock_class(self):
+        self.assertEqual(self._cv.clock_class.addr, self._cc.addr)
+
     def test_create_invalid_cycles_type(self):
         with self.assertRaises(TypeError):
             self._cc('yes')
 
-    def test_ns_from_epoch(self):
-        s_from_epoch = 45 + ((354 + 123) / 1000)
-        ns_from_epoch = int(s_from_epoch * 1e9)
-        self.assertEqual(self._cv.ns_from_epoch, ns_from_epoch)
-
-    def test_eq(self):
-        cv1 = self._cc(123)
-        cv2 = self._cc(123)
-        self.assertEqual(cv1, cv2)
+    def test_ns_from_origin(self):
+        s_from_origin = 45 + ((354 + 123) / 1000)
+        ns_from_origin = int(s_from_origin * 1e9)
+        self.assertEqual(self._cv.ns_from_origin, ns_from_origin)
 
     def test_eq_int(self):
-        cv1 = self._cc(123)
-        self.assertEqual(cv1, 123)
-
-    def test_ne_clock_class(self):
-        cc1 = bt2.ClockClass('yes', 1500)
-        cc2 = bt2.ClockClass('yes', 1501)
-        cv1 = cc1(123)
-        cv2 = cc2(123)
-        self.assertNotEqual(cv1, cv2)
-
-    def test_ne_cycles(self):
-        cv1 = self._cc(123)
-        cv2 = self._cc(125)
-        self.assertNotEqual(cv1, cv2)
+        self.assertEqual(self._cv, 123)
 
     def test_eq_invalid(self):
         self.assertFalse(self._cv == 23)
-
-    def _test_copy(self, cpy):
-        self.assertIsNot(cpy, self._cv)
-        self.assertNotEqual(cpy.addr, self._cv.addr)
-        self.assertEqual(cpy, self._cv)
-
-    def test_copy(self):
-        cpy = copy.copy(self._cv)
-        self._test_copy(cpy)
-
-    def test_deepcopy(self):
-        cpy = copy.deepcopy(self._cv)
-        self._test_copy(cpy)

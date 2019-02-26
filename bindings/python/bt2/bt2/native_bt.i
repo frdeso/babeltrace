@@ -33,9 +33,11 @@
 #include "logging.h"
 
 #include <babeltrace/babeltrace.h>
+#include <babeltrace/property.h>
 #include <babeltrace/assert-internal.h>
 
 typedef const unsigned char *BTUUID;
+typedef const uint8_t *bt_uuid;
 %}
 
 typedef int bt_bool;
@@ -128,6 +130,42 @@ typedef int bt_bool;
 }
 
 /* Output argument typemap for value output (always appends) */
+%typemap(in, numinputs=0) struct bt_field_type_unsigned_enumeration_mapping_ranges **BTOUTENUMMAPPINGRANGE (struct bt_field_type_unsigned_enumeration_mapping_ranges *temp_value = NULL) {
+	$1 = &temp_value;
+}
+
+%typemap(argout) struct bt_field_type_unsigned_enumeration_mapping_ranges **BTOUTENUMMAPPINGRANGE {
+	if (*$1) {
+		/* SWIG_Python_AppendOutput() steals the created object */
+		$result = SWIG_Python_AppendOutput($result,
+				SWIG_NewPointerObj(SWIG_as_voidptr(*$1),
+					SWIGTYPE_p_bt_field_type_unsigned_enumeration_mapping_ranges, 0));
+	} else {
+		/* SWIG_Python_AppendOutput() steals Py_None */
+		Py_INCREF(Py_None);
+		$result = SWIG_Python_AppendOutput($result, Py_None);
+	}
+}
+
+/* Output argument typemap for value output (always appends) */
+%typemap(in, numinputs=0) struct bt_field_type_signed_enumeration_mapping_ranges **BTOUTENUMMAPPINGRANGE (struct bt_field_type_signed_enumeration_mapping_ranges *temp_value = NULL) {
+	$1 = &temp_value;
+}
+
+%typemap(argout) struct bt_field_type_signed_enumeration_mapping_ranges **BTOUTENUMMAPPINGRANGE {
+	if (*$1) {
+		/* SWIG_Python_AppendOutput() steals the created object */
+		$result = SWIG_Python_AppendOutput($result,
+				SWIG_NewPointerObj(SWIG_as_voidptr(*$1),
+					SWIGTYPE_p_bt_field_type_signed_enumeration_mapping_ranges, 0));
+	} else {
+		/* SWIG_Python_AppendOutput() steals Py_None */
+		Py_INCREF(Py_None);
+		$result = SWIG_Python_AppendOutput($result, Py_None);
+	}
+}
+
+/* Output argument typemap for value output (always appends) */
 %typemap(in, numinputs=0) struct bt_value **BTOUTVALUE (struct bt_value *temp_value = NULL) {
 	$1 = &temp_value;
 }
@@ -143,6 +181,32 @@ typedef int bt_bool;
 	}
 }
 
+/* Output argument typemap for clock value output (always appends) */
+%typemap(in, numinputs=0) struct bt_clock_value **BTOUTCLOCKVALUE (struct bt_clock_value *temp_clock_value = NULL) {
+	$1 = &temp_clock_value;
+}
+
+%typemap(argout) struct bt_clock_value **BTOUTCLOCKVALUE {
+	if (*$1) {
+		/* SWIG_Python_AppendOutput() steals the created object */
+		$result = SWIG_Python_AppendOutput($result, SWIG_NewPointerObj(SWIG_as_voidptr(*$1), SWIGTYPE_p_bt_clock_value, 0));
+	} else {
+		/* SWIG_Python_AppendOutput() steals Py_None */
+		Py_INCREF(Py_None);
+		$result = SWIG_Python_AppendOutput($result, Py_None);
+	}
+}
+
+/* Output argument typemap for initialized uint64_t output parameter (always appends) */
+%typemap(in, numinputs=0) enum bt_event_class_log_level *OUTPUTINIT (enum bt_event_class_log_level temp = -1) {
+	$1 = &temp;
+}
+
+%typemap(argout) enum bt_event_class_log_level *OUTPUTINIT {
+	/* SWIG_Python_AppendOutput() steals the created object */
+	$result = SWIG_Python_AppendOutput($result, SWIG_From_int(*$1));
+}
+
 /* Output argument typemap for initialized uint64_t output parameter (always appends) */
 %typemap(in, numinputs=0) uint64_t *OUTPUTINIT (uint64_t temp = -1ULL) {
 	$1 = &temp;
@@ -150,6 +214,15 @@ typedef int bt_bool;
 
 %typemap(argout) uint64_t *OUTPUTINIT {
 	$result = SWIG_Python_AppendOutput(resultobj, SWIG_From_unsigned_SS_long_SS_long((*$1)));
+}
+
+/* Output argument typemap for initialized int64_t output parameter (always appends) */
+%typemap(in, numinputs=0) int64_t *OUTPUTINIT (int64_t temp = -1ULL) {
+	$1 = &temp;
+}
+
+%typemap(argout) int64_t *OUTPUTINIT {
+	$result = SWIG_Python_AppendOutput(resultobj, SWIG_From_long_SS_long((*$1)));
 }
 
 /* Output argument typemap for initialized unsigned int output parameter (always appends) */
@@ -160,20 +233,45 @@ typedef int bt_bool;
 %typemap(argout) unsigned int *OUTPUTINIT {
 	$result = SWIG_Python_AppendOutput(resultobj, SWIG_From_unsigned_SS_long_SS_long((uint64_t) (*$1)));
 }
+/* Output argument typemap for initialized double output parameter (always appends) */
+%typemap(in, numinputs=0) double *OUTPUTINIT (double temp = -1) {
+	$1 = &temp;
+}
+
+%typemap(argout) double *OUTPUTINIT {
+	$result = SWIG_Python_AppendOutput(resultobj, SWIG_From_int((*$1)));
+}
+
 
 /* Input argument typemap for UUID bytes */
-%typemap(in) BTUUID {
+%typemap(in) bt_uuid {
 	$1 = (unsigned char *) PyBytes_AsString($input);
 }
 
 /* Output argument typemap for UUID bytes */
-%typemap(out) BTUUID {
+%typemap(out) bt_uuid {
 	if (!$1) {
 		Py_INCREF(Py_None);
 		$result = Py_None;
 	} else {
 		$result = PyBytes_FromStringAndSize((const char *) $1, 16);
 	}
+}
+
+/* Input argument typemap for bt_bool */
+%typemap(in) bt_bool {
+	$1 = PyObject_IsTrue($input);
+}
+
+/* Output argument typemap for bt_bool */
+%typemap(out) bt_bool {
+	if ($1 > 0) {
+		$result = Py_True;
+	} else {
+		$result = Py_False;
+	}
+	Py_INCREF($result);
+	return $result;
 }
 
 /*
@@ -193,29 +291,44 @@ typedef int bt_bool;
 	$result = $1;
 }
 
+enum bt_property_availability {
+	BT_PROPERTY_AVAILABILITY_AVAILABLE,
+	BT_PROPERTY_AVAILABILITY_NOT_AVAILABLE,
+};
 
 /* Per-module interface files */
-%include "native_btccpriomap.i"
-%include "native_btclockclass.i"
-%include "native_btcomponent.i"
-%include "native_btcomponentclass.i"
-%include "native_btconnection.i"
-%include "native_btctfwriter.i"
-%include "native_btevent.i"
-%include "native_bteventclass.i"
-%include "native_btfields.i"
-%include "native_btft.i"
-%include "native_btgraph.i"
-%include "native_btlogging.i"
-%include "native_btnotification.i"
-%include "native_btnotifiter.i"
-%include "native_btpacket.i"
-%include "native_btplugin.i"
-%include "native_btport.i"
-%include "native_btqueryexec.i"
-%include "native_btref.i"
-%include "native_btstream.i"
-%include "native_btstreamclass.i"
-%include "native_bttrace.i"
-%include "native_btvalues.i"
-%include "native_btversion.i"
+%include "native_bt_clockclass.i"
+%include "native_bt_clockvalue.i"
+%include "native_bt_component.i"
+%include "native_bt_componentclass.i"
+%include "native_bt_connection.i"
+%include "native_bt_event.i"
+%include "native_bt_eventclass.i"
+%include "native_bt_fields.i"
+%include "native_bt_fieldtypes.i"
+%include "native_bt_fieldpath.i"
+%include "native_bt_graph.i"
+%include "native_bt_logging.i"
+%include "native_bt_notification.i"
+%include "native_bt_notifiter.i"
+%include "native_bt_packet.i"
+%include "native_bt_plugin.i"
+%include "native_bt_port.i"
+%include "native_bt_queryexec.i"
+%include "native_bt_ref.i"
+%include "native_bt_stream.i"
+%include "native_bt_streamclass.i"
+%include "native_bt_trace.i"
+%include "native_bt_values.i"
+%include "native_bt_version.i"
+
+%include "ctfwriter/native_btctf.i"
+%include "ctfwriter/native_btctf_event.i"
+%include "ctfwriter/native_btctf_eventclass.i"
+%include "ctfwriter/native_btctf_stream.i"
+%include "ctfwriter/native_btctf_streamclass.i"
+%include "ctfwriter/native_btctf_clock.i"
+%include "ctfwriter/native_btctf_writer.i"
+%include "ctfwriter/native_btctf_fields.i"
+%include "ctfwriter/native_btctf_fieldtypes.i"
+%include "ctfwriter/native_btctf_trace.i"
