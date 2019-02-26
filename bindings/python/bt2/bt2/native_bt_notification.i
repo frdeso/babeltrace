@@ -34,8 +34,6 @@ enum bt_notification_type {
 	BT_NOTIFICATION_TYPE_STREAM_END = 3,
 	BT_NOTIFICATION_TYPE_PACKET_BEGIN = 4,
 	BT_NOTIFICATION_TYPE_PACKET_END = 5,
-	BT_NOTIFICATION_TYPE_DISCARDED_EVENTS = 6,
-	BT_NOTIFICATION_TYPE_DISCARDED_PACKETS = 7,
 };
 
 /* General functions */
@@ -44,32 +42,31 @@ enum bt_notification_type bt_notification_get_type(
 
 /* Event notification functions */
 struct bt_notification *bt_notification_event_create(
-		struct bt_event *event,
-		struct bt_clock_class_priority_map *clock_class_priority_map);
-struct bt_event *bt_notification_event_get_event(
-		struct bt_notification *notification);
-struct bt_clock_class_priority_map *
-bt_notification_event_get_clock_class_priority_map(
+		struct bt_private_connection_private_notification_iterator *notification_iterator,
+		struct bt_event_class *event_class, struct bt_packet *packet);
+struct bt_event *bt_notification_event_borrow_event(
 		struct bt_notification *notification);
 
 /* Inactivity notification functions */
 struct bt_notification *bt_notification_inactivity_create(
-		struct bt_clock_class_priority_map *clock_class_priority_map);
-struct bt_clock_class_priority_map *
-bt_notification_inactivity_get_clock_class_priority_map(
-		struct bt_notification *notification);
-struct bt_clock_value *bt_notification_inactivity_get_clock_value(
-		struct bt_notification *notification,
-		struct bt_clock_class *clock_class);
-int bt_notification_inactivity_set_clock_value(
-		struct bt_notification *notification,
-		struct bt_clock_value *clock_value);
+		struct bt_private_connection_private_notification_iterator *notification_iterator,
+		struct bt_clock_class *default_clock_class);
+int bt_notification_inactivity_set_default_clock_value(
+		struct bt_notification *notif, uint64_t raw_value);
+struct bt_clock_value *bt_notification_inactivity_borrow_default_clock_value(
+		struct bt_notification *notif);
 
 /* Packet notification functions */
 struct bt_notification *bt_notification_packet_begin_create(
+		struct bt_private_connection_private_notification_iterator *notification_iterator,
 		struct bt_packet *packet);
 struct bt_notification *bt_notification_packet_end_create(
+		struct bt_private_connection_private_notification_iterator *notification_iterator,
 		struct bt_packet *packet);
+struct bt_packet *bt_notification_packet_begin_borrow_packet(
+		struct bt_notification *notification);
+struct bt_packet *bt_notification_packet_end_borrow_packet(
+		struct bt_notification *notification);
 struct bt_packet *bt_notification_packet_begin_get_packet(
 		struct bt_notification *notification);
 struct bt_packet *bt_notification_packet_end_get_packet(
@@ -77,34 +74,24 @@ struct bt_packet *bt_notification_packet_end_get_packet(
 
 /* Stream notification functions */
 struct bt_notification *bt_notification_stream_begin_create(
+		struct bt_private_connection_private_notification_iterator *notification_iterator,
 		struct bt_stream *stream);
 struct bt_notification *bt_notification_stream_end_create(
+		struct bt_private_connection_private_notification_iterator *notification_iterator,
 		struct bt_stream *stream);
+struct bt_stream *bt_notification_stream_begin_borrow_stream(
+		struct bt_notification *notification);
 struct bt_stream *bt_notification_stream_begin_get_stream(
+		struct bt_notification *notification);
+int bt_notification_stream_begin_set_default_clock_value(
+		struct bt_notification *notif, uint64_t value_cycles);
+struct bt_clock_value *bt_notification_stream_begin_borrow_default_clock_value(
+		struct bt_notification *notif);
+struct bt_stream *bt_notification_stream_end_borrow_stream(
 		struct bt_notification *notification);
 struct bt_stream *bt_notification_stream_end_get_stream(
 		struct bt_notification *notification);
-
-/* Discarded packets notification functions */
-struct bt_clock_value *
-bt_notification_discarded_packets_get_begin_clock_value(
-		struct bt_notification *notification);
-struct bt_clock_value *
-bt_notification_discarded_packets_get_end_clock_value(
-		struct bt_notification *notification);
-int64_t bt_notification_discarded_packets_get_count(
-		struct bt_notification *notification);
-struct bt_stream *bt_notification_discarded_packets_get_stream(
-		struct bt_notification *notification);
-
-/* Discarded events notification functions */
-struct bt_clock_value *
-bt_notification_discarded_events_get_begin_clock_value(
-		struct bt_notification *notification);
-struct bt_clock_value *
-bt_notification_discarded_events_get_end_clock_value(
-		struct bt_notification *notification);
-int64_t bt_notification_discarded_events_get_count(
-		struct bt_notification *notification);
-struct bt_stream *bt_notification_discarded_events_get_stream(
-		struct bt_notification *notification);
+int bt_notification_stream_end_set_default_clock_value(
+		struct bt_notification *notif, uint64_t value_cycles);
+struct bt_clock_value *bt_notification_stream_end_borrow_default_clock_value(
+		struct bt_notification *notif);

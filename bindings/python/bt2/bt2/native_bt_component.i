@@ -46,8 +46,13 @@ struct bt_component_class *bt_component_get_class(
 enum bt_component_class_type bt_component_get_class_type(
 		struct bt_component *component);
 struct bt_graph *bt_component_get_graph(struct bt_component *component);
-struct bt_component *bt_component_from_private(
+struct bt_component *bt_component_borrow_from_private(
 		struct bt_private_component *private_component);
+void *bt_private_component_get_user_data(
+		struct bt_private_component *private_component);
+
+enum bt_component_status bt_private_component_set_user_data(
+		struct bt_private_component *private_component, void *user_data);
 
 /* Source component functions */
 int64_t bt_component_source_get_output_port_count(

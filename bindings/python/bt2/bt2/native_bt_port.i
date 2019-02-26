@@ -49,7 +49,8 @@ enum bt_port_status bt_port_disconnect(struct bt_port *port);
 int bt_port_is_connected(struct bt_port *port);
 
 /* Functions (private) */
-struct bt_port *bt_port_from_private(struct bt_private_port *private_port);
+struct bt_port *bt_port_borrow_from_private(
+		struct bt_private_port *private_port);
 struct bt_private_connection *bt_private_port_get_private_connection(
 		struct bt_private_port *private_port);
 struct bt_private_component *bt_private_port_get_private_component(
@@ -58,7 +59,11 @@ enum bt_port_status bt_private_port_remove_from_component(
 		struct bt_private_port *private_port);
 void *bt_private_port_get_user_data(
 		struct bt_private_port *private_port);
-
+struct bt_notification_iterator *bt_output_port_notification_iterator_create(
+		struct bt_port *port, const char *colander_component_name);
+enum bt_notification_iterator_status bt_output_port_notification_iterator_next(
+		struct bt_notification_iterator *iterator,
+		bt_notification_array *notifs, uint64_t *count);
 %{
 static struct bt_notification_iterator *bt_py3_create_output_port_notif_iter(
 		unsigned long long port_addr, const char *colander_name)

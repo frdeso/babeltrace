@@ -22,17 +22,33 @@
  * THE SOFTWARE.
  */
 
-/* Type */
-struct bt_stream;
+/* Types */
+struct bt_ctf_event;
+struct bt_ctf_event_class;
+struct bt_ctf_field;
 
 /* Functions */
-struct bt_stream *bt_stream_create(
-		struct bt_stream_class *stream_class,
+struct bt_ctf_event *bt_ctf_event_create(
+		struct bt_ctf_event_class *event_class);
+struct bt_ctf_field *bt_ctf_event_get_payload(struct bt_ctf_event *event,
 		const char *name);
-struct bt_stream *bt_stream_create_with_id(
-		struct bt_stream_class *stream_class,
-		const char *name, uint64_t id);
-const char *bt_stream_get_name(struct bt_stream *stream);
-int64_t bt_stream_get_id(struct bt_stream *stream);
-struct bt_stream_class *bt_stream_get_class(
-		struct bt_stream *stream);
+int bt_ctf_event_set_payload(struct bt_ctf_event *event,
+		const char *name, struct bt_ctf_field *field);
+struct bt_ctf_field *bt_ctf_event_get_payload_field(
+		struct bt_ctf_event *event);
+int bt_ctf_event_set_context(struct bt_ctf_event *event,
+		struct bt_ctf_field *field);
+struct bt_ctf_field *bt_ctf_event_get_context(
+		struct bt_ctf_event *event);
+int bt_ctf_event_set_stream_event_context(struct bt_ctf_event *event,
+		struct bt_ctf_field *field);
+struct bt_ctf_field *bt_ctf_event_get_stream_event_context(
+		struct bt_ctf_event *event);
+int bt_ctf_event_set_header(struct bt_ctf_event *event,
+		struct bt_ctf_field *field);
+struct bt_ctf_field *bt_ctf_event_get_header(
+		struct bt_ctf_event *event);
+struct bt_ctf_stream *bt_ctf_event_get_stream(
+		struct bt_ctf_event *event);
+struct bt_ctf_event_class *bt_ctf_event_get_class(
+		struct bt_ctf_event *event);

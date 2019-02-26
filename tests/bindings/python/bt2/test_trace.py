@@ -1,342 +1,172 @@
 from bt2 import values
 import unittest
-import copy
 import uuid
 import bt2
 
 
 class TraceTestCase(unittest.TestCase):
     def setUp(self):
-        self._sc = self._create_stream_class('sc1', 3)
-        self._tc = bt2.Trace()
+        self._trace = bt2.Trace()
 
     def tearDown(self):
-        del self._sc
-        del self._tc
-
-    def _create_stream_class(self, name, id):
-        ec1, ec2 = self._create_event_classes()
-        packet_context_ft = bt2.StructureFieldType()
-        packet_context_ft.append_field('menu', bt2.FloatingPointNumberFieldType())
-        packet_context_ft.append_field('sticker', bt2.StringFieldType())
-        event_header_ft = bt2.StructureFieldType()
-        event_header_ft.append_field('id', bt2.IntegerFieldType(19))
-        event_context_ft = bt2.StructureFieldType()
-        event_context_ft.append_field('msg', bt2.StringFieldType())
-        return bt2.StreamClass(name=name, id=id,
-                               packet_context_field_type=packet_context_ft,
-                               event_header_field_type=event_header_ft,
-                               event_context_field_type=event_context_ft,
-                               event_classes=(ec1, ec2))
-
-    def _create_event_classes(self):
-        context_ft = bt2.StructureFieldType()
-        context_ft.append_field('allo', bt2.StringFieldType())
-        context_ft.append_field('zola', bt2.IntegerFieldType(18))
-        payload_ft = bt2.StructureFieldType()
-        payload_ft.append_field('zoom', bt2.StringFieldType())
-        ec1 = bt2.EventClass('event23', id=23, context_field_type=context_ft,
-                             payload_field_type=payload_ft)
-        ec2 = bt2.EventClass('event17', id=17, context_field_type=payload_ft,
-                             payload_field_type=context_ft)
-        return ec1, ec2
+        del self._trace
 
     def test_create_default(self):
-        self.assertEqual(len(self._tc), 0)
-
-    def _get_std_header(self):
-        header_ft = bt2.StructureFieldType()
-        header_ft.append_field('magic', bt2.IntegerFieldType(32))
-        header_ft.append_field('stream_id', bt2.IntegerFieldType(32))
-        return header_ft
+        self.assertEqual(len(self._trace), 0)
 
     def test_create_full(self):
-        clock_classes = bt2.ClockClass('cc1', 1000), bt2.ClockClass('cc2', 30)
-        sc = self._create_stream_class('sc1', 3)
-        tc = bt2.Trace(name='my name',
-                       native_byte_order=bt2.ByteOrder.LITTLE_ENDIAN,
+        header_ft = bt2.StructureFieldType()
+        header_ft.append_field('magic', bt2.SignedIntegerFieldType(32))
+
+        trace_uuid = uuid.UUID('da7d6b6f-3108-4706-89bd-ab554732611b')
+        tc = bt2.Trace(name='my name', uuid=trace_uuid,
                        env={'the_string': 'value', 'the_int': 23},
-                       packet_header_field_type=self._get_std_header(),
-                       clock_classes=clock_classes,
-                       stream_classes=(sc,))
+                       packet_header_field_type=header_ft,
+                       automatic_stream_class_id=True)
+
+        sc = tc.create_stream_class()
+
         self.assertEqual(tc.name, 'my name')
-        self.assertEqual(tc.native_byte_order, bt2.ByteOrder.LITTLE_ENDIAN)
+        self.assertEqual(tc.uuid, trace_uuid)
         self.assertEqual(tc.env['the_string'], 'value')
         self.assertEqual(tc.env['the_int'], 23)
-        self.assertEqual(tc.packet_header_field_type, self._get_std_header())
-        self.assertEqual(tc.clock_classes['cc1'], clock_classes[0])
-        self.assertEqual(tc.clock_classes['cc2'], clock_classes[1])
-        self.assertEqual(tc[3], sc)
+        self.assertEqual(tc[sc.id]._ptr, sc._ptr)
 
-    def test_assign_name(self):
-        self._tc.name = 'lel'
-        self.assertEqual(self._tc.name, 'lel')
+    def test_create_no_uuid(self):
+        tc = bt2.Trace()
+        self.assertIsNone(tc.uuid)
 
     def test_assign_invalid_name(self):
         with self.assertRaises(TypeError):
-            self._tc.name = 17
+            self._trace.name = 17
 
     def test_assign_static(self):
-        self._tc.set_is_static()
-        self.assertTrue(self._tc.is_static)
-
-    def test_assign_native_byte_order(self):
-        self._tc.native_byte_order = bt2.ByteOrder.BIG_ENDIAN
-        self.assertEqual(self._tc.native_byte_order, bt2.ByteOrder.BIG_ENDIAN)
-
-    def test_assign_invalid_native_byte_order(self):
-        with self.assertRaises(TypeError):
-            self._tc.native_byte_order = 'lel'
+        self._trace.make_static()
+        self.assertTrue(self._trace.is_static)
 
     def test_assign_packet_header_field_type(self):
         header_ft = bt2.StructureFieldType()
-        header_ft.append_field('magic', bt2.IntegerFieldType(32))
-        self._tc.packet_header_field_type = header_ft
-        self.assertEqual(self._tc.packet_header_field_type, header_ft)
+        header_ft.append_field('magic', bt2.SignedIntegerFieldType(32))
+        self._trace.packet_header_field_type = header_ft
+        self.assertEqual(self._trace.packet_header_field_type.addr, header_ft.addr)
 
     def test_assign_no_packet_header_field_type(self):
-        self._tc.packet_header_field_type = None
-        self.assertIsNone(self._tc.packet_header_field_type)
-
-    def _test_copy(self, cpy):
-        self.assertIsNot(cpy, self._tc)
-        self.assertNotEqual(cpy.addr, self._tc.addr)
-        self.assertEqual(cpy, self._tc)
-        self.assertEqual(len(self._tc), len(cpy))
-
-    def _pre_copy(self):
-        self._tc.packet_header_field_type = self._get_std_header()
-        self._tc.name = 'the trace class'
-        sc1 = self._create_stream_class('sc1', 3)
-        sc2 = self._create_stream_class('sc2', 9)
-        sc3 = self._create_stream_class('sc3', 17)
-        self._tc.add_clock_class(bt2.ClockClass('cc1', 1000))
-        self._tc.add_clock_class(bt2.ClockClass('cc2', 30))
-        self._tc.env['allo'] = 'bateau'
-        self._tc.env['bateau'] = 'cart'
-        self._tc.add_stream_class(sc1)
-        self._tc.add_stream_class(sc2)
-        self._tc.add_stream_class(sc3)
-
-    def test_copy(self):
-        self._pre_copy()
-        cpy = copy.copy(self._tc)
-        self._test_copy(cpy)
-        self.assertEqual(self._tc.packet_header_field_type.addr, cpy.packet_header_field_type.addr)
-        self.assertEqual(self._tc.clock_classes['cc1'].addr, cpy.clock_classes['cc1'].addr)
-        self.assertEqual(self._tc.clock_classes['cc2'].addr, cpy.clock_classes['cc2'].addr)
-        self.assertEqual(self._tc.env['allo'].addr, cpy.env['allo'].addr)
-        self.assertEqual(self._tc.env['bateau'].addr, cpy.env['bateau'].addr)
-
-    def test_deepcopy(self):
-        self._pre_copy()
-        cpy = copy.deepcopy(self._tc)
-        self._test_copy(cpy)
-        self.assertNotEqual(self._tc.packet_header_field_type.addr, cpy.packet_header_field_type.addr)
-        self.assertNotEqual(self._tc.clock_classes['cc1'].addr, cpy.clock_classes['cc1'].addr)
-        self.assertNotEqual(self._tc.clock_classes['cc2'].addr, cpy.clock_classes['cc2'].addr)
-        self.assertNotEqual(self._tc.env['allo'].addr, cpy.env['allo'].addr)
-        self.assertNotEqual(self._tc.env['bateau'].addr, cpy.env['bateau'].addr)
+        self.assertIsNone(self._trace.packet_header_field_type)
 
     def test_getitem(self):
-        self._tc.add_stream_class(self._sc)
-        self.assertEqual(self._tc[3].addr, self._sc.addr)
+        trace = bt2.Trace(automatic_stream_class_id=False)
+        trace.create_stream_class(id=12)
+        trace.create_stream_class(id=54)
+        sc = trace.create_stream_class(id=2018)
+        self.assertEqual(trace[2018].addr, sc.addr)
 
     def test_getitem_wrong_key_type(self):
-        self._tc.add_stream_class(self._sc)
+        self._trace.create_stream_class()
         with self.assertRaises(TypeError):
-            self._tc['hello']
+            self._trace['hello']
 
     def test_getitem_wrong_key(self):
-        self._tc.add_stream_class(self._sc)
+        self._trace.create_stream_class()
         with self.assertRaises(KeyError):
-            self._tc[4]
+            self._trace[4]
 
     def test_len(self):
-        self.assertEqual(len(self._tc), 0)
-        self._tc.add_stream_class(self._sc)
-        self.assertEqual(len(self._tc), 1)
+        self.assertEqual(len(self._trace), 0)
+        self._trace.create_stream_class()
+        self.assertEqual(len(self._trace), 1)
+
+    def test_create_auto_event_class_id(self):
+        trace = bt2.Trace()
+        sc1 = trace.create_stream_class(automatic_event_class_id=False)
+        self.assertFalse(sc1.assigns_automatic_event_class_id)
+
+    def test_create_auto_stream_id(self):
+        trace = bt2.Trace()
+        sc1 = trace.create_stream_class(automatic_stream_id=False)
+        self.assertFalse(sc1.assigns_automatic_stream_id)
 
     def test_iter(self):
-        self._tc.packet_header_field_type = self._get_std_header()
-        sc1 = self._create_stream_class('sc1', 3)
-        sc2 = self._create_stream_class('sc2', 9)
-        sc3 = self._create_stream_class('sc3', 17)
-        self._tc.add_stream_class(sc1)
-        self._tc.add_stream_class(sc2)
-        self._tc.add_stream_class(sc3)
+        trace = bt2.Trace(automatic_stream_class_id=False)
+        sc1 = trace.create_stream_class(id=12)
+        sc2 = trace.create_stream_class(id=54)
+        sc3 = trace.create_stream_class(id=2018)
 
-        for sid, stream_class in self._tc.items():
-            self.assertIsInstance(stream_class, bt2.StreamClass)
+        for sid, stream_class in trace.items():
+            self.assertIsInstance(stream_class, bt2.stream_class._StreamClass)
 
-            if sid == 3:
+            if sid == 12:
                 self.assertEqual(stream_class.addr, sc1.addr)
-            elif sid == 9:
+            elif sid == 54:
                 self.assertEqual(stream_class.addr, sc2.addr)
-            elif sid == 17:
+            elif sid == 2018:
                 self.assertEqual(stream_class.addr, sc3.addr)
 
     def test_env_getitem_wrong_key(self):
+        trace = bt2.Trace(env={'the_string': 'value', 'the_int': 23})
         with self.assertRaises(KeyError):
-            self._tc.env['lel']
+            trace.env['lel']
 
-    def test_clock_classes_getitem_wrong_key(self):
-        with self.assertRaises(KeyError):
-            self._tc.clock_classes['lel']
 
     def test_streams_none(self):
-        self.assertEqual(len(self._tc.streams), 0)
+        self.assertEqual(len(self._trace.streams), 0)
 
     def test_streams_len(self):
-        self._tc.add_stream_class(self._create_stream_class('sc1', 3))
-        stream0 = self._tc[3]()
-        stream1 = self._tc[3]()
-        stream2 = self._tc[3]()
-        self.assertEqual(len(self._tc.streams), 3)
+        trace = bt2.Trace(automatic_stream_class_id=False)
+        sc = trace.create_stream_class(id=12)
+
+        stream0 = sc()
+        stream1 = sc()
+        stream2 = sc()
+        self.assertEqual(len(trace.streams), 3)
 
     def test_streams_iter(self):
-        self._tc.add_stream_class(self._create_stream_class('sc1', 3))
-        stream0 = self._tc[3](id=12)
-        stream1 = self._tc[3](id=15)
-        stream2 = self._tc[3](id=17)
+        sc = self._trace.create_stream_class()
+        sc.assigns_automatic_stream_id = False
+        stream0 = sc(id=12)
+        stream1 = sc(id=15)
+        stream2 = sc(id=17)
+
         sids = set()
 
-        for stream in self._tc.streams:
+        for stream in self._trace.streams:
             sids.add(stream.id)
 
         self.assertEqual(len(sids), 3)
         self.assertTrue(12 in sids and 15 in sids and 17 in sids)
 
-    def _test_eq_create_objects(self):
-        cc1_uuid = uuid.UUID('bc7f2f2d-2ee4-4e03-ab1f-2e0e1304e94f')
-        cc1 = bt2.ClockClass('cc1', 1000, uuid=cc1_uuid)
-        cc2_uuid = uuid.UUID('da7d6b6f-3108-4706-89bd-ab554732611b')
-        cc2 = bt2.ClockClass('cc2', 30, uuid=cc2_uuid)
-        sc1 = self._create_stream_class('sc1', 3)
-        sc2 = self._create_stream_class('sc2', 9)
-        return cc1, cc2, sc1, sc2, self._get_std_header()
+    def test_create_stream_class_full(self):
+        event_header_ft = bt2.StructureFieldType()
+        event_header_ft.append_field('magic', bt2.SignedIntegerFieldType(32))
 
-    def test_eq(self):
-        cc1, cc2, sc1, sc2, header_ft = self._test_eq_create_objects()
-        tc1 = bt2.Trace(name='my name',
-                        native_byte_order=bt2.ByteOrder.LITTLE_ENDIAN,
-                        env={'the_string': 'value', 'the_int': 23},
-                        packet_header_field_type=header_ft,
-                        clock_classes=(cc1, cc2),
-                        stream_classes=(sc1, sc2))
-        cc1, cc2, sc1, sc2, header_ft = self._test_eq_create_objects()
-        tc2 = bt2.Trace(name='my name',
-                        native_byte_order=bt2.ByteOrder.LITTLE_ENDIAN,
-                        env={'the_string': 'value', 'the_int': 23},
-                        packet_header_field_type=header_ft,
-                        clock_classes=(cc1, cc2),
-                        stream_classes=(sc1, sc2))
-        self.assertEqual(tc1, tc2)
+        packet_context_ft = bt2.StructureFieldType()
+        packet_context_ft.append_field('magic', bt2.SignedIntegerFieldType(32))
 
-    def test_ne_name(self):
-        cc1, cc2, sc1, sc2, header_ft = self._test_eq_create_objects()
-        tc1 = bt2.Trace(name='my name2',
-                        native_byte_order=bt2.ByteOrder.LITTLE_ENDIAN,
-                        env={'the_string': 'value', 'the_int': 23},
-                        packet_header_field_type=header_ft,
-                        clock_classes=(cc1, cc2),
-                        stream_classes=(sc1, sc2))
-        cc1, cc2, sc1, sc2, header_ft = self._test_eq_create_objects()
-        tc2 = bt2.Trace(name='my name',
-                        native_byte_order=bt2.ByteOrder.LITTLE_ENDIAN,
-                        env={'the_string': 'value', 'the_int': 23},
-                        packet_header_field_type=header_ft,
-                        clock_classes=(cc1, cc2),
-                        stream_classes=(sc1, sc2))
-        self.assertNotEqual(tc1, tc2)
+        event_common_context_ft = bt2.StructureFieldType()
+        event_common_context_ft.append_field('magic', bt2.SignedIntegerFieldType(32))
+        cc = bt2.ClockClass()
+        trace = bt2.Trace(automatic_stream_class_id=False)
+        sc = trace.create_stream_class(id=12,
+                event_header_ft=event_header_ft,
+                packet_context_ft=packet_context_ft,
+                event_common_context_ft=event_common_context_ft,
+                default_clock_class=cc,
+                default_clock_always_known=True,
+                packets_have_discarded_event_counter_snapshot=False,
+                packets_have_packet_counter_snapshot=False,
+                packets_have_default_beginning_clock_value=False,
+                packets_have_default_end_clock_value=False,
+                automatic_event_class_id=False,
+                automatic_stream_id=False)
 
-    def test_ne_packet_header_field_type(self):
-        cc1, cc2, sc1, sc2, header_ft = self._test_eq_create_objects()
-        tc1 = bt2.Trace(name='my name',
-                        native_byte_order=bt2.ByteOrder.LITTLE_ENDIAN,
-                        env={'the_string': 'value', 'the_int': 23},
-                        packet_header_field_type=header_ft,
-                        clock_classes=(cc1, cc2),
-                        stream_classes=(sc1, sc2))
-        cc1, cc2, sc1, sc2, header_ft = self._test_eq_create_objects()
-        header_ft.append_field('yes', bt2.StringFieldType())
-        tc2 = bt2.Trace(name='my name',
-                        native_byte_order=bt2.ByteOrder.LITTLE_ENDIAN,
-                        env={'the_string': 'value', 'the_int': 23},
-                        packet_header_field_type=header_ft,
-                        clock_classes=(cc1, cc2),
-                        stream_classes=(sc1, sc2))
-        self.assertNotEqual(tc1, tc2)
+        self.assertEqual(sc.event_header_field_type.addr, event_header_ft.addr)
+        self.assertEqual(sc.packet_context_field_type.addr, packet_context_ft.addr)
+        self.assertEqual(sc.event_common_context_field_type.addr, event_common_context_ft.addr)
+        self.assertEqual(sc.default_clock_class.addr, cc.addr)
+        self.assertTrue(sc.default_clock_always_known)
+        self.assertFalse(sc.packets_have_discarded_event_counter_snapshot)
+        self.assertFalse(sc.packets_have_packet_counter_snapshot)
+        self.assertFalse(sc.packets_have_default_beginning_clock_value)
+        self.assertFalse(sc.packets_have_default_end_clock_value)
+        self.assertFalse(sc.assigns_automatic_event_class_id)
+        self.assertFalse(sc.assigns_automatic_stream_id)
 
-    def test_ne_native_byte_order(self):
-        cc1, cc2, sc1, sc2, header_ft = self._test_eq_create_objects()
-        tc1 = bt2.Trace(name='my name',
-                        native_byte_order=bt2.ByteOrder.LITTLE_ENDIAN,
-                        env={'the_string': 'value', 'the_int': 23},
-                        packet_header_field_type=header_ft,
-                        clock_classes=(cc1, cc2),
-                        stream_classes=(sc1, sc2))
-        cc1, cc2, sc1, sc2, header_ft = self._test_eq_create_objects()
-        tc2 = bt2.Trace(name='my name',
-                        native_byte_order=bt2.ByteOrder.BIG_ENDIAN,
-                        env={'the_string': 'value', 'the_int': 23},
-                        packet_header_field_type=header_ft,
-                        clock_classes=(cc1, cc2),
-                        stream_classes=(sc1, sc2))
-        self.assertNotEqual(tc1, tc2)
-
-    def test_ne_env(self):
-        cc1, cc2, sc1, sc2, header_ft = self._test_eq_create_objects()
-        tc1 = bt2.Trace(name='my name',
-                        native_byte_order=bt2.ByteOrder.LITTLE_ENDIAN,
-                        env={'the_string': 'value', 'the_int2': 23},
-                        packet_header_field_type=header_ft,
-                        clock_classes=(cc1, cc2),
-                        stream_classes=(sc1, sc2))
-        cc1, cc2, sc1, sc2, header_ft = self._test_eq_create_objects()
-        tc2 = bt2.Trace(name='my name',
-                        native_byte_order=bt2.ByteOrder.LITTLE_ENDIAN,
-                        env={'the_string': 'value', 'the_int': 23},
-                        packet_header_field_type=header_ft,
-                        clock_classes=(cc1, cc2),
-                        stream_classes=(sc1, sc2))
-        self.assertNotEqual(tc1, tc2)
-
-    def test_ne_clock_classes(self):
-        cc1, cc2, sc1, sc2, header_ft = self._test_eq_create_objects()
-        tc1 = bt2.Trace(name='my name',
-                        native_byte_order=bt2.ByteOrder.LITTLE_ENDIAN,
-                        env={'the_string': 'value', 'the_int': 23},
-                        packet_header_field_type=header_ft,
-                        clock_classes=(cc1, cc2),
-                        stream_classes=(sc1, sc2))
-        cc1, cc2, sc1, sc2, header_ft = self._test_eq_create_objects()
-        cc2.frequency = 1234
-        tc2 = bt2.Trace(name='my name',
-                        native_byte_order=bt2.ByteOrder.LITTLE_ENDIAN,
-                        env={'the_string': 'value', 'the_int': 23},
-                        packet_header_field_type=header_ft,
-                        clock_classes=(cc1, cc2),
-                        stream_classes=(sc1, sc2))
-        self.assertNotEqual(tc1, tc2)
-
-    def test_ne_stream_classes(self):
-        cc1, cc2, sc1, sc2, header_ft = self._test_eq_create_objects()
-        tc1 = bt2.Trace(name='my name',
-                        native_byte_order=bt2.ByteOrder.LITTLE_ENDIAN,
-                        env={'the_string': 'value', 'the_int': 23},
-                        packet_header_field_type=header_ft,
-                        clock_classes=(cc1, cc2),
-                        stream_classes=(sc1, sc2))
-        cc1, cc2, sc1, sc2, header_ft = self._test_eq_create_objects()
-        sc2.id = 72632
-        tc2 = bt2.Trace(name='my name',
-                        native_byte_order=bt2.ByteOrder.LITTLE_ENDIAN,
-                        env={'the_string': 'value', 'the_int': 23},
-                        packet_header_field_type=header_ft,
-                        clock_classes=(cc1, cc2),
-                        stream_classes=(sc1, sc2))
-        self.assertNotEqual(tc1, tc2)
-
-    def test_eq_invalid(self):
-        self.assertFalse(self._tc == 23)
