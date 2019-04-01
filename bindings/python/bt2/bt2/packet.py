@@ -22,7 +22,7 @@
 
 import copy
 from bt2 import native_bt, utils
-import bt2.fields
+import bt2.field
 import bt2
 
 class _Packet(bt2.object._SharedObject):
@@ -92,7 +92,7 @@ class _Packet(bt2.object._SharedObject):
         if field_ptr is None:
             return
 
-        return bt2.fields._create_field_from_ptr(field_ptr, self._ptr)
+        return bt2.field._create_field_from_ptr(field_ptr, self._ptr)
 
     @property
     def context_field(self):
@@ -101,4 +101,4 @@ class _Packet(bt2.object._SharedObject):
         if field_ptr is None:
             return
 
-        return bt2.fields._create_field_from_ptr(field_ptr, self._ptr)
+        return bt2.field._create_field_from_ptr(field_ptr, self._ptr)

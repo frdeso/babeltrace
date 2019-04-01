@@ -72,7 +72,7 @@ class _Event(bt2.object._UniqueObject):
         if field_ptr is None:
             return
 
-        return bt2.fields._create_field_from_ptr(field_ptr, self._owning_ptr)
+        return bt2.field._create_field_from_ptr(field_ptr, self._owning_ptr)
 
     @property
     def common_context_field(self):
@@ -81,7 +81,7 @@ class _Event(bt2.object._UniqueObject):
         if field_ptr is None:
             return
 
-        return bt2.fields._create_field_from_ptr(field_ptr, self._owning_ptr)
+        return bt2.field._create_field_from_ptr(field_ptr, self._owning_ptr)
 
     @property
     def specific_context_field(self):
@@ -90,7 +90,7 @@ class _Event(bt2.object._UniqueObject):
         if field_ptr is None:
             return
 
-        return bt2.fields._create_field_from_ptr(field_ptr, self._owning_ptr)
+        return bt2.field._create_field_from_ptr(field_ptr, self._owning_ptr)
 
     @property
     def payload_field(self):
@@ -99,7 +99,7 @@ class _Event(bt2.object._UniqueObject):
         if field_ptr is None:
             return
 
-        return bt2.fields._create_field_from_ptr(field_ptr, self._owning_ptr)
+        return bt2.field._create_field_from_ptr(field_ptr, self._owning_ptr)
     @property
     def packet(self):
         packet_ptr = native_bt.event_borrow_packet(self._ptr)

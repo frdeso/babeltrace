@@ -44,7 +44,7 @@ from bt2.event import *
 from bt2.event_class import *
 from bt2.field_types import *
 from bt2.field_path import *
-from bt2.fields import *
+from bt2.field import *
 from bt2.graph import *
 from bt2.logging import *
 from bt2.notification import *
@@ -65,7 +65,7 @@ from bt2.stream import *
 from bt2.stream_class import *
 from bt2.trace import *
 from bt2.trace_collection_notification_iterator import *
-from bt2.values import *
+from bt2.value import *
 
 
 class Error(Exception):

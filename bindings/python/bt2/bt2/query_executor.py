@@ -87,4 +87,4 @@ class QueryExecutor(object._SharedObject):
                                                             object, params_ptr)
         self._handle_status(status, 'cannot query component class')
         assert(result_ptr)
-        return bt2.values._create_from_ptr(result_ptr)
+        return bt2.value._create_from_ptr(result_ptr)

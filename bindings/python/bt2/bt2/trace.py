@@ -99,7 +99,7 @@ class _TraceEnv(collections.abc.MutableMapping):
                 entry_name, value_ptr = native_bt.trace_borrow_environment_entry_by_index(self._trace._ptr,
                                                                         idx)
                 native_bt.get(value_ptr)
-                return bt2.values._create_from_ptr(value_ptr)
+                return bt2.value._create_from_ptr(value_ptr)
 
         raise KeyError(key)
 

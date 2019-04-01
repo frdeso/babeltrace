@@ -1,4 +1,4 @@
-import bt2.fields
+import bt2.field
 import unittest
 import bt2
 
