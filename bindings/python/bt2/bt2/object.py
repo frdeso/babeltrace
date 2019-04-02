@@ -23,7 +23,6 @@
 
 __all__ = ['_SharedObject', '_UniqueObject']
 
-from bt2 import native_bt
 
 class _BaseObject:
     def __new__(cls, *args, **kwargs):
@@ -49,35 +48,73 @@ class _BaseObject:
     def __deepcopy__(self):
         raise NotImplementedError
 
+    def __eq__(self, other):
+        if not hasattr(other, 'addr'):
+            return False
+
+        return self.addr == other.addr
+
 
 class _UniqueObject(_BaseObject):
     @classmethod
-    def _create_from_ptr(cls, ptr_borrowed, owning_ptr_borrowed):
+    def _create_from_ptr(cls, ptr_borrowed, owning_ptr_borrowed,
+                         owning_ptr_get_func, owning_ptr_put_func):
         obj = cls.__new__(cls)
         obj._ptr = ptr_borrowed
         obj._owning_ptr = owning_ptr_borrowed
-        native_bt.get(obj._owning_ptr)
+        obj._owning_ptr_get_func = owning_ptr_get_func
+        obj._owning_ptr_put_func = owning_ptr_put_func
+        owning_ptr_get_func(obj._owning_ptr)
         return obj
 
     def __del__(self):
         owning_ptr = getattr(self, '_owning_ptr', None)
-        native_bt.put(owning_ptr)
         self._owning_ptr = None
+        self._owning_ptr_put_func(owning_ptr)
 
 
 class _SharedObject(_BaseObject):
+    """A Python object that owns a reference to a Babeltrace object."""
+
+    @staticmethod
+    def _GET_REF_FUNC(ptr):
+        """Get a new reference on ptr.
+
+        This must be implemented by subclasses to work correctly with a pointer
+        of the native type they wrap."""
+        raise NotImplementedError
+
+    @staticmethod
+    def _PUT_REF_FUNC(ptr):
+        """Put a reference on ptr.
+
+        This must be implemented by subclasses to work correctly with a pointer
+        of the native type they wrap."""
+        raise NotImplementedError
+
     @classmethod
     def _create_from_ptr(cls, ptr_owned):
+        """Create a _SharedObject from an existing reference.
+
+        This assumes that the caller owns a reference to the Babeltrace object
+        and transfers this ownership to the newly created Python object"""
         obj = cls.__new__(cls)
         obj._ptr = ptr_owned
         return obj
 
+    @classmethod
+    def _create_from_ptr_and_get_ref(cls, ptr):
+        """Create a _SharedObject from a new reference."""
+        obj = cls._create_from_ptr(ptr)
+        cls._GET_REF_FUNC(obj._ptr)
+        return obj
+
     def _get(self):
-        native_bt.get(self._ptr)
+        self._GET_REF_FUNC(self._ptr)
 
     def __del__(self):
         ptr = getattr(self, '_ptr', None)
-        native_bt.put(ptr)
+        self._PUT_REF_FUNC(ptr)
         self._ptr = None
 
 
