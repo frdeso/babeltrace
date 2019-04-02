@@ -57,6 +57,14 @@ def _create_from_ptr(ptr):
     return _TYPE_TO_OBJ[typeid]._create_from_ptr(ptr)
 
 
+def _create_from_ptr_and_get_ref(ptr):
+    if ptr is None or ptr == native_bt.value_null:
+        return
+
+    typeid = native_bt.value_get_type(ptr)
+    return _TYPE_TO_OBJ[typeid]._create_from_ptr_and_get_ref(ptr)
+
+
 def create_value(value):
     if value is None:
         # null value object
@@ -91,8 +99,11 @@ def create_value(value):
 
 
 class _Value(bt2.object._SharedObject, metaclass=abc.ABCMeta):
+    _GET_REF_FUNC = native_bt.value_get_ref
+    _PUT_REF_FUNC = native_bt.value_put_ref
+
     def __deepcopy__(self, memo):
-        ptr = native_bt.value_copy(self._ptr)
+        status, ptr = native_bt.value_copy(self._ptr)
 
         if ptr is None:
             raise RuntimeError('unexpected error: cannot deep-copy {} value object'.format(self._NAME))
@@ -369,13 +380,11 @@ class BoolValue(_Value):
 
     @property
     def _value(self):
-        status, value = native_bt.value_bool_get(self._ptr)
-        assert(status == native_bt.VALUE_STATUS_OK)
-        return value > 0
+        value = native_bt.value_bool_get(self._ptr)
+        return value != 0
 
     def _set_value(self, value):
-        status = native_bt.value_bool_set(self._ptr, self._value_to_bool(value))
-        self._handle_status(status)
+        native_bt.value_bool_set(self._ptr, self._value_to_bool(value))
 
     value = property(fset=_set_value)
 
@@ -402,13 +411,10 @@ class IntegerValue(_IntegralValue):
 
     @property
     def _value(self):
-        status, value = native_bt.value_integer_get(self._ptr)
-        assert(status == native_bt.VALUE_STATUS_OK)
-        return value
+        return native_bt.value_integer_get(self._ptr)
 
     def _set_value(self, value):
-        status = native_bt.value_integer_set(self._ptr, self._value_to_int(value))
-        self._handle_status(status)
+        native_bt.value_integer_set(self._ptr, self._value_to_int(value))
 
     value = property(fset=_set_value)
 
@@ -418,10 +424,10 @@ class FloatValue(_RealValue):
 
     def __init__(self, value=None):
         if value is None:
-            ptr = native_bt.value_float_create()
+            ptr = native_bt.value_real_create()
         else:
             value = self._value_to_float(value)
-            ptr = native_bt.value_float_create_init(value)
+            ptr = native_bt.value_real_create_init(value)
 
         self._check_create_status(ptr)
         super().__init__(ptr)
@@ -434,14 +440,10 @@ class FloatValue(_RealValue):
 
     @property
     def _value(self):
-        status, value = native_bt.value_float_get(self._ptr)
-        assert(status == native_bt.VALUE_STATUS_OK)
-        return value
+        return native_bt.value_real_get(self._ptr)
 
     def _set_value(self, value):
-        value = self._value_to_float(value)
-        status = native_bt.value_float_set(self._ptr, value)
-        self._handle_status(status)
+        native_bt.value_real_set(self._ptr, self._value_to_float(value))
 
     value = property(fset=_set_value)
 
@@ -468,9 +470,7 @@ class StringValue(collections.abc.Sequence, _Value):
 
     @property
     def _value(self):
-        status, value = native_bt.value_string_get(self._ptr)
-        assert(status == native_bt.VALUE_STATUS_OK)
-        return value
+        return native_bt.value_string_get(self._ptr)
 
     def _set_value(self, value):
         status = native_bt.value_string_set(self._ptr, self._value_to_str(value))
@@ -494,7 +494,7 @@ class StringValue(collections.abc.Sequence, _Value):
         return bool(self._value)
 
     def __repr__(self):
-        repr(self._value)
+        return repr(self._value)
 
     def __str__(self):
         return self._value
@@ -552,7 +552,7 @@ class ArrayValue(_Container, collections.abc.MutableSequence, _Value):
             return
 
     def __len__(self):
-        size = native_bt.value_array_size(self._ptr)
+        size = native_bt.value_array_get_size(self._ptr)
         assert(size >= 0)
         return size
 
@@ -568,9 +568,9 @@ class ArrayValue(_Container, collections.abc.MutableSequence, _Value):
 
     def __getitem__(self, index):
         self._check_index(index)
-        ptr = native_bt.value_array_get(self._ptr, index)
+        ptr = native_bt.value_array_borrow_element_by_index(self._ptr, index)
         assert(ptr)
-        return _create_from_ptr(ptr)
+        return _create_from_ptr_and_get_ref(ptr)
 
     def __setitem__(self, index, value):
         self._check_index(index)
@@ -581,7 +581,7 @@ class ArrayValue(_Container, collections.abc.MutableSequence, _Value):
         else:
             ptr = value._ptr
 
-        status = native_bt.value_array_set(self._ptr, index, ptr)
+        status = native_bt.value_array_set_element_by_index(self._ptr, index, ptr)
         self._handle_status(status)
 
     def append(self, value):
@@ -592,7 +592,7 @@ class ArrayValue(_Container, collections.abc.MutableSequence, _Value):
         else:
             ptr = value._ptr
 
-        status = native_bt.value_array_append(self._ptr, ptr)
+        status = native_bt.value_array_append_element(self._ptr, ptr)
         self._handle_status(status)
 
     def __iadd__(self, iterable):
@@ -614,7 +614,7 @@ class _MapValueKeyIterator(collections.abc.Iterator):
     def __init__(self, map_obj):
         self._map_obj = map_obj
         self._at = 0
-        keys_ptr = native_bt.value_map_get_keys_private(map_obj._ptr)
+        keys_ptr = native_bt.value_map_get_keys(map_obj._ptr)
 
         if keys_ptr is None:
             raise RuntimeError('unexpected error: cannot get map value object keys')
@@ -671,13 +671,13 @@ class MapValue(_Container, collections.abc.MutableMapping, _Value):
             return
 
     def __len__(self):
-        size = native_bt.value_map_size(self._ptr)
+        size = native_bt.value_map_get_size(self._ptr)
         assert(size >= 0)
         return size
 
     def __contains__(self, key):
         self._check_key_type(key)
-        return native_bt.value_map_has_key(self._ptr, key)
+        return native_bt.value_map_has_entry(self._ptr, key)
 
     def _check_key_type(self, key):
         utils._check_str(key)
@@ -688,9 +688,9 @@ class MapValue(_Container, collections.abc.MutableMapping, _Value):
 
     def __getitem__(self, key):
         self._check_key(key)
-        ptr = native_bt.value_map_get(self._ptr, key)
+        ptr = native_bt.value_map_borrow_entry_value(self._ptr, key)
         assert(ptr)
-        return _create_from_ptr(ptr)
+        return _create_from_ptr_and_get_ref(ptr)
 
     def __iter__(self):
         return _MapValueKeyIterator(self)
@@ -704,7 +704,7 @@ class MapValue(_Container, collections.abc.MutableMapping, _Value):
         else:
             ptr = value._ptr
 
-        status = native_bt.value_map_insert(self._ptr, key, ptr)
+        status = native_bt.value_map_insert_entry(self._ptr, key, ptr)
         self._handle_status(status)
 
     def __repr__(self):

@@ -687,7 +687,6 @@ def _inject_numeric_testing_methods(cls):
         setattr(cls, test_ibinop_name('value_zero_vfloat'), partialmethod(_TestNumericValue._test_ibinop_value_zero_vfloat, op=ibinop))
 
 
-@unittest.skip("this is broken")
 class CreateValueFuncTestCase(unittest.TestCase):
     def test_create_none(self):
         v = bt2.create_value(None)
@@ -790,7 +789,6 @@ class CreateValueFuncTestCase(unittest.TestCase):
             v = bt2.create_value(a)
 
 
-@unittest.skip("this is broken")
 class BoolValueTestCase(_TestCopySimple, unittest.TestCase):
     def setUp(self):
         self._f = bt2.BoolValue(False)
@@ -883,7 +881,6 @@ class BoolValueTestCase(_TestCopySimple, unittest.TestCase):
         self.assertNotEqual(self._t, False)
 
 
-@unittest.skip("this is broken")
 class IntegerValueTestCase(_TestNumericValue, unittest.TestCase):
     def setUp(self):
         self._pv = 23
@@ -993,7 +990,6 @@ class IntegerValueTestCase(_TestNumericValue, unittest.TestCase):
 _inject_numeric_testing_methods(IntegerValueTestCase)
 
 
-@unittest.skip("this is broken")
 class FloatValueTestCase(_TestNumericValue, unittest.TestCase):
     def setUp(self):
         self._pv = 23.4
@@ -1120,7 +1116,6 @@ class FloatValueTestCase(_TestNumericValue, unittest.TestCase):
 _inject_numeric_testing_methods(FloatValueTestCase)
 
 
-@unittest.skip("this is broken")
 class StringValueTestCase(_TestCopySimple, unittest.TestCase):
     def setUp(self):
         self._def_value = 'Hello, World!'
@@ -1239,7 +1234,6 @@ class StringValueTestCase(_TestCopySimple, unittest.TestCase):
         self.assertEqual(self._def, self._def_value)
 
 
-@unittest.skip("this is broken")
 class ArrayValueTestCase(unittest.TestCase):
     def setUp(self):
         self._def_value = [None, False, True, -23, 0, 42, -42.4, 23.17, 'yes']
@@ -1387,7 +1381,6 @@ class ArrayValueTestCase(unittest.TestCase):
             self.assertEqual(velem, elem)
 
 
-@unittest.skip("this is broken")
 class MapValueTestCase(unittest.TestCase):
     def setUp(self):
         self._def_value = {
