@@ -22,20 +22,20 @@
 
 import collections.abc
 from bt2 import native_bt, utils
-import bt2.notification
+import bt2.message
 import bt2.component
 import bt2
 
 
-class _NotificationIterator(collections.abc.Iterator):
+class _MessageIterator(collections.abc.Iterator):
     def _handle_status(self, status, gen_error_msg):
-        if status == native_bt.NOTIFICATION_ITERATOR_STATUS_CANCELED:
-            raise bt2.NotificationIteratorCanceled
-        elif status == native_bt.NOTIFICATION_ITERATOR_STATUS_AGAIN:
+        if status == native_bt.MESSAGE_ITERATOR_STATUS_CANCELED:
+            raise bt2.MessageIteratorCanceled
+        elif status == native_bt.MESSAGE_ITERATOR_STATUS_AGAIN:
             raise bt2.TryAgain
-        elif status == native_bt.NOTIFICATION_ITERATOR_STATUS_END:
+        elif status == native_bt.MESSAGE_ITERATOR_STATUS_END:
             raise bt2.Stop
-        elif status == native_bt.NOTIFICATION_ITERATOR_STATUS_UNSUPPORTED:
+        elif status == native_bt.MESSAGE_ITERATOR_STATUS_UNSUPPORTED:
             raise bt2.UnsupportedFeature
         elif status < 0:
             raise bt2.Error(gen_error_msg)
@@ -44,7 +44,7 @@ class _NotificationIterator(collections.abc.Iterator):
         raise NotImplementedError
 
 
-class _GenericNotificationIterator(bt2.object._SharedObject, _NotificationIterator):
+class _GenericMessageIterator(bt2.object._SharedObject, _MessageIterator):
     def __init__(self, ptr):
             self._current_notifs = []
             self._at = 0
@@ -54,30 +54,30 @@ class _GenericNotificationIterator(bt2.object._SharedObject, _NotificationIterat
         if len(self._current_notifs) == self._at:
             status, notifs = self._GET_NOFICATION_RANGE(self._ptr)
             self._handle_status(status,
-                                'unexpected error: cannot advance the notification iterator')
+                                'unexpected error: cannot advance the message iterator')
             self._current_notifs = notifs
             self._at = 0
 
         notif_ptr = self._current_notifs[self._at]
         self._at += 1
 
-        return bt2.notification._create_from_ptr(notif_ptr)
+        return bt2.message._create_from_ptr(notif_ptr)
 
 
-class _PrivateConnectionNotificationIterator(_GenericNotificationIterator):
+class _PrivateConnectionMessageIterator(_GenericMessageIterator):
     _GET_NOFICATION_RANGE = native_bt.py3_self_component_port_input_get_msg_range
     @property
     def component(self):
-        comp_ptr = native_bt.private_connection_notification_iterator_get_component(self._ptr)
+        comp_ptr = native_bt.private_connection_message_iterator_get_component(self._ptr)
         assert(comp_ptr)
         return bt2.component._create_generic_component_from_ptr(comp_ptr)
 
 
-class _OutputPortNotificationIterator(_GenericNotificationIterator):
+class _OutputPortMessageIterator(_GenericMessageIterator):
     _GET_NOFICATION_RANGE = native_bt.py3_port_output_get_msg_range
 
 
-class _UserNotificationIterator(_NotificationIterator):
+class _UserMessageIterator(_MessageIterator):
     def __new__(cls, ptr):
         # User iterator objects are always created by the native side,
         # that is, never instantiated directly by Python code.
@@ -119,26 +119,26 @@ class _UserNotificationIterator(_NotificationIterator):
         except:
             raise
 
-        utils._check_type(notif, bt2.notification._Notification)
+        utils._check_type(notif, bt2.message._Message)
 
         # take a new reference for the native part
         notif._get()
         return int(notif._ptr)
 
-    def  _create_event_notification(self, event_class, packet):
-        return bt2.notification._EventNotification(self, event_class, packet);
+    def  _create_event_message(self, event_class, packet):
+        return bt2.message._EventMessage(self, event_class, packet);
 
-    def _create_inactivity_notification(self, clock_class):
-        return bt2.notification._InactivityNotification(self, clock_class);
+    def _create_inactivity_message(self, clock_class):
+        return bt2.message._InactivityMessage(self, clock_class);
 
-    def _create_stream_beginning_notification(self, stream):
-        return bt2.notification._StreamBeginningNotification(self, stream);
+    def _create_stream_beginning_message(self, stream):
+        return bt2.message._StreamBeginningMessage(self, stream);
 
-    def _create_stream_end_notification(self, stream):
-        return bt2.notification._StreamEndNotification(self, stream);
+    def _create_stream_end_message(self, stream):
+        return bt2.message._StreamEndMessage(self, stream);
 
-    def _create_packet_beginning_notification(self, packet):
-        return bt2.notification._PacketBeginningNotification(self, packet);
+    def _create_packet_beginning_message(self, packet):
+        return bt2.message._PacketBeginningMessage(self, packet);
 
-    def _create_packet_end_notification(self, packet):
-        return bt2.notification._PacketEndNotification(self, packet);
+    def _create_packet_end_message(self, packet):
+        return bt2.message._PacketEndMessage(self, packet);

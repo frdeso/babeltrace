@@ -4,7 +4,7 @@ import copy
 import bt2
 from collections import OrderedDict
 
-#Raise "create a graph to generate event notification so we can change and test the clock value using the
+#Raise "create a graph to generate event message so we can change and test the clock value using the
 #Bt_event_set_clock_value"
 
 
@@ -159,22 +159,22 @@ class ClockValueTestCase(unittest.TestCase):
         self._ec = _ec
         self._cc = _cc
 
-        class MyIter(bt2._UserNotificationIterator):
+        class MyIter(bt2._UserMessageIterator):
             def __init__(self):
                 self._at = 0
 
             def __next__(self):
                 if self._at == 0:
-                    notif = self._create_stream_beginning_notification(_stream)
+                    notif = self._create_stream_beginning_message(_stream)
                 elif self._at == 1:
-                    notif = self._create_packet_beginning_notification(_packet)
+                    notif = self._create_packet_beginning_message(_packet)
                 elif self._at == 2:
-                    notif = self._create_event_notification(_ec, _packet)
+                    notif = self._create_event_message(_ec, _packet)
                     notif.event.default_clock_value = 123
                 elif self._at == 3:
-                    notif = self._create_packet_end_notification(_packet)
+                    notif = self._create_packet_end_message(_packet)
                 elif self._at == 4:
-                    notif = self._create_stream_end_notification(_stream)
+                    notif = self._create_stream_end_message(_stream)
                 else:
                     raise bt2.Stop
 
@@ -182,13 +182,13 @@ class ClockValueTestCase(unittest.TestCase):
                 return notif
 
 
-        class MySrc(bt2._UserSourceComponent, notification_iterator_class=MyIter):
+        class MySrc(bt2._UserSourceComponent, message_iterator_class=MyIter):
             def __init__(self, params):
                 self._add_output_port('out')
 
         self._graph = bt2.Graph()
         self._src_comp = self._graph.add_component(MySrc, 'my_source')
-        self._notif_iter = self._src_comp.output_ports['out'].create_notification_iterator()
+        self._notif_iter = self._src_comp.output_ports['out'].create_message_iterator()
 
         for i, notif in enumerate(self._notif_iter):
             if i == 2:

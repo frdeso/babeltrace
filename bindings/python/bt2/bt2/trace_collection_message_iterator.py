@@ -27,7 +27,7 @@ import collections.abc
 import numbers
 from bt2 import utils
 import bt2
-import bt2.notification_iterator
+import bt2.message_iterator
 
 
 # a pair of component and ComponentSpec
@@ -81,7 +81,7 @@ class _CompClsType:
     FILTER = 1
 
 
-class TraceCollectionNotificationIterator(bt2.notification_iterator._NotificationIterator):
+class TraceCollectionMessageIterator(bt2.message_iterator._MessageIterator):
     def __init__(self, source_component_specs, filter_component_specs=None,
                  stream_intersection_mode=False, begin=None, end=None):
         utils._check_bool(stream_intersection_mode)
@@ -315,5 +315,5 @@ class TraceCollectionNotificationIterator(bt2.notification_iterator._Notificatio
 
                 self._connect_src_comp_port(out_port)
 
-        # create this trace collection iterator's notification iterator
-        self._notif_iter = notif_iter_port.create_notification_iterator()
+        # create this trace collection iterator's message iterator
+        self._notif_iter = notif_iter_port.create_message_iterator()

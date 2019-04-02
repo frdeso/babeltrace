@@ -32,99 +32,99 @@ import bt2
 
 
 def _create_from_ptr(ptr):
-    notif_type = native_bt.notification_get_type(ptr)
+    notif_type = native_bt.message_get_type(ptr)
     cls = None
 
     if notif_type not in _NOTIF_TYPE_TO_CLS:
-        raise bt2.Error('unknown notification type: {}'.format(notif_type))
+        raise bt2.Error('unknown message type: {}'.format(notif_type))
 
     return _NOTIF_TYPE_TO_CLS[notif_type]._create_from_ptr(ptr)
 
 
-class _Notification(object._SharedObject):
+class _Message(object._SharedObject):
     pass
 
 
-class _EventNotification(_Notification):
+class _EventMessage(_Message):
     _TYPE = native_bt.MESSAGE_TYPE_EVENT
 
     def __init__(self, priv_conn_priv_iter, event_class, packet):
         utils._check_type(event_class, bt2.event_class._EventClass)
 
-        ptr = native_bt.notification_event_create(priv_conn_priv_iter._ptr,
+        ptr = native_bt.message_event_create(priv_conn_priv_iter._ptr,
                 event_class._ptr, packet._ptr)
 
         if ptr is None:
-            raise bt2.CreationError('cannot create event notification object')
+            raise bt2.CreationError('cannot create event message object')
 
         super().__init__(ptr)
 
     @property
     def event(self):
-        event_ptr = native_bt.notification_event_borrow_event(self._ptr)
+        event_ptr = native_bt.message_event_borrow_event(self._ptr)
         assert(event_ptr)
         return bt2.event._create_event_from_ptr(event_ptr, self._ptr)
 
 
-class _PacketBeginningNotification(_Notification):
+class _PacketBeginningMessage(_Message):
     _TYPE = native_bt.MESSAGE_TYPE_PACKET_BEGINNING
 
     def __init__(self, priv_conn_priv_iter, packet):
         utils._check_type(packet, bt2.packet._Packet)
-        ptr = native_bt.notification_packet_begin_create(priv_conn_priv_iter._ptr, packet._ptr)
+        ptr = native_bt.message_packet_begin_create(priv_conn_priv_iter._ptr, packet._ptr)
 
         if ptr is None:
-            raise bt2.CreationError('cannot create packet beginning notification object')
+            raise bt2.CreationError('cannot create packet beginning message object')
 
         super().__init__(ptr)
 
     @property
     def packet(self):
-        packet_ptr = native_bt.notification_packet_begin_get_packet(self._ptr)
+        packet_ptr = native_bt.message_packet_begin_get_packet(self._ptr)
         assert(packet_ptr)
         return bt2.packet._Packet._create_from_ptr(packet_ptr)
 
 
-class _PacketEndNotification(_Notification):
+class _PacketEndMessage(_Message):
     _TYPE = native_bt.MESSAGE_TYPE_PACKET_END
 
     def __init__(self, priv_conn_priv_iter, packet):
         utils._check_type(packet, bt2.packet._Packet)
-        ptr = native_bt.notification_packet_end_create(priv_conn_priv_iter._ptr, packet._ptr)
+        ptr = native_bt.message_packet_end_create(priv_conn_priv_iter._ptr, packet._ptr)
 
         if ptr is None:
-            raise bt2.CreationError('cannot create packet end notification object')
+            raise bt2.CreationError('cannot create packet end message object')
 
         super().__init__(ptr)
 
     @property
     def packet(self):
-        packet_ptr = native_bt.notification_packet_end_get_packet(self._ptr)
+        packet_ptr = native_bt.message_packet_end_get_packet(self._ptr)
         assert(packet_ptr)
         return bt2.packet._Packet._create_from_ptr(packet_ptr)
 
 
-class _StreamBeginningNotification(_Notification):
+class _StreamBeginningMessage(_Message):
     _TYPE = native_bt.MESSAGE_TYPE_STREAM_BEGINNING
 
     def __init__(self, priv_conn_priv_iter, stream):
         utils._check_type(stream, bt2.stream._Stream)
-        ptr = native_bt.notification_stream_begin_create(priv_conn_priv_iter._ptr, stream._ptr)
+        ptr = native_bt.message_stream_begin_create(priv_conn_priv_iter._ptr, stream._ptr)
 
         if ptr is None:
-            raise bt2.CreationError('cannot create stream beginning notification object')
+            raise bt2.CreationError('cannot create stream beginning message object')
 
         super().__init__(ptr)
 
     @property
     def stream(self):
-        stream_ptr = native_bt.notification_stream_begin_get_stream(self._ptr)
+        stream_ptr = native_bt.message_stream_begin_get_stream(self._ptr)
         assert(stream_ptr)
         return bt2.stream._create_stream_from_ptr(stream_ptr)
 
     @property
     def default_clock_value(self):
-        value_ptr = native_bt.notification_stream_begin_borrow_default_clock_value(self._ptr)
+        value_ptr = native_bt.message_stream_begin_borrow_default_clock_value(self._ptr)
 
         if value_ptr is None:
             return
@@ -133,31 +133,31 @@ class _StreamBeginningNotification(_Notification):
 
     @default_clock_value.setter
     def default_clock_value(self, value):
-        ret = native_bt.notification_stream_begin_set_default_clock_value(self._ptr, value)
-        utils._handle_ret(ret, "cannot set stream begin notification clock value")
+        ret = native_bt.message_stream_begin_set_default_clock_value(self._ptr, value)
+        utils._handle_ret(ret, "cannot set stream begin message clock value")
 
 
-class _StreamEndNotification(_Notification):
+class _StreamEndMessage(_Message):
     _TYPE = native_bt.MESSAGE_TYPE_STREAM_END
 
     def __init__(self, priv_conn_priv_iter, stream):
         utils._check_type(stream, bt2.stream._Stream)
-        ptr = native_bt.notification_stream_end_create(priv_conn_priv_iter._ptr, stream._ptr)
+        ptr = native_bt.message_stream_end_create(priv_conn_priv_iter._ptr, stream._ptr)
 
         if ptr is None:
-            raise bt2.CreationError('cannot create stream end notification object')
+            raise bt2.CreationError('cannot create stream end message object')
 
         super().__init__(ptr)
 
     @property
     def stream(self):
-        stream_ptr = native_bt.notification_stream_end_get_stream(self._ptr)
+        stream_ptr = native_bt.message_stream_end_get_stream(self._ptr)
         assert(stream_ptr)
         return bt2.stream._create_stream_from_ptr(stream_ptr)
 
     @property
     def default_clock_value(self):
-        value_ptr = native_bt.notification_stream_end_borrow_default_clock_value(self._ptr)
+        value_ptr = native_bt.message_stream_end_borrow_default_clock_value(self._ptr)
 
         if value_ptr is None:
             return
@@ -166,24 +166,24 @@ class _StreamEndNotification(_Notification):
 
     @default_clock_value.setter
     def default_clock_value(self, value):
-        ret = native_bt.notification_stream_end_set_default_clock_value(self._ptr, value)
-        utils._handle_ret(ret, "cannot set stream end notification clock value")
+        ret = native_bt.message_stream_end_set_default_clock_value(self._ptr, value)
+        utils._handle_ret(ret, "cannot set stream end message clock value")
 
 
-class _InactivityNotification(_Notification):
+class _InactivityMessage(_Message):
     _TYPE = native_bt.MESSAGE_TYPE_MESSAGE_ITERATOR_INACTIVITY
 
     def __init__(self, priv_conn_priv_iter, clock_class):
-        ptr = native_bt.notification_inactivity_create(priv_conn_priv_iter._ptr, clock_class._ptr)
+        ptr = native_bt.message_inactivity_create(priv_conn_priv_iter._ptr, clock_class._ptr)
 
         if ptr is None:
-            raise bt2.CreationError('cannot create inactivity notification object')
+            raise bt2.CreationError('cannot create inactivity message object')
 
         super().__init__(ptr)
 
     @property
     def default_clock_value(self):
-        value_ptr = native_bt.notification_inactivity_borrow_default_clock_value(self._ptr)
+        value_ptr = native_bt.message_inactivity_borrow_default_clock_value(self._ptr)
 
         if value_ptr is None:
             return
@@ -192,15 +192,15 @@ class _InactivityNotification(_Notification):
 
     @default_clock_value.setter
     def default_clock_value(self, value):
-        ret = native_bt.notification_inactivity_set_default_clock_value(self._ptr, value)
-        utils._handle_ret(ret, "cannot set stream end notification clock value")
+        ret = native_bt.message_inactivity_set_default_clock_value(self._ptr, value)
+        utils._handle_ret(ret, "cannot set stream end message clock value")
 
 
 _NOTIF_TYPE_TO_CLS = {
-    native_bt.MESSAGE_TYPE_EVENT: _EventNotification,
-    native_bt.MESSAGE_TYPE_PACKET_BEGINNING: _PacketBeginningNotification,
-    native_bt.MESSAGE_TYPE_PACKET_END: _PacketEndNotification,
-    native_bt.MESSAGE_TYPE_STREAM_BEGINNING: _StreamBeginningNotification,
-    native_bt.MESSAGE_TYPE_STREAM_END: _StreamEndNotification,
-    native_bt.MESSAGE_TYPE_MESSAGE_ITERATOR_INACTIVITY: _InactivityNotification,
+    native_bt.MESSAGE_TYPE_EVENT: _EventMessage,
+    native_bt.MESSAGE_TYPE_PACKET_BEGINNING: _PacketBeginningMessage,
+    native_bt.MESSAGE_TYPE_PACKET_END: _PacketEndMessage,
+    native_bt.MESSAGE_TYPE_STREAM_BEGINNING: _StreamBeginningMessage,
+    native_bt.MESSAGE_TYPE_STREAM_END: _StreamEndMessage,
+    native_bt.MESSAGE_TYPE_MESSAGE_ITERATOR_INACTIVITY: _InactivityMessage,
 }

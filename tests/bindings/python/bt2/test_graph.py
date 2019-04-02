@@ -4,7 +4,7 @@ import unittest
 import copy
 import bt2
 
-class _MyIter(bt2._UserNotificationIterator):
+class _MyIter(bt2._UserMessageIterator):
     def __init__(self):
         self._build_meta()
         self._at = 0
@@ -80,12 +80,12 @@ class GraphTestCase(unittest.TestCase):
             self._graph.add_component(int, 'salut')
 
     def test_connect_ports(self):
-        class MyIter(bt2._UserNotificationIterator):
+        class MyIter(bt2._UserMessageIterator):
             def __next__(self):
                 raise bt2.Stop
 
         class MySource(bt2._UserSourceComponent,
-                       notification_iterator_class=MyIter):
+                       message_iterator_class=MyIter):
             def __init__(self, params):
                 self._add_output_port('out')
 
@@ -106,12 +106,12 @@ class GraphTestCase(unittest.TestCase):
         self.assertEqual(sink.input_ports['in'].connection._ptr, conn._ptr)
 
     def test_connect_ports_invalid_direction(self):
-        class MyIter(bt2._UserNotificationIterator):
+        class MyIter(bt2._UserMessageIterator):
             def __next__(self):
                 raise bt2.Stop
 
         class MySource(bt2._UserSourceComponent,
-                       notification_iterator_class=MyIter):
+                       message_iterator_class=MyIter):
             def __init__(self, params):
                 self._add_output_port('out')
 
@@ -130,12 +130,12 @@ class GraphTestCase(unittest.TestCase):
                                              src.output_ports['out'])
 
     def test_connect_ports_refused(self):
-        class MyIter(bt2._UserNotificationIterator):
+        class MyIter(bt2._UserMessageIterator):
             def __next__(self):
                 raise bt2.Stop
 
         class MySource(bt2._UserSourceComponent,
-                       notification_iterator_class=MyIter):
+                       message_iterator_class=MyIter):
             def __init__(self, params):
                 self._add_output_port('out')
 
@@ -157,12 +157,12 @@ class GraphTestCase(unittest.TestCase):
                                              sink.input_ports['in'])
 
     def test_connect_ports_canceled(self):
-        class MyIter(bt2._UserNotificationIterator):
+        class MyIter(bt2._UserMessageIterator):
             def __next__(self):
                 raise bt2.Stop
 
         class MySource(bt2._UserSourceComponent,
-                       notification_iterator_class=MyIter):
+                       message_iterator_class=MyIter):
             def __init__(self, params):
                 self._add_output_port('out')
 
@@ -194,21 +194,21 @@ class GraphTestCase(unittest.TestCase):
                     raise bt2.Stop
 
                 if self._at == 0:
-                    notif = self._create_stream_beginning_notification(self._stream)
+                    notif = self._create_stream_beginning_message(self._stream)
                 elif self._at == 1:
-                    notif = self._create_packet_beginning_notification(self._packet)
+                    notif = self._create_packet_beginning_message(self._packet)
                 elif self._at == 7:
-                    notif = self._create_packet_end_notification(self._packet)
+                    notif = self._create_packet_end_message(self._packet)
                 elif self._at == 8:
-                    notif = self._create_stream_end_notification(self._stream)
+                    notif = self._create_stream_end_message(self._stream)
                 else:
-                    notif = self._create_event_notification(self._ec, self._packet)
+                    notif = self._create_event_message(self._ec, self._packet)
 
                 self._at += 1
                 return notif
 
         class MySource(bt2._UserSourceComponent,
-                       notification_iterator_class=MyIter):
+                       message_iterator_class=MyIter):
             def __init__(self, params):
                 self._add_output_port('out')
 
@@ -221,21 +221,21 @@ class GraphTestCase(unittest.TestCase):
                 notif = next(comp_self._notif_iter)
 
                 if comp_self._at == 0:
-                    self.assertIsInstance(notif, bt2.notification._StreamBeginningNotification)
+                    self.assertIsInstance(notif, bt2.message._StreamBeginningMessage)
                 elif comp_self._at == 1:
-                    self.assertIsInstance(notif, bt2.notification._PacketBeginningNotification)
+                    self.assertIsInstance(notif, bt2.message._PacketBeginningMessage)
                 elif comp_self._at >= 2 and comp_self._at <= 6:
-                    self.assertIsInstance(notif, bt2.notification._EventNotification)
+                    self.assertIsInstance(notif, bt2.message._EventMessage)
                     self.assertEqual(notif.event.event_class.name, 'salut')
                 elif comp_self._at == 7:
-                    self.assertIsInstance(notif, bt2.notification._PacketEndNotification)
+                    self.assertIsInstance(notif, bt2.message._PacketEndMessage)
                 elif comp_self._at == 8:
-                    self.assertIsInstance(notif, bt2.notification._StreamEndNotification)
+                    self.assertIsInstance(notif, bt2.message._StreamEndMessage)
 
                 comp_self._at += 1
 
             def _port_connected(self, port, other_port):
-                self._notif_iter = port.connection.create_notification_iterator()
+                self._notif_iter = port.connection.create_message_iterator()
 
         src = self._graph.add_component(MySource, 'src')
         sink = self._graph.add_component(MySink, 'sink')
@@ -250,17 +250,17 @@ class GraphTestCase(unittest.TestCase):
                     raise bt2.TryAgain
 
                 if self._at == 0:
-                    notif = self._create_stream_beginning_notification(self._stream)
+                    notif = self._create_stream_beginning_message(self._stream)
                 elif self._at == 1:
-                    notif = self._create_packet_beginning_notification(self._packet)
+                    notif = self._create_packet_beginning_message(self._packet)
                 elif self._at == 2:
-                    notif = self._create_event_notification(self._ec, self._packet)
+                    notif = self._create_event_message(self._ec, self._packet)
 
                 self._at += 1
                 return notif
 
         class MySource(bt2._UserSourceComponent,
-                       notification_iterator_class=MyIter):
+                       message_iterator_class=MyIter):
             def __init__(self, params):
                 self._add_output_port('out')
 
@@ -272,11 +272,11 @@ class GraphTestCase(unittest.TestCase):
             def _consume(comp_self):
                 notif = next(comp_self._notif_iter)
                 if comp_self._at == 0:
-                    self.assertIsInstance(notif, bt2.notification._StreamBeginningNotification)
+                    self.assertIsInstance(notif, bt2.message._StreamBeginningMessage)
                 elif comp_self._at == 1:
-                    self.assertIsInstance(notif, bt2.notification._PacketBeginningNotification)
+                    self.assertIsInstance(notif, bt2.message._PacketBeginningMessage)
                 elif comp_self._at == 2:
-                    self.assertIsInstance(notif, bt2.notification._EventNotification)
+                    self.assertIsInstance(notif, bt2.message._EventMessage)
                     raise bt2.TryAgain
                 else:
                     pass
@@ -284,7 +284,7 @@ class GraphTestCase(unittest.TestCase):
                 comp_self._at += 1
 
             def _port_connected(self, port, other_port):
-                self._notif_iter = port.connection.create_notification_iterator()
+                self._notif_iter = port.connection.create_message_iterator()
 
         src = self._graph.add_component(MySource, 'src')
         sink = self._graph.add_component(MySink, 'sink')
@@ -301,16 +301,16 @@ class GraphTestCase(unittest.TestCase):
                     raise bt2.TryAgain
 
                 if self._at == 0:
-                    notif = self._create_stream_beginning_notification(self._stream)
+                    notif = self._create_stream_beginning_message(self._stream)
                 elif self._at == 1:
-                    notif = self._create_packet_beginning_notification(self._packet)
+                    notif = self._create_packet_beginning_message(self._packet)
                 elif self._at == 2:
-                    notif = self._create_event_notification(self._ec, self._packet)
+                    notif = self._create_event_message(self._ec, self._packet)
                 self._at += 1
                 return notif
 
         class MySource(bt2._UserSourceComponent,
-                       notification_iterator_class=MyIter):
+                       message_iterator_class=MyIter):
             def __init__(self, params):
                 self._add_output_port('out')
 
@@ -322,18 +322,18 @@ class GraphTestCase(unittest.TestCase):
             def _consume(comp_self):
                 notif = next(comp_self._notif_iter)
                 if comp_self._at == 0:
-                    self.assertIsInstance(notif, bt2.notification._StreamBeginningNotification)
+                    self.assertIsInstance(notif, bt2.message._StreamBeginningMessage)
                 elif comp_self._at == 1:
-                    self.assertIsInstance(notif, bt2.nofitication._PacketBeginningNotification)
+                    self.assertIsInstance(notif, bt2.nofitication._PacketBeginningMessage)
                 elif comp_self._at == 2:
-                    self.assertIsInstance(notif, bt2.notification._EventNotification)
+                    self.assertIsInstance(notif, bt2.message._EventMessage)
                 elif comp_self._at == 3:
                     raise RuntimeError('error!')
 
                 comp_self._at += 1
 
             def _port_connected(self, port, other_port):
-                self._notif_iter = port.connection.create_notification_iterator()
+                self._notif_iter = port.connection.create_message_iterator()
 
         src = self._graph.add_component(MySource, 'src')
         sink = self._graph.add_component(MySink, 'sink')
@@ -344,12 +344,12 @@ class GraphTestCase(unittest.TestCase):
             self._graph.run()
 
     def test_listeners(self):
-        class MyIter(bt2._UserNotificationIterator):
+        class MyIter(bt2._UserMessageIterator):
             def __next__(self):
                 raise bt2.Stop
 
         class MySource(bt2._UserSourceComponent,
-                       notification_iterator_class=MyIter):
+                       message_iterator_class=MyIter):
             def __init__(self, params):
                 self._add_output_port('out')
                 self._add_output_port('zero')

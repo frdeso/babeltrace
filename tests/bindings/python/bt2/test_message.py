@@ -6,7 +6,7 @@ import bt2
 
 
 @unittest.skip("this is broken")
-class AllNotificationTestCase(unittest.TestCase):
+class AllMessageTestCase(unittest.TestCase):
     def setUp(self):
         _trace = bt2.Trace()
         _cc = bt2.ClockClass()
@@ -27,25 +27,25 @@ class AllNotificationTestCase(unittest.TestCase):
         packet = self._packet
         event_class = self._event_class
 
-        class MyIter(bt2._UserNotificationIterator):
+        class MyIter(bt2._UserMessageIterator):
             def __init__(self):
                 self._at = 0
 
             def __next__(self):
                 if self._at == 0:
-                    notif = self._create_stream_beginning_notification(stream)
+                    notif = self._create_stream_beginning_message(stream)
                     notif.default_clock_value = self._at
                 elif self._at == 1:
-                    notif = self._create_packet_beginning_notification(packet)
+                    notif = self._create_packet_beginning_message(packet)
                 elif self._at == 2:
-                    notif = self._create_event_notification(event_class, packet)
+                    notif = self._create_event_message(event_class, packet)
                 elif self._at == 3:
-                    notif = self._create_inactivity_notification(_cc)
+                    notif = self._create_inactivity_message(_cc)
                     notif.default_clock_value = self._at
                 elif self._at == 4:
-                    notif = self._create_packet_end_notification(packet)
+                    notif = self._create_packet_end_message(packet)
                 elif self._at == 5:
-                    notif = self._create_stream_end_notification(stream)
+                    notif = self._create_stream_end_message(stream)
                     notif.default_clock_value = self._at
                 elif self._at >= 6:
                     raise bt2.Stop
@@ -54,13 +54,13 @@ class AllNotificationTestCase(unittest.TestCase):
                 return notif
 
 
-        class MySrc(bt2._UserSourceComponent, notification_iterator_class=MyIter):
+        class MySrc(bt2._UserSourceComponent, message_iterator_class=MyIter):
             def __init__(self, params):
                 self._add_output_port('out')
 
         self._graph = bt2.Graph()
         self._src_comp = self._graph.add_component(MySrc, 'my_source')
-        self._notif_iter = self._src_comp.output_ports['out'].create_notification_iterator()
+        self._notif_iter = self._src_comp.output_ports['out'].create_message_iterator()
 
     def tearDown(self):
         del self._graph

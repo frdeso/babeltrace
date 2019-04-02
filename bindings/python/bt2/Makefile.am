@@ -17,7 +17,7 @@ STATIC_BINDINGS_IR_DEPS =			\
 	bt2/stream.py					\
 	bt2/stream_class.py				\
 	bt2/trace.py					\
-	bt2/trace_collection_notification_iterator.py	\
+	bt2/trace_collection_message_iterator.py	\
 	bt2/utils.py					\
 	bt2/value.py
 
@@ -26,8 +26,8 @@ STATIC_BINDINGS_GRAPH_DEPS =
 	bt2/connection.py				\
 	bt2/graph.py					\
 	bt2/logging.py					\
-	bt2/notification.py				\
-	bt2/notification_iterator.py	\
+	bt2/message.py				\
+	bt2/message_iterator.py	\
 	bt2/plugin.py					\
 	bt2/port.py						\
 	bt2/py_plugin.py				\
