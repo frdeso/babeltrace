@@ -64,3 +64,36 @@ const bt_port *bt_port_input_as_port_const(const bt_port_input *port_input);
 extern void bt_port_input_get_ref(const bt_port_input *port_input);
 
 extern void bt_port_input_put_ref(const bt_port_input *port_input);
+
+/* From self-component-port.h */
+
+typedef enum bt_self_component_port_status {
+	BT_SELF_PORT_STATUS_OK = 0,
+} bt_self_component_port_status;
+
+const bt_port *bt_self_component_port_as_port(
+		bt_self_component_port *self_port);
+
+extern bt_self_component *bt_self_component_port_borrow_component(
+		bt_self_component_port *self_port);
+
+extern void *bt_self_component_port_get_data(
+		const bt_self_component_port *self_port);
+
+/* From self-component-port-output.h */
+
+bt_self_component_port *
+bt_self_component_port_output_as_self_component_port(
+		bt_self_component_port_output *self_component_port);
+
+const bt_port_output *bt_self_component_port_output_as_port_output(
+		bt_self_component_port_output *self_component_port);
+
+/* From self-component-port-input.h */
+
+bt_self_component_port *
+bt_self_component_port_input_as_self_component_port(
+		bt_self_component_port_input *self_component_port);
+
+const bt_port_input *bt_self_component_port_input_as_port_input(
+		const bt_self_component_port_input *self_component_port);

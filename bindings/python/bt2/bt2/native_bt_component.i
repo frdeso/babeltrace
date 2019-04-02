@@ -177,7 +177,7 @@ extern bt_self_component_status
 bt_self_component_source_add_output_port(
 		bt_self_component_source *self_component,
 		const char *name, void *user_data,
-		bt_self_component_port_output **self_component_port);
+		bt_self_component_port_output **BTOUTSELFPORTOUTPUT);
 
 /* From self-component-filter.h */
 
@@ -202,7 +202,7 @@ extern bt_self_component_status
 bt_self_component_filter_add_output_port(
 		bt_self_component_filter *self_component,
 		const char *name, void *data,
-		bt_self_component_port_output **self_component_port);
+		bt_self_component_port_output **BTOUTSELFPORTOUTPUT);
 
 extern bt_self_component_port_input *
 bt_self_component_filter_borrow_input_port_by_name(
@@ -218,7 +218,7 @@ extern bt_self_component_status
 bt_self_component_filter_add_input_port(
 		bt_self_component_filter *self_component,
 		const char *name, void *data,
-		bt_self_component_port_input **self_component_port);
+		bt_self_component_port_input **BTOUTSELFPORTINPUT);
 
 /* From self-component-sink.h */
 
@@ -242,4 +242,4 @@ extern bt_self_component_status
 bt_self_component_sink_add_input_port(
 		bt_self_component_sink *self_component,
 		const char *name, void *user_data,
-		bt_self_component_port_input **self_component_port);
+		bt_self_component_port_input **BTOUTSELFPORTINPUT);
