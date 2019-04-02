@@ -161,8 +161,9 @@ class _ComponentPorts(collections.abc.Mapping):
 class _Component:
     @property
     def name(self):
-        name = native_bt.component_get_name(self._ptr)
-        assert(name is not None)
+        ptr = self._AS_COMPONENT(self._ptr)
+        name = native_bt.component_get_name(ptr)
+        assert name is not None
         return name
 
     @property
@@ -179,18 +180,21 @@ class _Component:
 
 
 class _SourceComponent(_Component):
+    _AS_COMPONENT = native_bt.component_source_as_component_const
     _AS_COMPONENT_CLASS = native_bt.component_class_source_as_component_class
     _BORROW_COMPONENT_CLASS = native_bt.component_source_borrow_component_class_const
     _COMP_CLS_TYPE = native_bt.COMPONENT_CLASS_TYPE_SOURCE
 
 
 class _FilterComponent(_Component):
+    _AS_COMPONENT = native_bt.component_filter_as_component_const
     _AS_COMPONENT_CLASS = native_bt.component_class_filter_as_component_class
     _BORROW_COMPONENT_CLASS = native_bt.component_filter_borrow_component_class_const
     _COMP_CLS_TYPE = native_bt.COMPONENT_CLASS_TYPE_FILTER
 
 
 class _SinkComponent(_Component):
+    _AS_COMPONENT = native_bt.component_sink_as_component_const
     _AS_COMPONENT_CLASS = native_bt.component_class_sink_as_component_class
     _BORROW_COMPONENT_CLASS = native_bt.component_sink_borrow_component_class_const
     _COMP_CLS_TYPE = native_bt.COMPONENT_CLASS_TYPE_SINK
@@ -534,9 +538,10 @@ class _UserComponentType(type):
 class _UserComponent(metaclass=_UserComponentType):
     @property
     def name(self):
-        pub_ptr = native_bt.component_borrow_from_private(self._ptr)
-        name = native_bt.component_get_name(pub_ptr)
-        assert(name is not None)
+        ptr = self._AS_NOT_SELF_SPECIFIC_COMPONENT(self._ptr)
+        ptr = self._AS_COMPONENT(ptr)
+        name = native_bt.component_get_name(ptr)
+        assert name is not None
         return name
 
     @property
@@ -548,10 +553,9 @@ class _UserComponent(metaclass=_UserComponentType):
 
     @property
     def component_class(self):
-        pub_ptr = native_bt.component_borrow_from_private(self._ptr)
-        cc_ptr = native_bt.component_get_class(pub_ptr)
-        assert(cc_ptr)
-        return _create_generic_component_class_from_ptr(cc_ptr)
+        comp_ptr = self._AS_NOT_SELF_SPECIFIC_COMPONENT(self._ptr)
+        cc_ptr = self._BORROW_COMPONENT_CLASS(comp_ptr)
+        return _create_known_component_class_from_ptr_and_get_ref(cc_ptr, self._COMP_CLS_TYPE)
 
     @property
     def addr(self):
@@ -608,6 +612,8 @@ class _UserComponent(metaclass=_UserComponentType):
 
 
 class _UserSourceComponent(_UserComponent, _SourceComponent):
+    _AS_NOT_SELF_SPECIFIC_COMPONENT = native_bt.self_component_source_as_component_source
+
     @property
     def _output_ports(self):
         return _ComponentPorts(True, self,
@@ -626,6 +632,8 @@ class _UserSourceComponent(_UserComponent, _SourceComponent):
 
 
 class _UserFilterComponent(_UserComponent, _FilterComponent):
+    _AS_NOT_SELF_SPECIFIC_COMPONENT = native_bt.self_component_filter_as_component_filter
+
     @property
     def _output_ports(self):
         return _ComponentPorts(True, self,
@@ -660,6 +668,8 @@ class _UserFilterComponent(_UserComponent, _FilterComponent):
 
 
 class _UserSinkComponent(_UserComponent, _SinkComponent):
+    _AS_NOT_SELF_SPECIFIC_COMPONENT = native_bt.self_component_sink_as_component_sink
+
     @property
     def _input_ports(self):
         return _ComponentPorts(True, self,
