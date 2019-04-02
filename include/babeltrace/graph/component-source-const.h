@@ -40,6 +40,10 @@ const bt_component *bt_component_source_as_component_const(
 	return (void *) component;
 }
 
+extern const bt_component_class_source *
+bt_component_source_borrow_component_class_const(
+		const bt_component_source *component);
+
 extern uint64_t bt_component_source_get_output_port_count(
 		const bt_component_source *component);
 

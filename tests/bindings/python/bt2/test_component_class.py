@@ -3,7 +3,6 @@ import unittest
 import bt2
 
 
-@unittest.skip("this is broken")
 class UserComponentClassTestCase(unittest.TestCase):
     def _test_no_init(self, cls):
         with self.assertRaises(bt2.Error):
@@ -264,7 +263,6 @@ class UserComponentClassTestCase(unittest.TestCase):
         del query_params
 
 
-@unittest.skip("this is broken")
 class GenericComponentClassTestCase(unittest.TestCase):
     def setUp(self):
         class MySink(bt2._UserSinkComponent):
@@ -282,7 +280,7 @@ class GenericComponentClassTestCase(unittest.TestCase):
 
         self._py_comp_cls = MySink
         graph = bt2.Graph()
-        comp = graph.add_component(MySink, 'salut')
+        comp = graph.add_sink_component(MySink, 'salut')
         self._comp_cls = comp.component_class
         self.assertTrue(issubclass(type(self._comp_cls),
                                    bt2.component._GenericComponentClass))

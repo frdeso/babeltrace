@@ -91,37 +91,37 @@ extern bt_graph *bt_graph_create(void);
 extern bt_graph_status bt_graph_add_source_component(bt_graph *graph,
 		const bt_component_class_source *component_class,
 		const char *name, const bt_value *params,
-		const bt_component_source **component);
+		const bt_component_source **BTOUTCOMP);
 
 extern bt_graph_status bt_graph_add_source_component_with_init_method_data(
 		bt_graph *graph,
 		const bt_component_class_source *component_class,
 		const char *name, const bt_value *params,
 		void *init_method_data,
-		const bt_component_source **component);
+		const bt_component_source **BTOUTCOMP);
 
 extern bt_graph_status bt_graph_add_filter_component(bt_graph *graph,
 		const bt_component_class_filter *component_class,
 		const char *name, const bt_value *params,
-		const bt_component_filter **component);
+		const bt_component_filter **BTOUTCOMP);
 
 extern bt_graph_status bt_graph_add_filter_component_with_init_method_data(
 		bt_graph *graph,
 		const bt_component_class_filter *component_class,
 		const char *name, const bt_value *params,
 		void *init_method_data,
-		const bt_component_filter **component);
+		const bt_component_filter **BTOUTCOMP);
 
 extern bt_graph_status bt_graph_add_sink_component(
 		bt_graph *graph, const bt_component_class_sink *component_class,
 		const char *name, const bt_value *params,
-		const bt_component_sink **component);
+		const bt_component_sink **BTOUTCOMP);
 
 extern bt_graph_status bt_graph_add_sink_component_with_init_method_data(
 		bt_graph *graph, const bt_component_class_sink *component_class,
 		const char *name, const bt_value *params,
 		void *init_method_data,
-		const bt_component_sink **component);
+		const bt_component_sink **BTOUTCOMP);
 
 extern bt_graph_status bt_graph_connect_ports(bt_graph *graph,
 		const bt_port_output *upstream,

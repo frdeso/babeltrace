@@ -26,14 +26,17 @@ import bt2
 
 
 class QueryExecutor(object._SharedObject):
+    _GET_REF_FUNC = native_bt.query_executor_get_ref
+    _PUT_REF_FUNC = native_bt.query_executor_put_ref
+
     def _handle_status(self, status, gen_error_msg):
-        if status == native_bt.QUERY_STATUS_AGAIN:
+        if status == native_bt.QUERY_EXECUTOR_STATUS_AGAIN:
             raise bt2.TryAgain
-        elif status == native_bt.QUERY_STATUS_EXECUTOR_CANCELED:
+        elif status == native_bt.QUERY_EXECUTOR_STATUS_CANCELED:
             raise bt2.QueryExecutorCanceled
-        elif status == native_bt.QUERY_STATUS_INVALID_OBJECT:
+        elif status == native_bt.QUERY_EXECUTOR_STATUS_INVALID_OBJECT:
             raise bt2.InvalidQueryObject
-        elif status == native_bt.QUERY_STATUS_INVALID_PARAMS:
+        elif status == native_bt.QUERY_EXECUTOR_STATUS_INVALID_PARAMS:
             raise bt2.InvalidQueryParams
         elif status < 0:
             raise bt2.Error(gen_error_msg)
@@ -83,7 +86,9 @@ class QueryExecutor(object._SharedObject):
         else:
             cc_ptr = component_class._cc_ptr
 
-        status, result_ptr = native_bt.query_executor_query(self._ptr, cc_ptr,
+        cc_ptr_base = component_class._AS_COMPONENT_CLASS(cc_ptr)
+
+        status, result_ptr = native_bt.query_executor_query(self._ptr, cc_ptr_base,
                                                             object, params_ptr)
         self._handle_status(status, 'cannot query component class')
         assert(result_ptr)

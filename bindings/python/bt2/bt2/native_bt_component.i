@@ -50,6 +50,10 @@ extern void bt_component_put_ref(const bt_component *component);
 const bt_component *bt_component_source_as_component_const(
 		const bt_component_source *component);
 
+extern const bt_component_class_source *
+bt_component_source_borrow_component_class_const(
+		const bt_component_source *component);
+
 extern uint64_t bt_component_source_get_output_port_count(
 		const bt_component_source *component);
 
@@ -70,6 +74,10 @@ extern void bt_component_source_put_ref(
 /* From component-filter-const.h */
 
 const bt_component *bt_component_filter_as_component_const(
+		const bt_component_filter *component);
+
+extern const bt_component_class_filter *
+bt_component_filter_borrow_component_class_const(
 		const bt_component_filter *component);
 
 extern uint64_t bt_component_filter_get_input_port_count(
@@ -103,6 +111,10 @@ extern void bt_component_filter_put_ref(
 /* From component-sink-const.h */
 
 const bt_component *bt_component_sink_as_component_const(
+		const bt_component_sink *component);
+
+extern const bt_component_class_sink *
+bt_component_sink_borrow_component_class_const(
 		const bt_component_sink *component);
 
 extern uint64_t bt_component_sink_get_input_port_count(

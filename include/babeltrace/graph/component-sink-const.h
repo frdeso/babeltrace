@@ -40,6 +40,10 @@ const bt_component *bt_component_sink_as_component_const(
 	return (const void *) component;
 }
 
+extern const bt_component_class_sink *
+bt_component_sink_borrow_component_class_const(
+		const bt_component_sink *component);
+
 extern uint64_t bt_component_sink_get_input_port_count(
 		const bt_component_sink *component);
 

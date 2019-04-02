@@ -55,6 +55,18 @@ end:
 	return (void *) sink;
 }
 
+const bt_component_class_sink *
+bt_component_sink_borrow_component_class_const(
+		const bt_component_sink *component)
+{
+	struct bt_component_class *cls = component->parent.class;
+
+	BT_ASSERT(cls != NULL);
+	BT_ASSERT(cls->type == BT_COMPONENT_CLASS_TYPE_SINK);
+
+	return (bt_component_class_sink *) cls;
+}
+
 uint64_t bt_component_sink_get_input_port_count(
 		const struct bt_component_sink *component)
 {

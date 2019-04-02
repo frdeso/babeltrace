@@ -40,31 +40,41 @@ _NO_PRINT_TRACEBACK = _env_var == '1'
 # we can only wrap it in a generic way and lose the original Python
 # class.
 class _GenericComponentClass(object._SharedObject):
+
     @property
     def name(self):
-        name = native_bt.component_class_get_name(self._ptr)
-        assert(name is not None)
+        ptr = self._AS_COMPONENT_CLASS(self._ptr)
+        name = native_bt.component_class_get_name(ptr)
+        assert name is not None
         return name
 
     @property
     def description(self):
-        return native_bt.component_class_get_description(self._ptr)
+        ptr = self._AS_COMPONENT_CLASS(self._ptr)
+        return native_bt.component_class_get_description(ptr)
 
     @property
     def help(self):
-        return native_bt.component_class_get_help(self._ptr)
+        ptr = self._AS_COMPONENT_CLASS(self._ptr)
+        return native_bt.component_class_get_help(ptr)
 
 
 class _GenericSourceComponentClass(_GenericComponentClass):
-    pass
+    _GET_REF_FUNC = native_bt.component_class_source_get_ref
+    _PUT_REF_FUNC = native_bt.component_class_source_put_ref
+    _AS_COMPONENT_CLASS = native_bt.component_class_source_as_component_class
 
 
 class _GenericFilterComponentClass(_GenericComponentClass):
-    pass
+    _GET_REF_FUNC = native_bt.component_class_filter_get_ref
+    _PUT_REF_FUNC = native_bt.component_class_filter_put_ref
+    _AS_COMPONENT_CLASS = native_bt.component_class_filter_as_component_class
 
 
 class _GenericSinkComponentClass(_GenericComponentClass):
-    pass
+    _GET_REF_FUNC = native_bt.component_class_sink_get_ref
+    _PUT_REF_FUNC = native_bt.component_class_sink_put_ref
+    _AS_COMPONENT_CLASS = native_bt.component_class_sink_as_component_class
 
 
 def _handle_component_status(status, gen_error_msg):
@@ -163,26 +173,35 @@ class _Component:
 
     @property
     def component_class(self):
-        cc_ptr = native_bt.component_get_class(self._ptr)
-        assert(cc_ptr)
-        return _create_generic_component_class_from_ptr(cc_ptr)
+        cc_ptr = self._BORROW_COMPONENT_CLASS(self._ptr)
+        assert cc_ptr is not None
+        return _create_known_component_class_from_ptr_and_get_ref(cc_ptr, self._COMP_CLS_TYPE)
 
 
 class _SourceComponent(_Component):
-    pass
+    _AS_COMPONENT_CLASS = native_bt.component_class_source_as_component_class
+    _BORROW_COMPONENT_CLASS = native_bt.component_source_borrow_component_class_const
+    _COMP_CLS_TYPE = native_bt.COMPONENT_CLASS_TYPE_SOURCE
 
 
 class _FilterComponent(_Component):
-    pass
+    _AS_COMPONENT_CLASS = native_bt.component_class_filter_as_component_class
+    _BORROW_COMPONENT_CLASS = native_bt.component_filter_borrow_component_class_const
+    _COMP_CLS_TYPE = native_bt.COMPONENT_CLASS_TYPE_FILTER
 
 
 class _SinkComponent(_Component):
-    pass
+    _AS_COMPONENT_CLASS = native_bt.component_class_sink_as_component_class
+    _BORROW_COMPONENT_CLASS = native_bt.component_sink_borrow_component_class_const
+    _COMP_CLS_TYPE = native_bt.COMPONENT_CLASS_TYPE_SINK
 
 
 # This is analogous to _GenericSourceComponentClass, but for source
 # component objects.
 class _GenericSourceComponent(object._SharedObject, _SourceComponent):
+    _GET_REF_FUNC = native_bt.component_source_get_ref
+    _PUT_REF_FUNC = native_bt.component_source_put_ref
+
     @property
     def output_ports(self):
         return _ComponentPorts(False, self,
@@ -194,6 +213,9 @@ class _GenericSourceComponent(object._SharedObject, _SourceComponent):
 # This is analogous to _GenericFilterComponentClass, but for filter
 # component objects.
 class _GenericFilterComponent(object._SharedObject, _FilterComponent):
+    _GET_REF_FUNC = native_bt.component_filter_get_ref
+    _PUT_REF_FUNC = native_bt.component_filter_put_ref
+
     @property
     def output_ports(self):
         return _ComponentPorts(False, self,
@@ -212,6 +234,9 @@ class _GenericFilterComponent(object._SharedObject, _FilterComponent):
 # This is analogous to _GenericSinkComponentClass, but for sink
 # component objects.
 class _GenericSinkComponent(object._SharedObject, _SinkComponent):
+    _GET_REF_FUNC = native_bt.component_sink_get_ref
+    _PUT_REF_FUNC = native_bt.component_sink_put_ref
+
     @property
     def input_ports(self):
         return _ComponentPorts(False, self,
@@ -233,16 +258,26 @@ _COMP_CLS_TYPE_TO_GENERIC_COMP_CLS_PYCLS = {
     native_bt.COMPONENT_CLASS_TYPE_SINK: _GenericSinkComponentClass,
 }
 
+def _create_known_component_from_ptr(ptr, comp_cls_type):
+    """Create a component Python object (of type _GenericSourceComponent,
+    _GenericFilterComponent or _GenericSinkComponent, depending on
+    comp_cls_type).
 
-def _create_generic_component_from_ptr(ptr):
-    comp_cls_type = native_bt.component_get_class_type(ptr)
+    The Python object steals the reference to ptr."""
     return _COMP_CLS_TYPE_TO_GENERIC_COMP_PYCLS[comp_cls_type]._create_from_ptr(ptr)
 
 
-def _create_generic_component_class_from_ptr(ptr):
-    comp_cls_type = native_bt.component_class_get_type(ptr)
-    return _COMP_CLS_TYPE_TO_GENERIC_COMP_CLS_PYCLS[comp_cls_type]._create_from_ptr(ptr)
+#def _create_generic_component_from_ptr(ptr):
+#    comp_cls_type = native_bt.component_get_class_type(ptr)
+#    return _COMP_CLS_TYPE_TO_GENERIC_COMP_PYCLS[comp_cls_type]._create_from_ptr(ptr)
 
+
+#def _create_generic_component_class_from_ptr(ptr):
+#    comp_cls_type = native_bt.component_class_get_type(ptr)
+#    return _COMP_CLS_TYPE_TO_GENERIC_COMP_CLS_PYCLS[comp_cls_type]._create_from_ptr(ptr)
+
+def _create_known_component_class_from_ptr_and_get_ref(ptr, comp_cls_type):
+    return _COMP_CLS_TYPE_TO_GENERIC_COMP_CLS_PYCLS[comp_cls_type]._create_from_ptr_and_get_ref(ptr)
 
 def _trim_docstring(docstring):
     lines = docstring.expandtabs().splitlines()
@@ -409,8 +444,7 @@ class _UserComponentType(type):
 
         # call user's __init__() method
         if params_ptr is not None:
-            native_bt.get(params_ptr)
-            params = bt2.value._create_from_ptr(params_ptr)
+            params = bt2.value._create_from_ptr_and_get_ref(params_ptr)
         else:
             params = None
 
@@ -435,15 +469,18 @@ class _UserComponentType(type):
 
     @property
     def name(cls):
-        return native_bt.component_class_get_name(cls._cc_ptr)
+        ptr = cls._AS_COMPONENT_CLASS(cls._cc_ptr)
+        return native_bt.component_class_get_name(ptr)
 
     @property
     def description(cls):
-        return native_bt.component_class_get_description(cls._cc_ptr)
+        ptr = cls._AS_COMPONENT_CLASS(cls._cc_ptr)
+        return native_bt.component_class_get_description(ptr)
 
     @property
     def help(cls):
-        return native_bt.component_class_get_help(cls._cc_ptr)
+        ptr = cls._AS_COMPONENT_CLASS(cls._cc_ptr)
+        return native_bt.component_class_get_help(ptr)
 
     @property
     def addr(cls):
@@ -453,13 +490,12 @@ class _UserComponentType(type):
         # this can raise, in which case the native call to
         # bt_component_class_query() returns NULL
         if params_ptr is not None:
-            native_bt.get(params_ptr)
-            params = bt2.value._create_from_ptr(params_ptr)
+            params = bt2.value._create_from_ptr_and_get_ref(params_ptr)
         else:
             params = None
 
-        native_bt.get(query_exec_ptr)
-        query_exec = bt2.QueryExecutor._create_from_ptr(query_exec_ptr)
+        query_exec = bt2.QueryExecutor._create_from_ptr_and_get_ref(
+            query_exec_ptr)
 
         # this can raise, but the native side checks the exception
         results = cls._query(query_exec, obj, params)
@@ -491,7 +527,8 @@ class _UserComponentType(type):
 
     def __del__(cls):
         if hasattr(cls, '_cc_ptr'):
-            native_bt.put(cls._cc_ptr)
+            cc_ptr = cls._AS_COMPONENT_CLASS(cls._cc_ptr)
+            native_bt.component_class_put_ref(cc_ptr)
 
 
 class _UserComponent(metaclass=_UserComponentType):
