@@ -3,7 +3,6 @@ import unittest
 import bt2
 
 
-@unittest.skip("this is broken")
 class QueryExecutorTestCase(unittest.TestCase):
     def test_query(self):
         class MySink(bt2._UserSinkComponent):

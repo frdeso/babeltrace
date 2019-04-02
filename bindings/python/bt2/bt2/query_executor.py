@@ -60,6 +60,9 @@ class QueryExecutor(object._SharedObject):
         return is_canceled > 0
 
     def query(self, component_class, object, params=None):
+        if self.is_canceled:
+            raise bt2.QueryExecutorCanceled
+
         if not isinstance(component_class, bt2.component._GenericComponentClass):
             err = False
 
