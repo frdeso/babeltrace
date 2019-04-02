@@ -45,17 +45,20 @@ def _create_private_from_ptr(ptr):
 
 
 class _Connection(bt2.object._SharedObject):
+    _GET_REF_FUNC = native_bt.connection_get_ref
+    _PUT_REF_FUNC = native_bt.connection_put_ref
+
     @staticmethod
     def _downstream_port(ptr):
-        port_ptr = native_bt.connection_get_downstream_port(ptr)
+        port_ptr = native_bt.connection_borrow_downstream_port_const(ptr)
         utils._handle_ptr(port_ptr, "cannot get connection object's downstream port object")
-        return bt2.port._create_from_ptr(port_ptr)
+        return bt2.port._create_from_ptr_and_get_ref(port_ptr, native_bt.PORT_TYPE_INPUT)
 
     @staticmethod
     def _upstream_port(ptr):
-        port_ptr = native_bt.connection_get_upstream_port(ptr)
+        port_ptr = native_bt.connection_borrow_upstream_port_const(ptr)
         utils._handle_ptr(port_ptr, "cannot get connection object's upstream port object")
-        return bt2.port._create_from_ptr(port_ptr)
+        return bt2.port._create_from_ptr_and_get_ref(port_ptr,  native_bt.PORT_TYPE_OUTPUT)
 
     @property
     def downstream_port(self):

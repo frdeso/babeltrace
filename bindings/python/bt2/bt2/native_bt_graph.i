@@ -126,7 +126,7 @@ extern bt_graph_status bt_graph_add_sink_component_with_init_method_data(
 extern bt_graph_status bt_graph_connect_ports(bt_graph *graph,
 		const bt_port_output *upstream,
 		const bt_port_input *downstream,
-		const bt_connection **connection);
+		const bt_connection **BTOUTCONN);
 
 extern bt_graph_status bt_graph_run(bt_graph *graph);
 
