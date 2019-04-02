@@ -45,8 +45,8 @@ extern const char *bt_plugin_get_description(const bt_plugin *plugin);
 extern const char *bt_plugin_get_path(const bt_plugin *plugin);
 
 extern bt_property_availability bt_plugin_get_version(
-		const bt_plugin *plugin, unsigned int *major,
-		unsigned int *minor, unsigned int *patch, const char **extra);
+		const bt_plugin *plugin, unsigned int *OUTPUTINIT,
+		unsigned int *OUTPUTINIT, unsigned int *OUTPUTINIT, const char **BTOUTSTR);
 
 extern uint64_t bt_plugin_get_source_component_class_count(
 		const bt_plugin *plugin);

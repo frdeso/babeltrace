@@ -1,6 +1,4 @@
-from bt2 import value
 import unittest
-import copy
 import bt2
 import bt2.plugin
 import os
@@ -9,7 +7,6 @@ import os
 _TEST_PLUGIN_PLUGINS_PATH = os.environ['TEST_PLUGIN_PLUGINS_PATH']
 
 
-@unittest.skip("this is broken")
 class PluginSetTestCase(unittest.TestCase):
     def test_create(self):
         pset = bt2.find_plugins(_TEST_PLUGIN_PLUGINS_PATH)
@@ -31,7 +28,6 @@ class PluginSetTestCase(unittest.TestCase):
         self.assertTrue('text' in names)
 
 
-@unittest.skip("this is broken")
 class FindPluginsTestCase(unittest.TestCase):
     def test_find_none(self):
         pset = bt2.find_plugins('/this/does/not/exist/246703df-cb85-46d5-8406-5e8dc4a88b41')
@@ -42,7 +38,6 @@ class FindPluginsTestCase(unittest.TestCase):
         self.assertTrue(len(pset) >= 3)
 
 
-@unittest.skip("this is broken")
 class FindPluginTestCase(unittest.TestCase):
     def test_find_none(self):
         plugin = bt2.find_plugin('this-does-not-exist-246703df-cb85-46d5-8406-5e8dc4a88b41')
@@ -53,7 +48,6 @@ class FindPluginTestCase(unittest.TestCase):
         self.assertIsInstance(plugin, bt2.plugin._Plugin)
 
 
-@unittest.skip("this is broken")
 class PluginTestCase(unittest.TestCase):
     def setUp(self):
         self._plugin = bt2.find_plugin('ctf')
@@ -82,7 +76,9 @@ class PluginTestCase(unittest.TestCase):
         self.assertIsNone(self._plugin.version)
 
     def test_source_comp_classes_len(self):
-        self.assertEqual(len(self._plugin.source_component_classes), 2)
+        # Reset this when the lttng-live source is enabled again.
+        # self.assertEqual(len(self._plugin.source_component_classes), 2)
+        self.assertEqual(len(self._plugin.source_component_classes), 1)
 
     def test_source_comp_classes_getitem(self):
         self.assertEqual(self._plugin.source_component_classes['fs'].name, 'fs')
@@ -97,14 +93,18 @@ class PluginTestCase(unittest.TestCase):
         for cc_name, cc in self._plugin.source_component_classes.items():
             plugins[cc_name] = cc
 
+        # Reset this when the lttng-live source is enabled again.
         self.assertTrue('fs' in plugins)
-        self.assertTrue('lttng-live' in plugins)
+        # self.assertTrue('lttng-live' in plugins)
+        self.assertFalse('lttng-live' in plugins)
         self.assertEqual(plugins['fs'].name, 'fs')
-        self.assertEqual(plugins['lttng-live'].name, 'lttng-live')
+        # self.assertEqual(plugins['lttng-live'].name, 'lttng-live')
 
     def test_filter_comp_classes_len(self):
         plugin = bt2.find_plugin('utils')
         self.assertEqual(len(plugin.filter_component_classes), 2)
 
     def test_sink_comp_classes_len(self):
-        self.assertEqual(len(self._plugin.sink_component_classes), 1)
+        # Switch back to 1 when Phil finishes implementing the ctf sink.
+        # self.assertEqual(len(self._plugin.sink_component_classes), 1)
+        self.assertEqual(len(self._plugin.sink_component_classes), 0)
