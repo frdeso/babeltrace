@@ -795,7 +795,8 @@ bt_port_output_message_iterator_create(struct bt_graph *graph,
 	 * Also set the graph as being configured: it has no active sink
 	 * anyway, so we don't need to call bt_graph_configure().
 	 */
-	graph->config_state = BT_GRAPH_CONFIGURATION_STATE_CONFIGURED;
+	// TODO: handle failure
+	bt_graph_configure(graph);
 	goto end;
 
 error:

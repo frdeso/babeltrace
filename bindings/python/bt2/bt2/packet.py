@@ -26,12 +26,14 @@ import bt2.field
 import bt2
 
 class _Packet(bt2.object._SharedObject):
+    _GET_REF_FUNC = native_bt.packet_get_ref
+    _PUT_REF_FUNC = native_bt.packet_put_ref
+
     @property
     def stream(self):
         stream_ptr = native_bt.packet_borrow_stream(self._ptr)
-        native_bt.get(stream_ptr)
-        assert(stream_ptr)
-        return bt2.stream._Stream._create_from_ptr(stream_ptr)
+        assert stream_ptr is not None
+        return bt2.stream._Stream._create_from_ptr_and_get_ref(stream_ptr)
 
     @property
     def default_beginning_clock_snapshot(self):
@@ -101,4 +103,6 @@ class _Packet(bt2.object._SharedObject):
         if field_ptr is None:
             return
 
-        return bt2.field._create_field_from_ptr(field_ptr, self._ptr)
+        return bt2.field._create_field_from_ptr(field_ptr, self._ptr,
+                                                self._GET_REF_FUNC,
+                                                self._PUT_REF_FUNC)

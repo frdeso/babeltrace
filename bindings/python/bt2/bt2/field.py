@@ -32,18 +32,23 @@ import functools
 import math
 import numbers
 
-def _create_field_from_ptr(ptr, owner_ptr):
+
+def _create_field_from_ptr(ptr, owning_ptr, owning_ptr_get_func,
+                           owning_ptr_put_func):
     # recreate the field wrapper of this field's type (the identity
     # could be different, but the underlying address should be the
     # same)
-    field_class_ptr = native_bt.field_borrow_type(ptr)
-    native_bt.get(field_class_ptr)
+    field_class_ptr = native_bt.field_borrow_class_const(ptr)
     utils._handle_ptr(field_class_ptr, "cannot get field object's type")
-    field_class = bt2.field_class._create_field_class_from_ptr(field_class_ptr)
-    typeid = native_bt.field_class_get_type_id(field_class._ptr)
-    field = _FIELD_ID_TO_OBJ[typeid]._create_from_ptr(ptr, owner_ptr)
+    field_class = bt2.field_class._create_field_class_from_ptr_and_get_ref(
+        field_class_ptr)
+    typeid = native_bt.field_class_get_type(field_class._ptr)
+    field = _FIELD_ID_TO_OBJ[typeid]._create_from_ptr(ptr, owning_ptr,
+                                                      owning_ptr_get_func,
+                                                      owning_ptr_put_func)
     field._field_class = field_class
     return field
+
 
 def _get_leaf_field(obj):
     if not isinstance(obj, _VariantField):
@@ -474,7 +479,9 @@ class _StructureField(_ContainerField, collections.abc.MutableMapping):
         if field_ptr is None:
             raise KeyError(key)
 
-        return _create_field_from_ptr(field_ptr, self._owning_ptr)
+        return _create_field_from_ptr(field_ptr, self._owning_ptr,
+                                      self._owning_ptr_get_func,
+                                      self._owning_ptr_put_func)
 
     def at_index(self, index):
         utils._check_uint64(index)

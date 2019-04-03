@@ -5,82 +5,12 @@ import copy
 import bt2
 
 
-@unittest.skip("this is broken")
 class EventTestCase(unittest.TestCase):
-    def _create_event(self, packet_fields_config=None, event_fields_config=None,
-            with_clockclass=False, with_eh=False, with_cc=False, with_sc=False, with_ep=False):
-        # packet header
-        ph = bt2.StructureFieldType()
-        ph += OrderedDict((
-            ('magic', bt2.SignedIntegerFieldType(64)),
-            ('stream_id', bt2.SignedIntegerFieldType(16))
-        ))
-
-        trace = bt2.Trace(packet_header_field_class=ph)
-        stream_class = trace.create_stream_class()
-
-        # common context
-        if with_cc:
-            cc = bt2.StructureFieldType()
-            cc += OrderedDict((
-                ('cpu_id', bt2.SignedIntegerFieldType(8)),
-                ('stuff', bt2.RealFieldType()),
-            ))
-            stream_class.event_common_context_field_class = cc
-
-        # packet context
-        pc = bt2.StructureFieldType()
-        pc += OrderedDict((
-            ('something', bt2.UnsignedIntegerFieldType(8)),
-            ('something_else', bt2.RealFieldType()),
-        ))
-        stream_class.packet_context_field_class = pc
-
-        if with_clockclass:
-            clock_class = bt2.ClockClass('my_cc', 1000)
-            stream_class.default_clock_class = clock_class
-
-        # event header
-        if with_eh:
-            eh = bt2.StructureFieldType()
-            eh += OrderedDict((
-                ('id', bt2.SignedIntegerFieldType(8)),
-                ('ts', bt2.UnsignedIntegerFieldType(64)),
-            ))
-            stream_class.event_header_field_class = eh
-
-
-        event_class = stream_class.create_event_class()
-        event_class.name = 'garou'
-        # specific context
-        if with_sc:
-            sc = bt2.StructureFieldType()
-            sc += OrderedDict((
-                ('ant', bt2.SignedIntegerFieldType(16)),
-                ('msg', bt2.StringFieldType()),
-            ))
-            event_class.specific_context_field_class = sc
-
-        # event payload
-        if with_ep:
-            ep = bt2.StructureFieldType()
-            ep += OrderedDict((
-                ('giraffe', bt2.SignedIntegerFieldType(32)),
-                ('gnu', bt2.SignedIntegerFieldType(8)),
-                ('mosquito', bt2.SignedIntegerFieldType(8)),
-            ))
-            event_class.payload_field_class = ep
-
-
-        stream = stream_class()
-        packet = stream.create_packet()
-
-        if packet_fields_config is not None:
-            packet_fields_config(packet)
-
-        self.packet = packet
-        self.stream = stream
-        self.event_class = event_class
+    def _create_test_event_message(self, packet_fields_config=None,
+                                   event_fields_config=None,
+                                   with_clockclass=False,
+                                   with_cc=False, with_sc=False,
+                                   with_ep=False):
 
         class MyIter(bt2._UserMessageIterator):
             def __init__(self):
@@ -88,63 +18,110 @@ class EventTestCase(unittest.TestCase):
 
             def __next__(self):
                 if self._at == 0:
-                    notif = self._create_stream_beginning_message(stream)
+                    msg = self._create_stream_beginning_message(test_obj.stream)
                 elif self._at == 1:
-                    notif = self._create_packet_beginning_message(packet)
+                    default_clock_snapshot = 456 if with_clockclass else None
+                    assert test_obj.packet
+                    msg = self._create_packet_beginning_message(test_obj.packet, default_clock_snapshot)
                 elif self._at == 2:
-                    notif = self._create_event_message(event_class, packet)
+                    default_clock_snapshot = 789 if with_clockclass else None
+                    assert test_obj.packet
+                    msg = self._create_event_message(test_obj.event_class, test_obj.packet, default_clock_snapshot)
                     if event_fields_config is not None:
-                        event_fields_config(notif.event)
+                        event_fields_config(msg.event)
                 elif self._at == 3:
-                    notif = self._create_packet_end_message(packet)
+                    msg = self._create_packet_end_message(test_obj.packet)
                 elif self._at == 4:
-                    notif = self._create_stream_end_message(stream)
+                    msg = self._create_stream_end_message(test_obj.stream)
                 elif self._at >= 5:
                     raise bt2.Stop
 
                 self._at += 1
-                return notif
-
+                return msg
 
         class MySrc(bt2._UserSourceComponent, message_iterator_class=MyIter):
             def __init__(self, params):
                 self._add_output_port('out')
+                tc = self._create_trace_class()
 
+                clock_class = None
+                if with_clockclass:
+                    clock_class = self._create_clock_class('my_cc', 1000)
+
+                # event common context (stream-class-defined)
+                cc = None
+                if with_cc:
+                    cc = tc.create_structure_field_class()
+                    cc += OrderedDict((
+                        ('cpu_id', tc.create_signed_integer_field_class(8)),
+                        ('stuff', tc.create_real_field_class()),
+                    ))
+
+                # packet context (stream-class-defined)
+                pc = tc.create_structure_field_class()
+                pc += OrderedDict((
+                    ('something', tc.create_unsigned_integer_field_class(8)),
+                    ('something_else', tc.create_real_field_class()),
+                ))
+
+                stream_class = tc.create_stream_class(default_clock_class=clock_class,
+                                                      event_common_context_field_class=cc,
+                                                      packet_context_field_class=pc)
+
+                # specific context (event-class-defined)
+                sc = None
+                if with_sc:
+                    sc = tc.create_structure_field_class()
+                    sc += OrderedDict((
+                        ('ant', tc.create_signed_integer_field_class(16)),
+                        ('msg', tc.create_string_field_class()),
+                    ))
+
+                # event payload
+                ep = None
+                if with_ep:
+                    ep = tc.create_structure_field_class()
+                    ep += OrderedDict((
+                        ('giraffe', tc.create_signed_integer_field_class(32)),
+                        ('gnu', tc.create_signed_integer_field_class(8)),
+                        ('mosquito', tc.create_signed_integer_field_class(8)),
+                    ))
+
+                event_class = stream_class.create_event_class(name='garou',
+                                                              specific_context_field_class=sc,
+                                                              payload_field_class=ep)
+
+                trace = tc()
+                stream = trace.create_stream(stream_class)
+                packet = stream.create_packet()
+
+                if packet_fields_config is not None:
+                    packet_fields_config(packet)
+
+                test_obj.packet = packet
+                test_obj.stream = stream
+                test_obj.event_class = event_class
+
+        test_obj = self
         self._graph = bt2.Graph()
-        self._src_comp = self._graph.add_component(MySrc, 'my_source')
-        self._notif_iter = self._src_comp.output_ports['out'].create_message_iterator()
+        self._src_comp = self._graph.add_source_component(MySrc, 'my_source')
+        self._msg_iter = self._graph.create_output_port_message_iterator(self._src_comp.output_ports['out'])
 
-        for i, notif in enumerate(self._notif_iter):
+        for i, msg in enumerate(self._msg_iter):
             if i == 2:
-                return notif.event
+                return msg
 
     def test_attr_event_class(self):
-        ev = self._create_event()
-        self.assertEqual(ev.event_class.addr, self.event_class.addr)
+        msg = self._create_test_event_message()
+        self.assertEqual(msg.event.event_class.addr, self.event_class.addr)
 
     def test_attr_name(self):
-        ev = self._create_event()
-        self.assertEqual(ev.name, self.event_class.name)
+        msg = self._create_test_event_message()
+        self.assertEqual(msg.event.name, self.event_class.name)
 
     def test_attr_id(self):
-        ev = self._create_event()
-        self.assertEqual(ev.id, self.event_class.id)
-
-    def test_get_event_header_field(self):
-        class EventFieldsConfiguration:
-            def __call__(self, event):
-                event.header_field['id'] = 23
-                event.header_field['ts'] = 1234
-
-
-        ev = self._create_event(event_fields_config=EventFieldsConfiguration(), with_eh=True)
-
-        self.assertEqual(ev.header_field['id'], 23)
-        self.assertEqual(ev.header_field['ts'], 1234)
-
-    def test_no_event_header_field(self):
-        ev = self._create_event(with_eh=False)
-        self.assertIsNone(ev.header_field)
+        msg = self._create_test_event_message()
+        self.assertEqual(msg.event.id, self.event_class.id)
 
     def test_get_common_context_field(self):
         class EventFieldsConfiguration:
@@ -152,15 +129,14 @@ class EventTestCase(unittest.TestCase):
                 event.common_context_field['cpu_id'] = 1
                 event.common_context_field['stuff'] = 13.194
 
+        msg = self._create_test_event_message(event_fields_config=EventFieldsConfiguration(), with_cc=True)
 
-        ev = self._create_event(event_fields_config=EventFieldsConfiguration(), with_cc=True)
-
-        self.assertEqual(ev.common_context_field['cpu_id'], 1)
-        self.assertEqual(ev.common_context_field['stuff'], 13.194)
+        self.assertEqual(msg.event.common_context_field['cpu_id'], 1)
+        self.assertEqual(msg.event.common_context_field['stuff'], 13.194)
 
     def test_no_common_context_field(self):
-        ev = self._create_event(with_cc=False)
-        self.assertIsNone(ev.common_context_field)
+        msg = self._create_test_event_message(with_cc=False)
+        self.assertIsNone(msg.event.common_context_field)
 
     def test_get_specific_context_field(self):
         class EventFieldsConfiguration:
@@ -168,15 +144,14 @@ class EventTestCase(unittest.TestCase):
                 event.specific_context_field['ant'] = -1
                 event.specific_context_field['msg'] = 'hellooo'
 
+        msg = self._create_test_event_message(event_fields_config=EventFieldsConfiguration(), with_sc=True)
 
-        ev = self._create_event(event_fields_config=EventFieldsConfiguration(), with_sc=True)
-
-        self.assertEqual(ev.specific_context_field['ant'], -1)
-        self.assertEqual(ev.specific_context_field['msg'], 'hellooo')
+        self.assertEqual(msg.event.specific_context_field['ant'], -1)
+        self.assertEqual(msg.event.specific_context_field['msg'], 'hellooo')
 
     def test_no_specific_context_field(self):
-        ev = self._create_event(with_sc=False)
-        self.assertIsNone(ev.specific_context_field)
+        msg = self._create_test_event_message(with_sc=False)
+        self.assertIsNone(msg.event.specific_context_field)
 
     def test_get_event_payload_field(self):
         class EventFieldsConfiguration:
@@ -185,30 +160,28 @@ class EventTestCase(unittest.TestCase):
                 event.payload_field['gnu'] = 23
                 event.payload_field['mosquito'] = 42
 
+        msg = self._create_test_event_message(event_fields_config=EventFieldsConfiguration(), with_ep=True)
 
-        ev = self._create_event(event_fields_config=EventFieldsConfiguration(), with_ep=True)
-
-        self.assertEqual(ev.payload_field['giraffe'], 1)
-        self.assertEqual(ev.payload_field['gnu'], 23)
-        self.assertEqual(ev.payload_field['mosquito'], 42)
+        self.assertEqual(msg.event.payload_field['giraffe'], 1)
+        self.assertEqual(msg.event.payload_field['gnu'], 23)
+        self.assertEqual(msg.event.payload_field['mosquito'], 42)
 
     def test_no_payload_field(self):
-        ev = self._create_event(with_ep=False)
-        self.assertIsNone(ev.payload_field)
+        msg = self._create_test_event_message(with_ep=False)
+        self.assertIsNone(msg.event.payload_field)
 
     def test_clock_value(self):
-        ev = self._create_event(with_clockclass=True)
-        ev.default_clock_value = 177
-        self.assertEqual(ev.default_clock_value.cycles, 177)
+        msg = self._create_test_event_message(with_clockclass=True)
+        self.assertEqual(msg.default_clock_snapshot.cycles, 789)
 
     def test_no_clock_value(self):
-        ev = self._create_event(with_clockclass=False)
-        self.assertIsNone(ev.default_clock_value)
+        msg = self._create_test_event_message(with_clockclass=False)
+        self.assertIsNone(msg.default_clock_snapshot)
 
     def test_stream(self):
-        ev = self._create_event()
-        self.assertEqual(ev.stream.addr, self.stream.addr)
-    
+        msg = self._create_test_event_message()
+        self.assertEqual(msg.event.stream.addr, self.stream.addr)
+
     def test_getitem(self):
         class EventFieldsConfiguration:
             def __call__(self, event):
@@ -219,21 +192,18 @@ class EventTestCase(unittest.TestCase):
                 event.specific_context_field['msg'] = 'hellooo'
                 event.common_context_field['cpu_id'] = 1
                 event.common_context_field['stuff'] = 13.194
-                event.header_field['id'] = 23
-                event.header_field['ts'] = 1234
 
         class PacketFieldsConfiguration:
             def __call__(self, packet):
-                packet.header_field['magic'] = 0xc1fc1fc1
-                packet.header_field['stream_id'] = 0
                 packet.context_field['something'] = 154
                 packet.context_field['something_else'] = 17.2
 
-        ev = self._create_event(packet_fields_config=PacketFieldsConfiguration(),
-                event_fields_config=EventFieldsConfiguration(),
-                with_eh=True, with_cc=True, with_sc=True, with_ep=True)
+        msg = self._create_test_event_message(packet_fields_config=PacketFieldsConfiguration(),
+                                              event_fields_config=EventFieldsConfiguration(),
+                                              with_cc=True, with_sc=True, with_ep=True)
+        ev = msg.event
 
-        #Test event fields
+        # Test event fields
         self.assertEqual(ev['giraffe'], 1)
         self.assertEqual(ev['gnu'], 23)
         self.assertEqual(ev['mosquito'], 42)
@@ -241,14 +211,13 @@ class EventTestCase(unittest.TestCase):
         self.assertEqual(ev['msg'], 'hellooo')
         self.assertEqual(ev['cpu_id'], 1)
         self.assertEqual(ev['stuff'], 13.194)
-        self.assertEqual(ev['id'], 23)
-        self.assertEqual(ev['ts'], 1234)
 
-        #Test packet fields
-        self.assertEqual(ev['magic'], 0xc1fc1fc1)
-        self.assertEqual(ev['stream_id'], 0)
+        # Test packet fields
         self.assertEqual(ev['something'], 154)
         self.assertEqual(ev['something_else'], 17.2)
 
         with self.assertRaises(KeyError):
             ev['yes']
+
+if __name__ == "__main__":
+    unittest.main()

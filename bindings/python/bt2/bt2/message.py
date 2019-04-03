@@ -42,17 +42,32 @@ def _create_from_ptr(ptr):
 
 
 class _Message(object._SharedObject):
-    pass
+    _GET_REF_FUNC = native_bt.message_get_ref
+    _PUT_REF_FUNC = native_bt.message_put_ref
 
 
 class _EventMessage(_Message):
     _TYPE = native_bt.MESSAGE_TYPE_EVENT
 
-    def __init__(self, priv_conn_priv_iter, event_class, packet):
+    def __init__(self, priv_conn_priv_iter, event_class, packet, default_clock_snapshot):
         utils._check_type(event_class, bt2.event_class._EventClass)
 
-        ptr = native_bt.message_event_create(priv_conn_priv_iter._ptr,
-                event_class._ptr, packet._ptr)
+        has_default_clock_class = packet.stream.stream_class.default_clock_class is not None
+        if has_default_clock_class and default_clock_snapshot is None:
+            raise bt2.Error(
+                '_EventMessage: stream class has a default clock class, default_clock_snapshot should not be None')
+
+        if not has_default_clock_class and default_clock_snapshot is not None:
+            raise bt2.Error(
+                '_EventMessage: stream class has no default clock class, default_clock_snapshot should be None')
+
+        if has_default_clock_class:
+            utils._check_uint64(default_clock_snapshot)
+            ptr = native_bt.message_event_create_with_default_clock_snapshot(priv_conn_priv_iter._ptr,
+                                                                             event_class._ptr, packet._ptr, default_clock_snapshot)
+        else:
+            ptr = native_bt.message_event_create(priv_conn_priv_iter._ptr,
+                                                 event_class._ptr, packet._ptr)
 
         if ptr is None:
             raise bt2.CreationError('cannot create event message object')
@@ -63,15 +78,52 @@ class _EventMessage(_Message):
     def event(self):
         event_ptr = native_bt.message_event_borrow_event(self._ptr)
         assert(event_ptr)
-        return bt2.event._create_event_from_ptr(event_ptr, self._ptr)
+        return bt2.event._create_from_ptr(event_ptr, self._ptr,
+                                          self._GET_REF_FUNC,
+                                          self._PUT_REF_FUNC)
+
+    @property
+    def default_clock_snapshot(self):
+        if self.event.event_class.stream_class.default_clock_class is None:
+            return None
+
+        status, snapshot_ptr = native_bt.message_event_borrow_default_clock_snapshot_const(self._ptr)
+
+        if status == native_bt.CLOCK_SNAPSHOT_STATE_UNKNOWN:
+            return
+
+        if snapshot_ptr is None:
+            return
+
+        assert snapshot_ptr is not None
+
+        return bt2.clock_snapshot._ClockSnapshot._create_from_ptr(snapshot_ptr, self._ptr,
+                                                                  self._GET_REF_FUNC,
+                                                                  self._PUT_REF_FUNC)
 
 
 class _PacketBeginningMessage(_Message):
     _TYPE = native_bt.MESSAGE_TYPE_PACKET_BEGINNING
 
-    def __init__(self, priv_conn_priv_iter, packet):
+    def __init__(self, priv_conn_priv_iter, packet, default_clock_snapshot):
         utils._check_type(packet, bt2.packet._Packet)
-        ptr = native_bt.message_packet_begin_create(priv_conn_priv_iter._ptr, packet._ptr)
+        has_default_clock_class = packet.stream.stream_class.default_clock_class is not None
+
+        if has_default_clock_class and default_clock_snapshot is None:
+            raise bt2.Error(
+                '_PacketBeginningMessage: stream class has a default clock class, default_clock_snapshot should not be None')
+
+        if not has_default_clock_class and default_clock_snapshot is not None:
+            raise bt2.Error(
+                '_PacketBeginningMessage: stream class has no default clock class, default_clock_snapshot should be None')
+
+        if has_default_clock_class:
+            utils._check_uint64(default_clock_snapshot)
+            ptr = native_bt.message_packet_beginning_create_with_default_clock_snapshot(
+                priv_conn_priv_iter._ptr, packet._ptr, default_clock_snapshot)
+        else:
+            ptr = native_bt.message_packet_beginning_create(
+                priv_conn_priv_iter._ptr, packet._ptr)
 
         if ptr is None:
             raise bt2.CreationError('cannot create packet beginning message object')
@@ -109,7 +161,8 @@ class _StreamBeginningMessage(_Message):
 
     def __init__(self, priv_conn_priv_iter, stream):
         utils._check_type(stream, bt2.stream._Stream)
-        ptr = native_bt.message_stream_begin_create(priv_conn_priv_iter._ptr, stream._ptr)
+        ptr = native_bt.message_stream_beginning_create(
+            priv_conn_priv_iter._ptr, stream._ptr)
 
         if ptr is None:
             raise bt2.CreationError('cannot create stream beginning message object')

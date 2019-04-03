@@ -29,14 +29,10 @@ import bt2
 
 class _MessageIterator(collections.abc.Iterator):
     def _handle_status(self, status, gen_error_msg):
-        if status == native_bt.MESSAGE_ITERATOR_STATUS_CANCELED:
-            raise bt2.MessageIteratorCanceled
-        elif status == native_bt.MESSAGE_ITERATOR_STATUS_AGAIN:
+        if status == native_bt.MESSAGE_ITERATOR_STATUS_AGAIN:
             raise bt2.TryAgain
         elif status == native_bt.MESSAGE_ITERATOR_STATUS_END:
             raise bt2.Stop
-        elif status == native_bt.MESSAGE_ITERATOR_STATUS_UNSUPPORTED:
-            raise bt2.UnsupportedFeature
         elif status < 0:
             raise bt2.Error(gen_error_msg)
 
@@ -125,8 +121,8 @@ class _UserMessageIterator(_MessageIterator):
         notif._get()
         return int(notif._ptr)
 
-    def  _create_event_message(self, event_class, packet):
-        return bt2.message._EventMessage(self, event_class, packet);
+    def _create_event_message(self, event_class, packet, default_clock_snapshot=None):
+        return bt2.message._EventMessage(self, event_class, packet, default_clock_snapshot)
 
     def _create_inactivity_message(self, clock_class):
         return bt2.message._InactivityMessage(self, clock_class);
@@ -137,8 +133,8 @@ class _UserMessageIterator(_MessageIterator):
     def _create_stream_end_message(self, stream):
         return bt2.message._StreamEndMessage(self, stream);
 
-    def _create_packet_beginning_message(self, packet):
-        return bt2.message._PacketBeginningMessage(self, packet);
+    def _create_packet_beginning_message(self, packet, default_clock_snapshot=None):
+        return bt2.message._PacketBeginningMessage(self, packet, default_clock_snapshot)
 
     def _create_packet_end_message(self, packet):
         return bt2.message._PacketEndMessage(self, packet);
