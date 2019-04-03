@@ -30,10 +30,9 @@ import bt2
 class _ClockSnapshot(bt2.object._UniqueObject):
     @property
     def clock_class(self):
-        cc_ptr = native_bt.clock_snapshot_borrow_clock_class(self._ptr)
-        assert(cc_ptr)
-        native_bt.get(cc_ptr)
-        return bt2.ClockClass._create_from_ptr(cc_ptr)
+        cc_ptr = native_bt.clock_snapshot_borrow_clock_class_const(self._ptr)
+        assert cc_ptr is not None
+        return bt2.ClockClass._create_from_ptr_and_get_ref(cc_ptr)
 
     @property
     def cycles(self):
@@ -43,7 +42,7 @@ class _ClockSnapshot(bt2.object._UniqueObject):
     @property
     def ns_from_origin(self):
         ret, ns = native_bt.clock_snapshot_get_ns_from_origin(self._ptr)
-        utils._handle_ret(ret, "cannot get clock value object's nanoseconds from origin")
+        utils._handle_ret(ret, "cannot get clock snapshot object's nanoseconds from origin")
         return ns
 
     def __eq__(self, other):

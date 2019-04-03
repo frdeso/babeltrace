@@ -43,7 +43,7 @@ extern uint64_t bt_clock_class_get_precision(
 		const bt_clock_class *clock_class);
 
 extern void bt_clock_class_get_offset(const bt_clock_class *clock_class,
-		int64_t *seconds, uint64_t *cycles);
+		int64_t *OUTPUTINIT, uint64_t *OUTPUTINIT);
 
 extern bt_bool bt_clock_class_origin_is_unix_epoch(
 		const bt_clock_class *clock_class);

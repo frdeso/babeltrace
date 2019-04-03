@@ -42,4 +42,4 @@ extern uint64_t bt_clock_snapshot_get_value(
 
 extern bt_clock_snapshot_status bt_clock_snapshot_get_ns_from_origin(
 		const bt_clock_snapshot *clock_snapshot,
-		int64_t *ns_from_origin);
+		int64_t *OUTPUTINIT);

@@ -71,6 +71,8 @@ class _PrivateConnectionMessageIterator(_GenericMessageIterator):
 
 class _OutputPortMessageIterator(_GenericMessageIterator):
     _GET_NOFICATION_RANGE = native_bt.py3_port_output_get_msg_range
+    _GET_REF_FUNC = native_bt.port_output_message_iterator_get_ref
+    _PUT_REF_FUNC = native_bt.port_output_message_iterator_put_ref
 
 
 class _UserMessageIterator(_MessageIterator):
