@@ -19,7 +19,7 @@ class _MyIter(bt2._UserMessageIterator):
         payload_ft += collections.OrderedDict([
             ('my_int', self._my_int_ft),
         ])
-        self._ec.payload_field_type = payload_ft
+        self._ec.payload_field_class = payload_ft
         self._stream = self._sc()
         self._packet = self._stream.create_packet()
 

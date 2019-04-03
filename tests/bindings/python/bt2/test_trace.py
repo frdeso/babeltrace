@@ -22,7 +22,7 @@ class TraceTestCase(unittest.TestCase):
         trace_uuid = uuid.UUID('da7d6b6f-3108-4706-89bd-ab554732611b')
         tc = bt2.Trace(name='my name', uuid=trace_uuid,
                        env={'the_string': 'value', 'the_int': 23},
-                       packet_header_field_type=header_ft,
+                       packet_header_field_class=header_ft,
                        automatic_stream_class_id=True)
 
         sc = tc.create_stream_class()
@@ -45,14 +45,14 @@ class TraceTestCase(unittest.TestCase):
         self._trace.make_static()
         self.assertTrue(self._trace.is_static)
 
-    def test_assign_packet_header_field_type(self):
+    def test_assign_packet_header_field_class(self):
         header_ft = bt2.StructureFieldType()
         header_ft.append_field('magic', bt2.SignedIntegerFieldType(32))
-        self._trace.packet_header_field_type = header_ft
-        self.assertEqual(self._trace.packet_header_field_type.addr, header_ft.addr)
+        self._trace.packet_header_field_class = header_ft
+        self.assertEqual(self._trace.packet_header_field_class.addr, header_ft.addr)
 
-    def test_assign_no_packet_header_field_type(self):
-        self.assertIsNone(self._trace.packet_header_field_type)
+    def test_assign_no_packet_header_field_class(self):
+        self.assertIsNone(self._trace.packet_header_field_class)
 
     def test_getitem(self):
         trace = bt2.Trace(automatic_stream_class_id=False)
@@ -159,9 +159,9 @@ class TraceTestCase(unittest.TestCase):
                 automatic_event_class_id=False,
                 automatic_stream_id=False)
 
-        self.assertEqual(sc.event_header_field_type.addr, event_header_ft.addr)
-        self.assertEqual(sc.packet_context_field_type.addr, packet_context_ft.addr)
-        self.assertEqual(sc.event_common_context_field_type.addr, event_common_context_ft.addr)
+        self.assertEqual(sc.event_header_field_class.addr, event_header_ft.addr)
+        self.assertEqual(sc.packet_context_field_class.addr, packet_context_ft.addr)
+        self.assertEqual(sc.event_common_context_field_class.addr, event_common_context_ft.addr)
         self.assertEqual(sc.default_clock_class.addr, cc.addr)
         self.assertTrue(sc.default_clock_always_known)
         self.assertFalse(sc.packets_have_discarded_event_counter_snapshot)

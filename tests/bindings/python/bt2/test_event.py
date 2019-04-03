@@ -16,7 +16,7 @@ class EventTestCase(unittest.TestCase):
             ('stream_id', bt2.SignedIntegerFieldType(16))
         ))
 
-        trace = bt2.Trace(packet_header_field_type=ph)
+        trace = bt2.Trace(packet_header_field_class=ph)
         stream_class = trace.create_stream_class()
 
         # common context
@@ -26,7 +26,7 @@ class EventTestCase(unittest.TestCase):
                 ('cpu_id', bt2.SignedIntegerFieldType(8)),
                 ('stuff', bt2.RealFieldType()),
             ))
-            stream_class.event_common_context_field_type = cc
+            stream_class.event_common_context_field_class = cc
 
         # packet context
         pc = bt2.StructureFieldType()
@@ -34,7 +34,7 @@ class EventTestCase(unittest.TestCase):
             ('something', bt2.UnsignedIntegerFieldType(8)),
             ('something_else', bt2.RealFieldType()),
         ))
-        stream_class.packet_context_field_type = pc
+        stream_class.packet_context_field_class = pc
 
         if with_clockclass:
             clock_class = bt2.ClockClass('my_cc', 1000)
@@ -47,7 +47,7 @@ class EventTestCase(unittest.TestCase):
                 ('id', bt2.SignedIntegerFieldType(8)),
                 ('ts', bt2.UnsignedIntegerFieldType(64)),
             ))
-            stream_class.event_header_field_type = eh
+            stream_class.event_header_field_class = eh
 
 
         event_class = stream_class.create_event_class()
@@ -59,7 +59,7 @@ class EventTestCase(unittest.TestCase):
                 ('ant', bt2.SignedIntegerFieldType(16)),
                 ('msg', bt2.StringFieldType()),
             ))
-            event_class.specific_context_field_type = sc
+            event_class.specific_context_field_class = sc
 
         # event payload
         if with_ep:
@@ -69,7 +69,7 @@ class EventTestCase(unittest.TestCase):
                 ('gnu', bt2.SignedIntegerFieldType(8)),
                 ('mosquito', bt2.SignedIntegerFieldType(8)),
             ))
-            event_class.payload_field_type = ep
+            event_class.payload_field_class = ep
 
 
         stream = stream_class()

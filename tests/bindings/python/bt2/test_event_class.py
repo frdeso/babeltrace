@@ -28,40 +28,40 @@ class EventClassTestCase(unittest.TestCase):
     def test_create(self):
         self._ec.emf_uri = 'yes'
         self._ec.log_level = bt2.EventClassLogLevel.INFO
-        self._ec.specific_context_field_type = self._context_ft
-        self._ec.payload_field_type = self._payload_ft
+        self._ec.specific_context_field_class = self._context_ft
+        self._ec.payload_field_class = self._payload_ft
 
         self.assertEqual(self._ec.name, 'my_event')
         self.assertEqual(self._ec.id, 18)
-        self.assertEqual(self._ec.specific_context_field_type.addr, self._context_ft.addr)
-        self.assertEqual(self._ec.payload_field_type.addr, self._payload_ft.addr)
+        self.assertEqual(self._ec.specific_context_field_class.addr, self._context_ft.addr)
+        self.assertEqual(self._ec.payload_field_class.addr, self._payload_ft.addr)
         self.assertEqual(self._ec.emf_uri, 'yes')
         self.assertEqual(self._ec.log_level, bt2.EventClassLogLevel.INFO)
 
 
-    def test_assign_context_field_type(self):
+    def test_assign_context_field_class(self):
         ft = bt2.StructureFieldType()
         ft.append_field('garou', bt2.StringFieldType())
-        self._ec.specific_context_field_type = ft
-        self.assertEqual(self._ec.specific_context_field_type.addr, ft.addr)
+        self._ec.specific_context_field_class = ft
+        self.assertEqual(self._ec.specific_context_field_class.addr, ft.addr)
 
-    def test_assign_no_context_field_type(self):
-        self.assertIsNone(self._ec.specific_context_field_type)
+    def test_assign_no_context_field_class(self):
+        self.assertIsNone(self._ec.specific_context_field_class)
 
-    def test_assign_invalid_context_field_type(self):
+    def test_assign_invalid_context_field_class(self):
         with self.assertRaises(TypeError):
-            self._ec.specific_context_field_type = 'lel'
+            self._ec.specific_context_field_class = 'lel'
 
-    def test_assign_payload_field_type(self):
-        self._ec.payload_field_type = self._payload_ft
-        self.assertEqual(self._ec.payload_field_type.addr, self._payload_ft.addr)
+    def test_assign_payload_field_class(self):
+        self._ec.payload_field_class = self._payload_ft
+        self.assertEqual(self._ec.payload_field_class.addr, self._payload_ft.addr)
 
-    def test_assign_no_payload_field_type(self):
-        self.assertIsNone(self._ec.payload_field_type)
+    def test_assign_no_payload_field_class(self):
+        self.assertIsNone(self._ec.payload_field_class)
 
-    def test_assign_invalid_payload_field_type(self):
+    def test_assign_invalid_payload_field_class(self):
         with self.assertRaises(TypeError):
-            self._ec.payload_field_type = 'lel'
+            self._ec.payload_field_class = 'lel'
 
     def test_stream_class_prop(self):
         self.assertEqual(self._ec.stream_class.addr, self._stream_class.addr)

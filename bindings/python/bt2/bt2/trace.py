@@ -28,7 +28,7 @@ import collections.abc
 import uuid as uuidp
 from bt2 import utils, native_bt
 import bt2
-from . import object, field_types, stream_class
+from . import object, field_class, stream_class
 
 class _StreamClassIterator(collections.abc.Iterator):
     def __init__(self, trace):
@@ -130,7 +130,7 @@ class _TraceEnv(collections.abc.MutableMapping):
 
 class Trace(object._SharedObject, collections.abc.Mapping):
     def __init__(self, name=None, uuid=None, env=None,
-                 packet_header_field_type=None, automatic_stream_class_id=None):
+                 packet_header_field_class=None, automatic_stream_class_id=None):
 
         ptr = native_bt.trace_create()
 
@@ -145,8 +145,8 @@ class Trace(object._SharedObject, collections.abc.Mapping):
         if uuid is not None:
             self.uuid = uuid
 
-        if packet_header_field_type is not None:
-            self.packet_header_field_type = packet_header_field_type
+        if packet_header_field_class is not None:
+            self.packet_header_field_class = packet_header_field_class
 
         if env is not None:
             for key, value in env.items():
@@ -191,13 +191,13 @@ class Trace(object._SharedObject, collections.abc.Mapping):
         sc = bt2.stream_class._StreamClass._create_from_ptr(sc_ptr)
 
         if event_header_ft is not None:
-            sc.event_header_field_type = event_header_ft
+            sc.event_header_field_class = event_header_ft
 
         if packet_context_ft is not None:
-            sc.packet_context_field_type = packet_context_ft
+            sc.packet_context_field_class = packet_context_ft
 
         if event_common_context_ft is not None:
-            sc.event_common_context_field_type = event_common_context_ft
+            sc.event_common_context_field_class = event_common_context_ft
 
         if default_clock_class is not None:
             sc.default_clock_class = default_clock_class
@@ -268,25 +268,25 @@ class Trace(object._SharedObject, collections.abc.Mapping):
         return _TraceStreams(self)
 
     @property
-    def packet_header_field_type(self):
-        ft_ptr = native_bt.trace_borrow_packet_header_field_type(self._ptr)
+    def packet_header_field_class(self):
+        ft_ptr = native_bt.trace_borrow_packet_header_field_class(self._ptr)
 
         if ft_ptr is None:
             return
         native_bt.get(ft_ptr)
 
-        return bt2.field_types._create_field_type_from_ptr(ft_ptr)
+        return bt2.field_class._create_field_class_from_ptr(ft_ptr)
 
-    @packet_header_field_type.setter
-    def packet_header_field_type(self, packet_header_field_type):
-        packet_header_field_type_ptr = None
+    @packet_header_field_class.setter
+    def packet_header_field_class(self, packet_header_field_class):
+        packet_header_field_class_ptr = None
 
-        if packet_header_field_type is not None:
-            utils._check_type(packet_header_field_type, field_types._FieldType)
-            packet_header_field_type_ptr = packet_header_field_type._ptr
+        if packet_header_field_class is not None:
+            utils._check_type(packet_header_field_class, field_class._FieldClass)
+            packet_header_field_class_ptr = packet_header_field_class._ptr
 
-        ret = native_bt.trace_set_packet_header_field_type(self._ptr,
-                                                     packet_header_field_type_ptr)
+        ret = native_bt.trace_set_packet_header_field_class(self._ptr,
+                                                     packet_header_field_class_ptr)
         utils._handle_ret(ret, "cannot set trace class object's packet header field type")
 
     @property

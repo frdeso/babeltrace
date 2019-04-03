@@ -25,7 +25,7 @@ class PacketTestCase(unittest.TestCase):
                 ('magic', bt2.SignedIntegerFieldType(32)),
                 ('stream_id', bt2.SignedIntegerFieldType(16)),
             ))
-            tc.packet_header_field_type = ph
+            tc.packet_header_field_class = ph
 
         # event header
         eh = bt2.StructureFieldType()
@@ -59,10 +59,10 @@ class PacketTestCase(unittest.TestCase):
                 ('events_discarded', bt2.UnsignedIntegerFieldType(64)),
                 ('packet_seq_num', bt2.UnsignedIntegerFieldType(64)),
             ))
-            sc.packet_context_field_type = pc
+            sc.packet_context_field_class = pc
 
-        sc.event_header_field_type = eh
-        sc.event_common_context_field_type = sec
+        sc.event_header_field_class = eh
+        sc.event_common_context_field_class = sec
 
         # event context
         ec = bt2.StructureFieldType()
@@ -82,8 +82,8 @@ class PacketTestCase(unittest.TestCase):
         # event class
         event_class = sc.create_event_class()
         event_class.name = 'ec'
-        event_class.common_context_field_type = ec
-        event_class.payload_field_type = ep
+        event_class.common_context_field_class = ec
+        event_class.payload_field_class = ep
 
         # stream
         stream = sc()

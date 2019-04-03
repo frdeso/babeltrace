@@ -10,7 +10,7 @@ STATIC_BINDINGS_IR_DEPS =			\
 	bt2/clock_value.py				\
 	bt2/event.py					\
 	bt2/event_class.py				\
-	bt2/field_types.py				\
+	bt2/field_class.py				\
 	bt2/field.py					\
 	bt2/object.py					\
 	bt2/packet.py					\

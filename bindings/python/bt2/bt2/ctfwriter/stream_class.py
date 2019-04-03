@@ -21,7 +21,6 @@
 # THE SOFTWARE.
 
 from bt2 import native_bt, object, utils
-import bt2.field_types
 import collections.abc
 #import bt2.ctf_writer
 import bt2.stream

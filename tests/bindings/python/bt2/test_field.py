@@ -13,21 +13,21 @@ _COMP_BINOPS = (
     operator.ne,
 )
 
-def _create_stream(ctx_field_types):
+def _create_stream(ctx_field_classs):
     packet_context_ft = bt2.StructureFieldType()
-    for name, ft in ctx_field_types:
+    for name, ft in ctx_field_classs:
         packet_context_ft.append_field(name, ft)
 
     trace = bt2.Trace()
     stream_class = trace.create_stream_class()
-    stream_class.packet_context_field_type = packet_context_ft
+    stream_class.packet_context_field_class = packet_context_ft
 
     stream = stream_class()
     return stream
 
-def _create_field(field_type):
+def _create_field(field_class):
     field_name = 'field'
-    stream = _create_stream([(field_name, field_type)])
+    stream = _create_stream([(field_name, field_class)])
     packet = stream.create_packet()
     return packet.context_field[field_name]
 
@@ -1125,9 +1125,9 @@ class _TestArraySequenceFieldCommon:
         int_ft = bt2.SignedIntegerFieldType(32)
         another_int_ft = bt2.SignedIntegerFieldType(32)
         str_ft = bt2.StringFieldType()
-        struct_ft.append_field(field_type=int_ft, name='an_int')
-        struct_ft.append_field(field_type=str_ft, name='a_string')
-        struct_ft.append_field(field_type=another_int_ft, name='another_int')
+        struct_ft.append_field(field_class=int_ft, name='an_int')
+        struct_ft.append_field(field_class=str_ft, name='a_string')
+        struct_ft.append_field(field_class=another_int_ft, name='another_int')
         array_ft = bt2.StaticArrayFieldType(struct_ft, 3)
         stream = _create_stream([('array_field', array_ft)])
         values = [
@@ -1366,9 +1366,9 @@ class StructureFieldTestCase(unittest.TestCase):
         another_int_ft = bt2.SignedIntegerFieldType(32)
         str_ft = bt2.StringFieldType()
         struct_ft = bt2.StructureFieldType()
-        struct_ft.append_field(field_type=int_ft, name='an_int')
-        struct_ft.append_field(field_type=str_ft, name='a_string')
-        struct_ft.append_field(field_type=another_int_ft, name='another_int')
+        struct_ft.append_field(field_class=int_ft, name='an_int')
+        struct_ft.append_field(field_class=str_ft, name='a_string')
+        struct_ft.append_field(field_class=another_int_ft, name='another_int')
         values = {
             'an_int': 42,
             'a_string': 'hello',
@@ -1424,7 +1424,7 @@ class VariantFieldTestCase(unittest.TestCase):
         ft.append_field('zoom', ft1)
         ft.append_field('mellotron', ft2)
         ft.append_field('giorgio', ft3)
-        ft.selector_field_type = selector_ft
+        ft.selector_field_class = selector_ft
 
         top_ft = bt2.StructureFieldType()
         top_ft.append_field('selector_field', selector_ft)

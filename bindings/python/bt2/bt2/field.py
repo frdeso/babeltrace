@@ -24,7 +24,7 @@ __all__ = ['_StaticArrayField', '_DynamicArrayField', '_UnsignedEnumerationField
         '_UnsignedEnumerationField', '_Field' ,'_RealField', '_IntegerField',
         '_StringField', '_StructureField', '_VariantField']
 
-from bt2 import field_types, native_bt, utils
+from bt2 import field_class, native_bt, utils
 import abc
 import bt2
 import collections.abc
@@ -36,13 +36,13 @@ def _create_field_from_ptr(ptr, owner_ptr):
     # recreate the field wrapper of this field's type (the identity
     # could be different, but the underlying address should be the
     # same)
-    field_type_ptr = native_bt.field_borrow_type(ptr)
-    native_bt.get(field_type_ptr)
-    utils._handle_ptr(field_type_ptr, "cannot get field object's type")
-    field_type = bt2.field_types._create_field_type_from_ptr(field_type_ptr)
-    typeid = native_bt.field_type_get_type_id(field_type._ptr)
+    field_class_ptr = native_bt.field_borrow_type(ptr)
+    native_bt.get(field_class_ptr)
+    utils._handle_ptr(field_class_ptr, "cannot get field object's type")
+    field_class = bt2.field_class._create_field_class_from_ptr(field_class_ptr)
+    typeid = native_bt.field_class_get_type_id(field_class._ptr)
     field = _FIELD_ID_TO_OBJ[typeid]._create_from_ptr(ptr, owner_ptr)
-    field._field_type = field_type
+    field._field_class = field_class
     return field
 
 def _get_leaf_field(obj):
@@ -57,8 +57,8 @@ class _Field(bt2.object._UniqueObject):
         return self._spec_eq(other)
 
     @property
-    def field_type(self):
-        return self._field_type
+    def field_class(self):
+        return self._field_class
 
     def _repr(self):
         raise NotImplementedError
@@ -335,7 +335,7 @@ class _EnumerationField(_IntegerField):
 
     @property
     def labels(self):
-        return self.field_type.labels_by_value(self._value)
+        return self.field_class.labels_by_value(self._value)
 
 class _UnsignedEnumerationField(_EnumerationField, _UnsignedIntegerField):
     _NAME = 'Enumeration'
@@ -417,7 +417,7 @@ class _StructureField(_ContainerField, collections.abc.MutableMapping):
     _NAME = 'Structure'
 
     def _count(self):
-        return len(self.field_type)
+        return len(self.field_class)
 
     def __setitem__(self, key, value):
         # raises if key is somehow invalid
@@ -429,7 +429,7 @@ class _StructureField(_ContainerField, collections.abc.MutableMapping):
 
     def __iter__(self):
         # same name iterator
-        return iter(self.field_type)
+        return iter(self.field_class)
 
     def _spec_eq(self, other):
         try:
@@ -589,7 +589,7 @@ class _StaticArrayField(_ArrayField, _Field):
     _NAME = 'StaticArray'
 
     def _count(self):
-        return self.field_type.length
+        return self.field_class.length
 
     def _set_value(self, values):
         if len(self) != len(values):

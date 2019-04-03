@@ -18,9 +18,9 @@ class StreamClassTestCase(unittest.TestCase):
 
         self._sc = self._trace.create_stream_class(id=12)
         self._sc.name='my_stream_class'
-        self._sc.packet_context_field_type=self._packet_context_ft
-        self._sc.event_header_field_type=self._event_header_ft
-        self._sc.event_common_context_field_type=self._event_common_context_ft
+        self._sc.packet_context_field_class=self._packet_context_ft
+        self._sc.event_header_field_class=self._event_header_ft
+        self._sc.event_common_context_field_class=self._event_common_context_ft
         self._sc.assigns_automatic_event_class_id = False
 
 
@@ -31,12 +31,12 @@ class StreamClassTestCase(unittest.TestCase):
         payload_ft.append_field('zoom', bt2.StringFieldType())
 
         self._ec1 = self._sc.create_event_class(id=23)
-        self._ec1.context_field_type = context_ft
-        self._ec1.payload_field_type = payload_ft
+        self._ec1.context_field_class = context_ft
+        self._ec1.payload_field_class = payload_ft
 
         self._ec2 = self._sc.create_event_class(id=17)
-        self._ec2.context_field_type = payload_ft
-        self._ec2.payload_field_type = context_ft
+        self._ec2.context_field_class = payload_ft
+        self._ec2.payload_field_class = context_ft
 
     def tearDown(self):
         del self._packet_context_ft
@@ -49,9 +49,9 @@ class StreamClassTestCase(unittest.TestCase):
     def test_create(self):
         self.assertEqual(self._sc.name, 'my_stream_class')
         self.assertEqual(self._sc.id, 12)
-        self.assertEqual(self._sc.packet_context_field_type.addr, self._packet_context_ft.addr)
-        self.assertEqual(self._sc.event_header_field_type.addr, self._event_header_ft.addr)
-        self.assertEqual(self._sc.event_common_context_field_type.addr, self._event_common_context_ft.addr)
+        self.assertEqual(self._sc.packet_context_field_class.addr, self._packet_context_ft.addr)
+        self.assertEqual(self._sc.event_header_field_class.addr, self._event_header_ft.addr)
+        self.assertEqual(self._sc.event_common_context_field_class.addr, self._event_common_context_ft.addr)
         self.assertEqual(self._sc[23]._ptr, self._ec1._ptr)
         self.assertEqual(self._sc[17]._ptr, self._ec2._ptr)
         self.assertEqual(len(self._sc), 2)
@@ -104,38 +104,38 @@ class StreamClassTestCase(unittest.TestCase):
         sc.default_clock_class = cc
         self.assertTrue(sc.default_clock_always_known)
 
-    def test_assign_packet_context_field_type(self):
+    def test_assign_packet_context_field_class(self):
         ft = bt2.StructureFieldType()
         ft.append_field('champ', bt2.UnsignedIntegerFieldType(19))
         sc = self._trace.create_stream_class(id=1717)
-        sc.packet_context_field_type = ft
-        self.assertEqual(sc.packet_context_field_type.addr, ft.addr)
+        sc.packet_context_field_class = ft
+        self.assertEqual(sc.packet_context_field_class.addr, ft.addr)
 
-    def test_assign_no_packet_context_field_type(self):
+    def test_assign_no_packet_context_field_class(self):
         sc = self._trace.create_stream_class(id=1717)
-        self.assertIsNone(sc.packet_context_field_type)
+        self.assertIsNone(sc.packet_context_field_class)
 
-    def test_assign_event_header_field_type(self):
+    def test_assign_event_header_field_class(self):
         ft = bt2.StructureFieldType()
         ft.append_field('champ', bt2.UnsignedIntegerFieldType(19))
         sc = self._trace.create_stream_class(id=1717)
-        sc.event_header_field_type = ft
-        self.assertEqual(sc.event_header_field_type.addr, ft.addr)
+        sc.event_header_field_class = ft
+        self.assertEqual(sc.event_header_field_class.addr, ft.addr)
 
-    def test_assign_no_event_header_field_type(self):
+    def test_assign_no_event_header_field_class(self):
         sc = self._trace.create_stream_class(id=1717)
-        self.assertIsNone(sc.event_header_field_type)
+        self.assertIsNone(sc.event_header_field_class)
 
-    def test_assign_event_common_context_field_type(self):
+    def test_assign_event_common_context_field_class(self):
         ft = bt2.StructureFieldType()
         ft.append_field('champ', bt2.UnsignedIntegerFieldType(19))
         sc = self._trace.create_stream_class(id=1717)
-        sc.event_common_context_field_type = ft
-        self.assertEqual(sc.event_common_context_field_type.addr, ft.addr)
+        sc.event_common_context_field_class = ft
+        self.assertEqual(sc.event_common_context_field_class.addr, ft.addr)
 
-    def test_assign_no_event_common_context_field_type(self):
+    def test_assign_no_event_common_context_field_class(self):
         sc = self._trace.create_stream_class(id=1717)
-        self.assertIsNone(sc.event_common_context_field_type)
+        self.assertIsNone(sc.event_common_context_field_class)
 
     def test_trace_prop(self):
         tc = bt2.Trace()

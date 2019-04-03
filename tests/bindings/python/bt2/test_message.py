@@ -18,7 +18,7 @@ class AllMessageTestCase(unittest.TestCase):
         payload_ft += collections.OrderedDict([
             ('my_int', _my_int_ft),
         ])
-        self._event_class.payload_field_type = payload_ft
+        self._event_class.payload_field_class = payload_ft
         self._stream = _sc()
         self._packet = self._stream.create_packet()
 

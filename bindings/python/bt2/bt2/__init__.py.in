@@ -42,7 +42,7 @@ from bt2.connection import _Connection
 from bt2.connection import _PrivateConnection
 from bt2.event import *
 from bt2.event_class import *
-from bt2.field_types import *
+from bt2.field_class import *
 from bt2.field_path import *
 from bt2.field import *
 from bt2.graph import *
