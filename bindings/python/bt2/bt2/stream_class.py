@@ -65,8 +65,8 @@ class _StreamClass(bt2.object._SharedObject, collections.abc.Mapping):
     def __iter__(self):
         return _EventClassIterator(self)
 
-    def create_event_class(self, id=None, specific_context_field_class=None,
-                           payload_field_class=None):
+    def create_event_class(self, id=None, name=None, log_level=None, emf_uri=None,
+                           specific_context_field_class=None, payload_field_class=None):
         if self.assigns_automatic_event_class_id:
             ec_ptr = native_bt.event_class_create(self._ptr)
         else:
@@ -74,6 +74,15 @@ class _StreamClass(bt2.object._SharedObject, collections.abc.Mapping):
             ec_ptr = native_bt.event_class_create_with_id(self._ptr, id)
 
         event = bt2.event_class._EventClass._create_from_ptr(ec_ptr)
+
+        if name is not None:
+            event._name = name
+
+        if log_level is not None:
+            event._log_level = log_level
+
+        if emf_uri is not None:
+            event._emf_uri = emf_uri
 
         if specific_context_field_class is not None:
             event._specific_context_field_class = specific_context_field_class

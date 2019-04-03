@@ -57,19 +57,19 @@ class _EventClass(bt2.object._SharedObject):
     @property
     def stream_class(self):
         sc_ptr = native_bt.event_class_borrow_stream_class(self._ptr)
-        native_bt.get(sc_ptr)
 
         if sc_ptr is not None:
-            return bt2.stream_class._StreamClass._create_from_ptr(sc_ptr)
+            return bt2.stream_class._StreamClass._create_from_ptr_and_get_ref(sc_ptr)
 
     @property
     def name(self):
         return native_bt.event_class_get_name(self._ptr)
 
-    @name.setter
-    def name(self, name):
+    def _name(self, name):
         utils._check_str(name)
         return native_bt.event_class_set_name(self._ptr, name)
+
+    _name = property(fset=_name)
 
     @property
     def id(self):
@@ -79,10 +79,9 @@ class _EventClass(bt2.object._SharedObject):
     @property
     def log_level(self):
         is_available, log_level = native_bt.event_class_get_log_level(self._ptr)
-        return _EVENT_CLASS_LOG_LEVEL_TO_OBJ[log_level] if is_available == bt2.PropertyAvailability.AVAILABLE else None
+        return _EVENT_CLASS_LOG_LEVEL_TO_OBJ[log_level] if is_available == native_bt.PROPERTY_AVAILABILITY_AVAILABLE else None
 
-    @log_level.setter
-    def log_level(self, log_level):
+    def _log_level(self, log_level):
         log_levels = (
             EventClassLogLevel.EMERGENCY,
             EventClassLogLevel.ALERT,
@@ -104,55 +103,56 @@ class _EventClass(bt2.object._SharedObject):
         if log_level not in log_levels:
             raise ValueError("'{}' is not a valid log level".format(log_level))
 
-        ret = native_bt.event_class_set_log_level(self._ptr, log_level)
-        utils._handle_ret(ret, "cannot set event class object's log level")
+        native_bt.event_class_set_log_level(self._ptr, log_level)
+
+    _log_level = property(fset=_log_level)
 
     @property
     def emf_uri(self):
         return native_bt.event_class_get_emf_uri(self._ptr)
 
-    @emf_uri.setter
-    def emf_uri(self, emf_uri):
+    def _emf_uri(self, emf_uri):
         utils._check_str(emf_uri)
         ret = native_bt.event_class_set_emf_uri(self._ptr, emf_uri)
         utils._handle_ret(ret, "cannot set event class object's EMF URI")
 
+    _emf_uri = property(fset=_emf_uri)
+
     @property
     def specific_context_field_class(self):
-        ft_ptr = native_bt.event_class_borrow_specific_context_field_class(self._ptr)
+        ft_ptr = native_bt.event_class_borrow_specific_context_field_class_const(self._ptr)
 
         if ft_ptr is None:
             return
 
-        native_bt.get(ft_ptr)
+        return bt2.field_class._create_field_class_from_ptr_and_get_ref(ft_ptr)
 
-        return bt2.field_class._create_field_class_from_ptr(ft_ptr)
-
-    @specific_context_field_class.setter
-    def specific_context_field_class(self, context_field_class):
+    def _specific_context_field_class(self, context_field_class):
         if context_field_class is not None:
-            utils._check_type(context_field_class, field_class._FieldClass)
+            utils._check_type(context_field_class, bt2.field_class._FieldClass)
             ret = native_bt.event_class_set_specific_context_field_class(self._ptr, context_field_class._ptr)
             utils._handle_ret(ret, "cannot set event class object's context field type")
 
+    _specific_context_field_class = property(fset=_specific_context_field_class)
+
     @property
     def payload_field_class(self):
-        ft_ptr = native_bt.event_class_borrow_payload_field_class(self._ptr)
+        ft_ptr = native_bt.event_class_borrow_payload_field_class_const(self._ptr)
 
         if ft_ptr is None:
             return
 
-        native_bt.get(ft_ptr)
+        return bt2.field_class._create_field_class_from_ptr_and_get_ref(ft_ptr)
 
-        return bt2.field_class._create_field_class_from_ptr(ft_ptr)
-
-    @payload_field_class.setter
-    def payload_field_class(self, payload_field_class):
+    def _payload_field_class(self, payload_field_class):
 
         if payload_field_class is not None:
-            utils._check_type(payload_field_class, field_class._FieldClass)
+            utils._check_type(payload_field_class, bt2.field_class._FieldClass)
             ret = native_bt.event_class_set_payload_field_class(self._ptr, payload_field_class._ptr)
-            utils._handle_ret(ret, "cannot set event class object's payload field type")
+            utils._handle_ret(ret, "cannot set event class object's payload field class")
+        # TODO: Else what, raise, clear the field?
+
+    _payload_field_class = property(fset=_payload_field_class)
 
 _EVENT_CLASS_LOG_LEVEL_TO_OBJ = {
         native_bt.EVENT_CLASS_LOG_LEVEL_EMERGENCY: EventClassLogLevel.EMERGENCY,

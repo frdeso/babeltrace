@@ -56,7 +56,7 @@ extern uint64_t bt_event_class_get_id(const bt_event_class *event_class);
 
 extern bt_property_availability bt_event_class_get_log_level(
 		const bt_event_class *event_class,
-		bt_event_class_log_level *log_level);
+		bt_event_class_log_level *OUTPUTINIT);
 
 extern const char *bt_event_class_get_emf_uri(
 		const bt_event_class *event_class);
