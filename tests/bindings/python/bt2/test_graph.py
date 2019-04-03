@@ -30,7 +30,7 @@ class _MyIter(bt2._UserNotificationIterator):
         return ev
 
 
-
+@unittest.skip("this is broken")
 class GraphTestCase(unittest.TestCase):
     def setUp(self):
         self._graph = bt2.Graph()

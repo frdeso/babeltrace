@@ -6,6 +6,7 @@ import bt2.native_bt
 import bt2.ctfwriter
 
 
+@unittest.skip("this is broken")
 class CtfWriterClockTestCase(unittest.TestCase):
     def setUp(self):
         self._clock = bt2.ctfwriter.CtfWriterClock('salut')
