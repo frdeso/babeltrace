@@ -43,6 +43,9 @@ class _EventClassIterator(collections.abc.Iterator):
         return ec_id
 
 class _StreamClass(bt2.object._SharedObject, collections.abc.Mapping):
+    _GET_REF_FUNC = native_bt.stream_class_get_ref
+    _PUT_REF_FUNC = native_bt.stream_class_put_ref
+
     def __getitem__(self, key):
         utils._check_int64(key)
 
@@ -93,19 +96,21 @@ class _StreamClass(bt2.object._SharedObject, collections.abc.Mapping):
     def assigns_automatic_event_class_id(self):
         return native_bt.stream_class_assigns_automatic_event_class_id(self._ptr)
 
-    @assigns_automatic_event_class_id.setter
-    def assigns_automatic_event_class_id(self, auto_id):
+    def _assigns_automatic_event_class_id(self, auto_id):
         utils._check_bool(auto_id)
         return native_bt.stream_class_set_assigns_automatic_event_class_id(self._ptr, auto_id)
+
+    _assigns_automatic_event_class_id = property(fset=_assigns_automatic_event_class_id)
 
     @property
     def assigns_automatic_stream_id(self):
         return native_bt.stream_class_assigns_automatic_stream_id(self._ptr)
 
-    @assigns_automatic_stream_id.setter
-    def assigns_automatic_stream_id(self, auto_id):
+    def _assigns_automatic_stream_id(self, auto_id):
         utils._check_bool(auto_id)
         return native_bt.stream_class_set_assigns_automatic_stream_id(self._ptr, auto_id)
+
+    _assigns_automatic_stream_id = property(fset=_assigns_automatic_stream_id)
 
     @property
     def id(self):
@@ -136,48 +141,52 @@ class _StreamClass(bt2.object._SharedObject, collections.abc.Mapping):
 
     @property
     def packet_context_field_class(self):
-        ft_ptr = native_bt.stream_class_borrow_packet_context_field_class(self._ptr)
+        ft_ptr = native_bt.stream_class_borrow_packet_context_field_class_const(self._ptr)
 
         if ft_ptr is None:
             return
-        native_bt.get(ft_ptr)
 
-        return bt2.field_class._create_field_class_from_ptr(ft_ptr)
+        return bt2.field_class._create_field_class_from_ptr_and_get_ref(ft_ptr)
 
-    @packet_context_field_class.setter
-    def packet_context_field_class(self, packet_context_field_class):
+    def _packet_context_field_class(self, packet_context_field_class):
         if packet_context_field_class is None:
             return
 
-        utils._check_type(packet_context_field_class, bt2.field_class._FieldClass)
+        utils._check_type(packet_context_field_class,
+                          bt2.field_class._FieldClass)
         packet_context_field_class_ptr = packet_context_field_class._ptr
 
         ret = native_bt.stream_class_set_packet_context_field_class(self._ptr,
-                                                             packet_context_field_class_ptr)
-        utils._handle_ret(ret, "cannot set stream class object's packet context field type")
+                                                                    packet_context_field_class_ptr)
+        utils._handle_ret(
+            ret, "cannot set stream class object's packet context field type")
+
+    _packet_context_field_class = property(fset=_packet_context_field_class)
 
     @property
     def event_common_context_field_class(self):
-        ft_ptr = native_bt.stream_class_borrow_event_common_context_field_class(self._ptr)
+        ft_ptr = native_bt.stream_class_borrow_event_common_context_field_class_const(
+            self._ptr)
 
         if ft_ptr is None:
             return
 
-        native_bt.get(ft_ptr)
+        return bt2.field_class._create_field_class_from_ptr_and_get_ref(ft_ptr)
 
-        return bt2.field_class._create_field_class_from_ptr(ft_ptr)
-
-    @event_common_context_field_class.setter
-    def event_common_context_field_class(self, event_common_context_field_class):
+    def _event_common_context_field_class(self, event_common_context_field_class):
         event_common_context_field_class_ptr = None
 
         if event_common_context_field_class is not None:
-            utils._check_type(event_common_context_field_class, bt2.field_class._FieldClass)
+            utils._check_type(event_common_context_field_class,
+                              bt2.field_class._FieldClass)
             event_common_context_field_class_ptr = event_common_context_field_class._ptr
 
             ret = native_bt.stream_class_set_event_common_context_field_class(self._ptr,
-                                                                event_common_context_field_class_ptr)
-            utils._handle_ret(ret, "cannot set stream class object's event context field type")
+                                                                              event_common_context_field_class_ptr)
+            utils._handle_ret(
+                ret, "cannot set stream class object's event context field type")
+
+    _event_common_context_field_class = property(fset=_event_common_context_field_class)
 
     def __call__(self, id=None):
         if self.assigns_automatic_stream_id:
@@ -197,13 +206,14 @@ class _StreamClass(bt2.object._SharedObject, collections.abc.Mapping):
         if cc_ptr is None:
             return
 
-        native_bt.get(cc_ptr)
-        return bt2.clock_class.ClockClass._create_from_ptr(cc_ptr)
+        return bt2.clock_class.ClockClass._create_from_ptr_and_get_ref(cc_ptr)
 
-    @default_clock_class.setter
-    def default_clock_class(self, clock_class):
+    def _default_clock_class(self, clock_class):
         utils._check_type(clock_class, bt2.clock_class.ClockClass)
-        native_bt.stream_class_set_default_clock_class(self._ptr, clock_class._ptr)
+        native_bt.stream_class_set_default_clock_class(
+            self._ptr, clock_class._ptr)
+
+    _default_clock_class = property(fset=_default_clock_class)
 
     @property
     def default_clock_always_known(self):

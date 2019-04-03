@@ -51,6 +51,9 @@ class ClockClassOffset:
         return (self.seconds, self.cycles) == (other.seconds, other.cycles)
 
 class ClockClass(bt2.object._SharedObject):
+    _GET_REF_FUNC = native_bt.clock_class_get_ref
+    _PUT_REF_FUNC = native_bt.clock_class_put_ref
+
     def __init__(self, name=None, frequency=None, description=None, precision=None,
                  offset=None, is_absolute=None, uuid=None):
         ptr = native_bt.clock_class_create()

@@ -64,6 +64,7 @@ from bt2.query_executor import *
 from bt2.stream import *
 from bt2.stream_class import *
 from bt2.trace import *
+from bt2.trace_class import *
 from bt2.trace_collection_message_iterator import *
 from bt2.value import *
 

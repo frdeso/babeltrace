@@ -29,9 +29,11 @@ import collections
 from bt2 import native_bt, utils, object
 import bt2
 
-def _create_field_class_from_ptr(ptr):
-    typeid = native_bt.field_class_get_type_id(ptr)
-    return _FIELD_CLASS_TYPE_TO_OBJ[typeid]._create_from_ptr(ptr)
+
+def _create_field_class_from_ptr_and_get_ref(ptr):
+    typeid = native_bt.field_class_get_type(ptr)
+    return _FIELD_CLASS_TYPE_TO_OBJ[typeid]._create_from_ptr_and_get_ref(ptr)
+
 
 class IntegerDisplayBase:
     BINARY = native_bt.FIELD_CLASS_INTEGER_PREFERRED_DISPLAY_BASE_BINARY
@@ -40,8 +42,8 @@ class IntegerDisplayBase:
     HEXADECIMAL = native_bt.FIELD_CLASS_INTEGER_PREFERRED_DISPLAY_BASE_HEXADECIMAL
 
 class _FieldClass(object._SharedObject):
-    def __init__(self, ptr):
-        super().__init__(ptr)
+    _GET_REF_FUNC = native_bt.field_class_get_ref
+    _PUT_REF_FUNC = native_bt.field_class_put_ref
 
     def _check_create_status(self, ptr):
         if ptr is None:

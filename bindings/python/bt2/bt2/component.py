@@ -601,9 +601,66 @@ class _UserComponent(metaclass=_UserComponentType):
             if not _NO_PRINT_TRACEBACK:
                 traceback.print_exc()
 
+    def _create_trace_class(self, env=None, uuid=None,
+                            assigns_automatic_stream_class_id=None):
+        ptr = self._AS_SELF_COMPONENT(self._ptr)
+        tc_ptr = native_bt.trace_class_create(ptr)
+
+        if tc_ptr is None:
+            raise bt2.CreationError('could not create trace class')
+
+        tc = bt2.TraceClass._create_from_ptr(tc_ptr)
+
+        if env is not None:
+            for key, value in env.items():
+                tc.env[key] = value
+
+        if uuid is not None:
+            tc._uuid = uuid
+
+        if assigns_automatic_stream_class_id is not None:
+            tc._assigns_automatic_stream_class_id = assigns_automatic_stream_class_id
+
+        return tc
+
+    def _create_clock_class(self, name=None, frequency=None, description=None,
+                            precision=None, offset=None, origin_is_unix_epoch=None,
+                            uuid=None):
+        ptr = self._AS_SELF_COMPONENT(self._ptr)
+        cc_ptr = native_bt.clock_class_create(ptr)
+
+        if cc_ptr is None:
+            raise bt2.CreationError('could not create clock class')
+
+        cc = bt2.ClockClass._create_from_ptr(cc_ptr)
+
+        if name is not None:
+            cc._name = name
+
+        if frequency is not None:
+            cc._frequency = frequency
+
+        if description is not None:
+            cc._description = description
+
+        if precision is not None:
+            cc._precision = precision
+
+        if offset is not None:
+            cc._offset = offset
+
+        if origin_is_unix_epoch is not None:
+            cc._origin_is_unix_epoch = origin_is_unix_epoch
+
+        if uuid is not None:
+            cc._uuid = uuid
+
+        return cc
+
 
 class _UserSourceComponent(_UserComponent, _SourceComponent):
     _AS_NOT_SELF_SPECIFIC_COMPONENT = native_bt.self_component_source_as_component_source
+    _AS_SELF_COMPONENT = native_bt.self_component_source_as_self_component
 
     @property
     def _output_ports(self):
@@ -625,6 +682,7 @@ class _UserSourceComponent(_UserComponent, _SourceComponent):
 
 class _UserFilterComponent(_UserComponent, _FilterComponent):
     _AS_NOT_SELF_SPECIFIC_COMPONENT = native_bt.self_component_filter_as_component_filter
+    _AS_SELF_COMPONENT = native_bt.self_component_filter_as_self_component
 
     @property
     def _output_ports(self):
@@ -663,6 +721,7 @@ class _UserFilterComponent(_UserComponent, _FilterComponent):
 
 class _UserSinkComponent(_UserComponent, _SinkComponent):
     _AS_NOT_SELF_SPECIFIC_COMPONENT = native_bt.self_component_sink_as_component_sink
+    _AS_SELF_COMPONENT = native_bt.self_component_sink_as_self_component
 
     @property
     def _input_ports(self):
