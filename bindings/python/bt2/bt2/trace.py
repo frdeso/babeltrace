@@ -28,7 +28,12 @@ import collections.abc
 import uuid as uuidp
 from bt2 import utils, native_bt
 import bt2
+import functools
 from . import object, field_class, stream_class
+
+def _trace_destruction_listener_from_native(user_listener, trace_ptr):
+    trace = bt2.trace.Trace._create_from_ptr_and_get_ref(trace_ptr)
+    user_listener(trace)
 
 class _StreamClassIterator(collections.abc.Iterator):
     def __init__(self, trace):
@@ -128,7 +133,10 @@ class _TraceEnv(collections.abc.MutableMapping):
         return _TraceEnvIterator(self)
 
 
-class Trace(object._SharedObject, collections.abc.Mapping):
+class Trace(object._SharedObject, collections.abc.Sequence):
+    _GET_REF_FUNC = native_bt.trace_get_ref
+    _PUT_REF_FUNC = native_bt.trace_put_ref
+
     def __init__(self, name=None, uuid=None, env=None,
                  packet_header_field_class=None, automatic_stream_class_id=None):
 
@@ -155,25 +163,20 @@ class Trace(object._SharedObject, collections.abc.Mapping):
         if automatic_stream_class_id is not None:
             self.assign_automatic_stream_class_id = automatic_stream_class_id
 
-    def __getitem__(self, key):
-        utils._check_int64(key)
+    def __getitem__(self, index):
+        utils._check_uint64(index)
 
-        for idx, sc_id in enumerate(self):
-            if sc_id == key:
-                sc_ptr = native_bt.trace_borrow_stream_class_by_index(self._ptr, idx)
-                native_bt.get(sc_ptr)
-                return bt2.stream_class._StreamClass._create_from_ptr(sc_ptr)
+        if index >= len(self):
+            raise IndexError
 
-        raise KeyError(key)
-
+        stream_ptr = native_bt.trace_borrow_stream_by_index_const(self._ptr, index)
+        assert stream_ptr
+        return bt2.stream._Stream._create_from_ptr_and_get_ref(stream_ptr)
 
     def __len__(self):
-        count = native_bt.trace_get_stream_class_count(self._ptr)
-        assert(count >= 0)
+        count = native_bt.trace_get_stream_count(self._ptr)
+        assert count >= 0
         return count
-
-    def __iter__(self):
-        return _StreamClassIterator(self)
 
     def create_stream_class(self, id=None, event_header_ft=None, packet_context_ft=None,
                 event_common_context_ft=None, default_clock_class=None, default_clock_always_known=None,
@@ -230,11 +233,52 @@ class Trace(object._SharedObject, collections.abc.Mapping):
     def name(self):
         return native_bt.trace_get_name(self._ptr)
 
-    @name.setter
-    def name(self, name):
+    def _name(self, name):
         utils._check_str(name)
         ret = native_bt.trace_set_name(self._ptr, name)
         utils._handle_ret(ret, "cannot set trace class object's name")
+
+    _name = property(fset=_name)
+
+    def create_stream(self, stream_class, id=None, name=None):
+        utils._check_type(stream_class, bt2.stream_class._StreamClass)
+
+        if stream_class.assigns_automatic_stream_id:
+            if id is not None:
+                raise bt2.CreationError("id provided, but stream class assigns automatic stream ids")
+
+            stream_ptr = native_bt.stream_create(stream_class._ptr, self._ptr)
+        else:
+            if id is None:
+                raise bt2.CreationError("id not provided, but stream class does not assign automatic stream ids")
+
+            utils._check_uint64(id)
+            stream_ptr = native_bt.stream_create_with_id(stream_class._ptr, self._ptr, id)
+
+        if stream_ptr is None:
+            raise bt2.CreationError('cannot create stream object')
+
+        stream = bt2.stream._Stream._create_from_ptr(stream_ptr)
+
+        if name is not None:
+            stream._name = name
+
+        return stream
+
+    def add_destruction_listener(self, listener):
+        '''Add a listener to be called when the trace is destroyed.'''
+        if not callable(listener):
+            raise TypeError("'listener' parameter is not callable")
+
+        fn = native_bt.py3_trace_add_destruction_listener
+        listener_from_native = functools.partial(_trace_destruction_listener_from_native,
+                                                 listener)
+
+        listener_id = fn(self._ptr, listener_from_native)
+        if listener_id is None:
+            utils._raise_bt2_error('cannot add destruction listener to trace object')
+
+        return bt2._ListenerHandle(listener_id, self)
 
     @property
     def uuid(self):

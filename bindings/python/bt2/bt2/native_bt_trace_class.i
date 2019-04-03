@@ -100,3 +100,55 @@ extern bt_stream_class *bt_trace_class_borrow_stream_class_by_index(
 
 extern bt_stream_class *bt_trace_class_borrow_stream_class_by_id(
 		bt_trace_class *trace_class, uint64_t id);
+
+/* Helper functions for Python */
+%{
+static void
+trace_class_destroyed_listener(const bt_trace_class *trace_class, void *py_callable)
+{
+	PyObject *py_trace_class_ptr = NULL;
+	PyObject *py_res = NULL;
+
+	py_trace_class_ptr = SWIG_NewPointerObj(SWIG_as_voidptr(trace_class),
+		SWIGTYPE_p_bt_trace_class, 0);
+	if (!py_trace_class_ptr) {
+		BT_LOGF_STR("Failed to create a SWIG pointer object.");
+		abort();
+	}
+
+	py_res = PyObject_CallFunction(py_callable, "(O)", py_trace_class_ptr);
+	if (py_res != NULL) {
+		BT_ASSERT(py_res == Py_None);
+	} else {
+		bt2_py_loge_exception();
+	}
+
+	Py_DECREF(py_trace_class_ptr);
+	Py_XDECREF(py_res);
+}
+
+uint64_t bt_py3_trace_class_add_destruction_listener(bt_trace_class *trace_class,
+	PyObject *py_callable)
+{
+	uint64_t id = (uint64_t) -1;
+
+	BT_ASSERT(trace_class);
+	BT_ASSERT(py_callable);
+
+	bt_trace_class_status status = bt_trace_class_add_destruction_listener(
+		trace_class, trace_class_destroyed_listener, py_callable, &id);
+	if (status != BT_TRACE_CLASS_STATUS_OK) {
+		// TODO: Raise a Python exception?
+		BT_LOGF_STR("Failed to add trace class destruction listener.");
+		goto end;
+	}
+
+	Py_INCREF(py_callable);
+
+end:
+	return id;
+}
+%}
+
+uint64_t bt_py3_trace_class_add_destruction_listener(bt_trace_class *trace_class,
+	PyObject *py_callable);

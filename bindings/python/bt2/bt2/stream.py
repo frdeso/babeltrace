@@ -29,6 +29,9 @@ def _create_stream_from_ptr(ptr):
     return _Stream._create_from_ptr(ptr)
 
 class _Stream(bt2.object._SharedObject):
+    _GET_REF_FUNC = native_bt.stream_get_ref
+    _PUT_REF_FUNC = native_bt.stream_put_ref
+
     @property
     def stream_class(self):
         stream_class_ptr = native_bt.stream_borrow_class(self._ptr)
