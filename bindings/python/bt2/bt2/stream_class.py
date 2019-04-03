@@ -51,9 +51,9 @@ class _StreamClass(bt2.object._SharedObject, collections.abc.Mapping):
 
         for idx, event_class_id in enumerate(self):
             if event_class_id == key:
-                ec_ptr = native_bt.stream_class_borrow_event_class_by_index(self._ptr, idx)
-                native_bt.get(ec_ptr)
-                return bt2.event_class._EventClass._create_from_ptr(ec_ptr)
+                ec_ptr = native_bt.stream_class_borrow_event_class_by_index(
+                    self._ptr, idx)
+                return bt2.event_class._EventClass._create_from_ptr_and_get_ref(ec_ptr)
 
         raise KeyError(key)
 
@@ -65,32 +65,41 @@ class _StreamClass(bt2.object._SharedObject, collections.abc.Mapping):
     def __iter__(self):
         return _EventClassIterator(self)
 
-    def create_event_class(self, id=None):
+    def create_event_class(self, id=None, specific_context_field_class=None,
+                           payload_field_class=None):
         if self.assigns_automatic_event_class_id:
             ec_ptr = native_bt.event_class_create(self._ptr)
         else:
             utils._check_uint64(id)
             ec_ptr = native_bt.event_class_create_with_id(self._ptr, id)
-                
-        return bt2.event_class._EventClass._create_from_ptr(ec_ptr)
+
+        event = bt2.event_class._EventClass._create_from_ptr(ec_ptr)
+
+        if specific_context_field_class is not None:
+            event._specific_context_field_class = specific_context_field_class
+
+        if payload_field_class is not None:
+            event._payload_field_class = payload_field_class
+
+        return event
 
     @property
-    def trace(self):
-        tc_ptr = native_bt.stream_class_borrow_trace(self._ptr)
-        native_bt.get(tc_ptr)
+    def trace_class(self):
+        tc_ptr = native_bt.stream_class_borrow_trace_class_const(self._ptr)
 
         if tc_ptr is not None:
-            return bt2.Trace._create_from_ptr(tc_ptr)
+            return bt2.TraceClass._create_from_ptr_and_get_ref(tc_ptr)
 
     @property
     def name(self):
         return native_bt.stream_class_get_name(self._ptr)
 
-    @name.setter
-    def name(self, name):
+    def _name(self, name):
         utils._check_str(name)
         ret = native_bt.stream_class_set_name(self._ptr, name)
         utils._handle_ret(ret, "cannot set stream class object's name")
+
+    _name = property(fset=_name)
 
     @property
     def assigns_automatic_event_class_id(self):

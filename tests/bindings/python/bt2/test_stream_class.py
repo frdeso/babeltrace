@@ -1,46 +1,61 @@
-from bt2 import value
 import unittest
 import bt2
+from test_utils.test_utils import run_in_component_init
 
 
-@unittest.skip("this is broken")
 class StreamClassTestCase(unittest.TestCase):
     def setUp(self):
-        self._packet_context_ft = bt2.StructureFieldType()
-        self._packet_context_ft.append_field('menu', bt2.RealFieldType())
-        self._packet_context_ft.append_field('sticker', bt2.StringFieldType())
-        self._event_header_ft = bt2.StructureFieldType()
-        self._event_header_ft.append_field('id', bt2.UnsignedIntegerFieldType(19))
-        self._event_common_context_ft = bt2.StructureFieldType()
-        self._event_common_context_ft.append_field('msg', bt2.StringFieldType())
+        def f(comp_self):
+            tc = comp_self._create_trace_class(assigns_automatic_stream_class_id = False)
+            cc = comp_self._create_clock_class()
+            return tc, cc
 
-        self._trace = bt2.Trace(automatic_stream_class_id=False)
+        self._tc, self._cc = run_in_component_init(f)
 
-        self._sc = self._trace.create_stream_class(id=12)
-        self._sc.name='my_stream_class'
-        self._sc.packet_context_field_class=self._packet_context_ft
-        self._sc.event_header_field_class=self._event_header_ft
-        self._sc.event_common_context_field_class=self._event_common_context_ft
-        self._sc.assigns_automatic_event_class_id = False
+        self._packet_context_ft = self._tc.create_structure_field_class()
+        self._packet_context_ft.append_field(
+            'menu', self._tc.create_real_field_class())
+        self._packet_context_ft.append_field(
+            'sticker', self._tc.create_string_field_class())
+        self._event_common_context_ft = self._tc.create_structure_field_class()
+        self._event_common_context_ft.append_field(
+            'msg', self._tc.create_string_field_class())
 
+        self._trace = self._tc()
 
-        context_ft = bt2.StructureFieldType()
-        context_ft.append_field('allo', bt2.StringFieldType())
-        context_ft.append_field('zola', bt2.UnsignedIntegerFieldType(18))
-        payload_ft = bt2.StructureFieldType()
-        payload_ft.append_field('zoom', bt2.StringFieldType())
+        self._sc = self._tc.create_stream_class(id=12, name='my_stream_class',
+                                                assigns_automatic_event_class_id=False,
+                                                event_common_context_field_class=self._event_common_context_ft,
+                                                packet_context_field_class=self._packet_context_ft)
 
-        self._ec1 = self._sc.create_event_class(id=23)
-        self._ec1.context_field_class = context_ft
-        self._ec1.payload_field_class = payload_ft
+        # Create event class 1
+        context_ft = self._tc.create_structure_field_class()
+        context_ft.append_field('allo', self._tc.create_string_field_class())
+        context_ft.append_field(
+            'zola', self._tc.create_unsigned_integer_field_class(18))
 
-        self._ec2 = self._sc.create_event_class(id=17)
-        self._ec2.context_field_class = payload_ft
-        self._ec2.payload_field_class = context_ft
+        payload_ft = self._tc.create_structure_field_class()
+        payload_ft.append_field('zoom', self._tc.create_string_field_class())
+
+        self._ec1 = self._sc.create_event_class(id=23,
+                                                specific_context_field_class=context_ft,
+                                                payload_field_class=payload_ft)
+
+        # Create event class 2
+        context_ft = self._tc.create_structure_field_class()
+        context_ft.append_field('allo', self._tc.create_string_field_class())
+        context_ft.append_field(
+            'zola', self._tc.create_unsigned_integer_field_class(18))
+
+        payload_ft = self._tc.create_structure_field_class()
+        payload_ft.append_field('zoom', self._tc.create_string_field_class())
+
+        self._ec2 = self._sc.create_event_class(id=17,
+                                                specific_context_field_class=context_ft,
+                                                payload_field_class=payload_ft)
 
     def tearDown(self):
         del self._packet_context_ft
-        del self._event_header_ft
         del self._event_common_context_ft
         del self._ec1
         del self._ec2
@@ -49,98 +64,76 @@ class StreamClassTestCase(unittest.TestCase):
     def test_create(self):
         self.assertEqual(self._sc.name, 'my_stream_class')
         self.assertEqual(self._sc.id, 12)
-        self.assertEqual(self._sc.packet_context_field_class.addr, self._packet_context_ft.addr)
-        self.assertEqual(self._sc.event_header_field_class.addr, self._event_header_ft.addr)
-        self.assertEqual(self._sc.event_common_context_field_class.addr, self._event_common_context_ft.addr)
+        self.assertEqual(self._sc.packet_context_field_class.addr,
+                         self._packet_context_ft.addr)
+        self.assertEqual(self._sc.event_common_context_field_class.addr,
+                         self._event_common_context_ft.addr)
         self.assertEqual(self._sc[23]._ptr, self._ec1._ptr)
         self.assertEqual(self._sc[17]._ptr, self._ec2._ptr)
         self.assertEqual(len(self._sc), 2)
 
-    def test_assign_name(self):
-        sc = self._trace.create_stream_class(id=14)
-        sc.name = 'lel'
-        self.assertEqual(sc.name, 'lel')
-
     def test_automatic_ids(self):
-        sc = self._trace.create_stream_class(id=14, automatic_stream_id=True, automatic_event_class_id=True)
+        sc = self._tc.create_stream_class(
+            id=14, assigns_automatic_stream_id=True, assigns_automatic_event_class_id=True)
         ec = sc.create_event_class()
-        stream = sc()
+        stream = self._trace.create_stream(sc)
+        self.assertTrue(sc.assigns_automatic_stream_id)
+        self.assertTrue(sc.assigns_automatic_event_class_id)
         self.assertIsNotNone(ec.id)
         self.assertIsNotNone(stream.id)
 
     def test_no_automatic_ids(self):
-        sc = self._trace.create_stream_class(id=14, automatic_stream_id=False, automatic_event_class_id=False)
+        sc = self._tc.create_stream_class(
+            id=14, assigns_automatic_stream_id=False, assigns_automatic_event_class_id=False)
         ec = sc.create_event_class(id=121)
-        stream = sc(id=0x1112)
+        stream = self._trace.create_stream(sc, id=0x1112)
+        self.assertFalse(sc.assigns_automatic_stream_id)
+        self.assertFalse(sc.assigns_automatic_event_class_id)
         self.assertIsNotNone(ec.id)
         self.assertIsNotNone(stream.id)
 
-    def test_assign_invalid_name(self):
-        sc = self._trace.create_stream_class(id=14)
+    def test_create_invalid_name(self):
         with self.assertRaises(TypeError):
-            sc.name = 17
+            sc = self._tc.create_stream_class(id=14, name=17)
 
     def test_assign_id(self):
-        sc = self._trace.create_stream_class(id=1717)
+        sc = self._tc.create_stream_class(id=1717)
         self.assertEqual(sc.id, 1717)
 
     def test_assign_invalid_id(self):
         with self.assertRaises(TypeError):
-            sc = self._trace.create_stream_class(id='lel')
+            self._tc.create_stream_class(id='lel')
 
     def test_default_clock_class(self):
-        cc = bt2.ClockClass()
-        sc = self._trace.create_stream_class(id=1717)
-        sc.default_clock_class = cc
-        self.assertEqual(sc.default_clock_class.addr, cc.addr)
+        sc = self._tc.create_stream_class(id=1717, default_clock_class=self._cc)
+        self.assertEqual(sc.default_clock_class.addr, self._cc.addr)
 
     def test_no_default_clock_class(self):
-        sc = self._trace.create_stream_class(id=1717)
+        sc = self._tc.create_stream_class(id=1717)
         self.assertIsNone(sc.default_clock_class)
 
     def test_clock_always_known(self):
-        cc = bt2.ClockClass()
-        sc = self._trace.create_stream_class(id=1717)
-        sc.default_clock_class = cc
+        sc = self._tc.create_stream_class(id=1717, default_clock_class=self._cc)
         self.assertTrue(sc.default_clock_always_known)
 
-    def test_assign_packet_context_field_class(self):
-        ft = bt2.StructureFieldType()
-        ft.append_field('champ', bt2.UnsignedIntegerFieldType(19))
-        sc = self._trace.create_stream_class(id=1717)
-        sc.packet_context_field_class = ft
-        self.assertEqual(sc.packet_context_field_class.addr, ft.addr)
-
-    def test_assign_no_packet_context_field_class(self):
-        sc = self._trace.create_stream_class(id=1717)
+    def test_create_no_packet_context_field_class(self):
+        sc = self._tc.create_stream_class(id=1717)
         self.assertIsNone(sc.packet_context_field_class)
 
-    def test_assign_event_header_field_class(self):
-        ft = bt2.StructureFieldType()
-        ft.append_field('champ', bt2.UnsignedIntegerFieldType(19))
-        sc = self._trace.create_stream_class(id=1717)
-        sc.event_header_field_class = ft
-        self.assertEqual(sc.event_header_field_class.addr, ft.addr)
-
-    def test_assign_no_event_header_field_class(self):
-        sc = self._trace.create_stream_class(id=1717)
-        self.assertIsNone(sc.event_header_field_class)
-
-    def test_assign_event_common_context_field_class(self):
-        ft = bt2.StructureFieldType()
-        ft.append_field('champ', bt2.UnsignedIntegerFieldType(19))
-        sc = self._trace.create_stream_class(id=1717)
-        sc.event_common_context_field_class = ft
+    def test_create_event_common_context_field_class(self):
+        ft = self._tc.create_structure_field_class()
+        ft.append_field(
+            'champ', self._tc.create_unsigned_integer_field_class(19))
+        sc = self._tc.create_stream_class(id=1717, event_common_context_field_class=ft)
         self.assertEqual(sc.event_common_context_field_class.addr, ft.addr)
 
     def test_assign_no_event_common_context_field_class(self):
-        sc = self._trace.create_stream_class(id=1717)
+        sc = self._tc.create_stream_class(id=1717)
         self.assertIsNone(sc.event_common_context_field_class)
 
-    def test_trace_prop(self):
-        tc = bt2.Trace()
-        sc = tc.create_stream_class()
-        self.assertEqual(sc.trace.addr, tc.addr)
+    def test_trace_class_prop(self):
+        sc = self._tc.create_stream_class(id=1717)
+        self.assertEqual(sc.trace_class.addr, self._tc.addr)
 
     def test_getitem(self):
         self.assertEqual(self._sc[23]._ptr, self._ec1._ptr)
@@ -165,21 +158,3 @@ class StreamClassTestCase(unittest.TestCase):
                 self.assertEqual(event_class._ptr, self._ec1._ptr)
             elif ec_id == 17:
                 self.assertEqual(event_class._ptr, self._ec2._ptr)
-
-    def test_counter_snapshots(self):
-        sc = self._trace.create_stream_class(id=1717,
-                packets_have_packet_counter_snapshot=True,
-                packets_have_discarded_event_counter_snapshot=True)
-        
-        self.assertTrue(sc.packets_have_packet_counter_snapshot)
-        self.assertTrue(sc.packets_have_discarded_event_counter_snapshot)
-
-    def test_default_clock_values(self):
-        cc = bt2.ClockClass()
-        sc = self._trace.create_stream_class(id=1717,
-                default_clock_class=cc,
-                packets_have_default_beginning_clock_value=True,
-                packets_have_default_end_clock_value=True)
-
-        self.assertTrue(sc.packets_have_default_beginning_clock_value)
-        self.assertTrue(sc.packets_have_default_end_clock_value)

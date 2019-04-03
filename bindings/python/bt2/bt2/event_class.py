@@ -51,6 +51,9 @@ class EventClassLogLevel:
 
 
 class _EventClass(bt2.object._SharedObject):
+    _GET_REF_FUNC = native_bt.event_class_get_ref
+    _PUT_REF_FUNC = native_bt.event_class_put_ref
+
     @property
     def stream_class(self):
         sc_ptr = native_bt.event_class_borrow_stream_class(self._ptr)
