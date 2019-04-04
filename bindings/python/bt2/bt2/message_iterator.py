@@ -62,6 +62,8 @@ class _GenericMessageIterator(bt2.object._SharedObject, _MessageIterator):
 
 class _SelfPortInputMessageIterator(_GenericMessageIterator):
     _GET_NOFICATION_RANGE = native_bt.py3_self_component_port_input_get_msg_range
+    _GET_REF_FUNC = native_bt.self_component_port_input_message_iterator_get_ref
+    _PUT_REF_FUNC = native_bt.self_component_port_input_message_iterator_put_ref
 
     @property
     def component(self):

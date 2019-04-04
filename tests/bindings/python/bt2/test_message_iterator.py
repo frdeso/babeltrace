@@ -5,7 +5,6 @@ import copy
 import bt2
 
 
-@unittest.skip("this is broken")
 class UserMessageIteratorTestCase(unittest.TestCase):
     @staticmethod
     def _create_graph(src_comp_cls):
@@ -14,14 +13,14 @@ class UserMessageIteratorTestCase(unittest.TestCase):
                 self._add_input_port('in')
 
             def _consume(self):
-                next(self._notif_iter)
+                next(self._msg_iter)
 
-            def _port_connected(self, port, other_port):
-                self._notif_iter = port.connection.create_message_iterator()
+            def _graph_is_configured(self):
+                self._msg_iter = self._input_ports['in'].create_message_iterator()
 
         graph = bt2.Graph()
-        src_comp = graph.add_component(src_comp_cls, 'src')
-        sink_comp = graph.add_component(MySink, 'sink')
+        src_comp = graph.add_source_component(src_comp_cls, 'src')
+        sink_comp = graph.add_sink_component(MySink, 'sink')
         graph.connect_ports(src_comp.output_ports['out'],
                             sink_comp.input_ports['in'])
         return graph
@@ -39,6 +38,7 @@ class UserMessageIteratorTestCase(unittest.TestCase):
 
         initialized = False
         graph = self._create_graph(MySource)
+        graph.run()
         self.assertTrue(initialized)
 
     def test_finalize(self):
@@ -54,6 +54,7 @@ class UserMessageIteratorTestCase(unittest.TestCase):
 
         finalized = False
         graph = self._create_graph(MySource)
+        graph.run()
         del graph
         self.assertTrue(finalized)
 
@@ -71,6 +72,7 @@ class UserMessageIteratorTestCase(unittest.TestCase):
 
         salut = None
         graph = self._create_graph(MySource)
+        graph.run()
         self.assertEqual(salut, 23)
 
     def test_addr(self):
@@ -86,104 +88,77 @@ class UserMessageIteratorTestCase(unittest.TestCase):
 
         addr = None
         graph = self._create_graph(MySource)
+        graph.run()
         self.assertIsNotNone(addr)
         self.assertNotEqual(addr, 0)
 
 
-@unittest.skip("this is broken")
-class PrivateConnectionMessageIteratorTestCase(unittest.TestCase):
-    def test_component(self):
-        class MyIter(bt2._UserMessageIterator):
-            pass
-
-        class MySource(bt2._UserSourceComponent,
-                       message_iterator_class=MyIter):
-            def __init__(self, params):
-                self._add_output_port('out')
-
-        class MySink(bt2._UserSinkComponent):
-            def __init__(self, params):
-                self._add_input_port('in')
-
-            def _consume(self):
-                next(self._notif_iter)
-
-            def _port_connected(self, port, other_port):
-                nonlocal upstream_comp
-                self._notif_iter = port.connection.create_message_iterator()
-                upstream_comp = self._notif_iter.component
-
-        upstream_comp = None
-        graph = bt2.Graph()
-        src_comp = graph.add_component(MySource, 'src')
-        sink_comp = graph.add_component(MySink, 'sink')
-        graph.connect_ports(src_comp.output_ports['out'],
-                            sink_comp.input_ports['in'])
-        self.assertEqual(src_comp._ptr, upstream_comp._ptr)
-        del upstream_comp
-
-
-@unittest.skip("this is broken")
 class OutputPortMessageIteratorTestCase(unittest.TestCase):
     def test_component(self):
         class MyIter(bt2._UserMessageIterator):
             def __init__(self):
-                self._build_meta()
                 self._at = 0
-
-            def _build_meta(self):
-                self._trace = bt2.Trace()
-                self._sc = self._trace.create_stream_class()
-                self._ec = self._sc.create_event_class()
-                self._ec.name = 'salut'
-                self._my_int_ft = bt2.SignedIntegerFieldType(32)
-                payload_ft = bt2.StructureFieldType()
-                payload_ft += collections.OrderedDict([
-                    ('my_int', self._my_int_ft),
-                ])
-                self._ec.payload_field_class = payload_ft
-                self._stream = self._sc()
-                self._packet = self._stream.create_packet()
 
             def __next__(self):
                 if self._at == 7:
                     raise bt2.Stop
 
                 if self._at == 0:
-                    notif = self._create_stream_beginning_message(self._stream)
+                    msg = self._create_stream_beginning_message(test_obj._stream)
                 elif self._at == 1:
-                    notif = self._create_packet_beginning_message(self._packet)
+                    msg = self._create_packet_beginning_message(test_obj._packet)
                 elif self._at == 5:
-                    notif = self._create_packet_end_message(self._packet)
+                    msg = self._create_packet_end_message(test_obj._packet)
                 elif self._at == 6:
-                    notif = self._create_stream_end_message(self._stream)
+                    msg = self._create_stream_end_message(test_obj._stream)
                 else:
-                    notif = self._create_event_message(self._ec, self._packet)
-                    notif.event.payload_field['my_int'] = self._at * 3
+                    msg = self._create_event_message(test_obj._event_class, test_obj._packet)
+                    msg.event.payload_field['my_int'] = self._at * 3
 
                 self._at += 1
-                return notif
+                return msg
 
         class MySource(bt2._UserSourceComponent,
                        message_iterator_class=MyIter):
             def __init__(self, params):
                 self._add_output_port('out')
 
-        graph = bt2.Graph()
-        src = graph.add_component(MySource, 'src')
-        notif_iter = src.output_ports['out'].create_message_iterator()
+                trace_class = self._create_trace_class()
+                stream_class = trace_class.create_stream_class()
 
-        for at, notif in enumerate(notif_iter):
+                # Create payload field class
+                my_int_ft = trace_class.create_signed_integer_field_class(32)
+                payload_ft = trace_class.create_structure_field_class()
+                payload_ft += collections.OrderedDict([
+                    ('my_int', my_int_ft),
+                ])
+
+                event_class = stream_class.create_event_class(name='salut', payload_field_class=payload_ft)
+
+                trace = trace_class()
+                stream = trace.create_stream(stream_class)
+                packet = stream.create_packet()
+
+                test_obj._event_class = event_class
+                test_obj._stream = stream
+                test_obj._packet = packet
+
+        test_obj = self
+        graph = bt2.Graph()
+        src = graph.add_source_component(MySource, 'src')
+        msg_iter = graph.create_output_port_message_iterator(src.output_ports['out'])
+
+        for at, msg in enumerate(msg_iter):
             if at == 0:
-                self.assertIsInstance(notif, bt2.message._StreamBeginningMessage)
+                self.assertIsInstance(msg, bt2.message._StreamBeginningMessage)
             elif at == 1:
-                self.assertIsInstance(notif, bt2.message._PacketBeginningMessage)
+                self.assertIsInstance(msg, bt2.message._PacketBeginningMessage)
             elif at == 5:
-                self.assertIsInstance(notif, bt2.message._PacketEndMessage)
+                self.assertIsInstance(msg, bt2.message._PacketEndMessage)
             elif at == 6:
-                self.assertIsInstance(notif, bt2.message._StreamEndMessage)
+                self.assertIsInstance(msg, bt2.message._StreamEndMessage)
             else:
-                self.assertIsInstance(notif, bt2.message._EventMessage)
-                self.assertEqual(notif.event.event_class.name, 'salut')
-                field = notif.event.payload_field['my_int']
+                self.assertIsInstance(msg, bt2.message._EventMessage)
+                self.assertEqual(msg.event.event_class.name, 'salut')
+                field = msg.event.payload_field['my_int']
                 self.assertEqual(field, at * 3)
