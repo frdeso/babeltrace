@@ -230,8 +230,8 @@ typedef int bt_bool;
 }
 
 /* Output argument typemap for clock value output (always appends) */
-%typemap(in, numinputs=0) const bt_clock_snapshot **BTOUTCLOCKSNAPSHOT (bt_clock_snapshot *temp_clock_value = NULL) {
-	$1 = &temp_clock_value;
+%typemap(in, numinputs=0) const bt_clock_snapshot **BTOUTCLOCKSNAPSHOT (bt_clock_snapshot *temp_clock_snapshot = NULL) {
+	$1 = &temp_clock_snapshot;
 }
 
 %typemap(argout) const bt_clock_snapshot **BTOUTCLOCKSNAPSHOT {

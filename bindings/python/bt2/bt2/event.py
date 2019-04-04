@@ -24,7 +24,7 @@ __all__ = ['_Event']
 
 import collections
 from bt2 import native_bt, utils
-import bt2.clock_value
+import bt2.clock_snapshot
 import bt2.packet
 import bt2
 
@@ -151,18 +151,18 @@ class _Event(bt2.object._UniqueObject):
         raise KeyError(key)
 
     @property
-    def default_clock_value(self):
-        status, value_ptr = native_bt.event_borrow_default_clock_value(self._ptr)
+    def default_clock_snapshot(self):
+        status, value_ptr = native_bt.event_borrow_default_clock_snapshot(self._ptr)
 
-        if status is native_bt.CLOCK_VALUE_STATUS_UNKNOWN:
+        if status is native_bt.CLOCK_SNAPSHOT_STATUS_UNKNOWN:
             return
 
         if value_ptr is None:
             return
 
-        return bt2.clock_value._ClockValue._create_from_ptr(value_ptr, self._owning_ptr)
+        return bt2.clock_snapshot._ClockSnapshot._create_from_ptr(value_ptr, self._owning_ptr)
 
-    @default_clock_value.setter
-    def default_clock_value(self, value):
-        ret = native_bt.event_set_default_clock_value(self._ptr, value);
+    @default_clock_snapshot.setter
+    def default_clock_snapshot(self, value):
+        ret = native_bt.event_set_default_clock_snapshot(self._ptr, value);
         utils._handle_ret(ret, "cannot set event default clock value")

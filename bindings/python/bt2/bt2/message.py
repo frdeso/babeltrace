@@ -24,7 +24,7 @@ import copy
 import collections
 from bt2 import native_bt, utils
 from bt2 import object
-import bt2.clock_value
+import bt2.clock_snapshot
 import bt2.event
 import bt2.packet
 import bt2.stream
@@ -123,17 +123,17 @@ class _StreamBeginningMessage(_Message):
         return bt2.stream._create_stream_from_ptr(stream_ptr)
 
     @property
-    def default_clock_value(self):
-        value_ptr = native_bt.message_stream_begin_borrow_default_clock_value(self._ptr)
+    def default_clock_snapshot(self):
+        value_ptr = native_bt.message_stream_begin_borrow_default_clock_snapshot(self._ptr)
 
         if value_ptr is None:
             return
 
-        return bt2.clock_value._ClockValue._create_from_ptr(value_ptr, self._ptr)
+        return bt2.clock_snapshot._ClockSnapshot._create_from_ptr(value_ptr, self._ptr)
 
-    @default_clock_value.setter
-    def default_clock_value(self, value):
-        ret = native_bt.message_stream_begin_set_default_clock_value(self._ptr, value)
+    @default_clock_snapshot.setter
+    def default_clock_snapshot(self, value):
+        ret = native_bt.message_stream_begin_set_default_clock_snapshot(self._ptr, value)
         utils._handle_ret(ret, "cannot set stream begin message clock value")
 
 
@@ -156,17 +156,17 @@ class _StreamEndMessage(_Message):
         return bt2.stream._create_stream_from_ptr(stream_ptr)
 
     @property
-    def default_clock_value(self):
-        value_ptr = native_bt.message_stream_end_borrow_default_clock_value(self._ptr)
+    def default_clock_snapshot(self):
+        value_ptr = native_bt.message_stream_end_borrow_default_clock_snapshot(self._ptr)
 
         if value_ptr is None:
             return
 
-        return bt2.clock_value._ClockValue._create_from_ptr(value_ptr, self._ptr)
+        return bt2.clock_snapshot._ClockSnapshot._create_from_ptr(value_ptr, self._ptr)
 
-    @default_clock_value.setter
-    def default_clock_value(self, value):
-        ret = native_bt.message_stream_end_set_default_clock_value(self._ptr, value)
+    @default_clock_snapshot.setter
+    def default_clock_snapshot(self, value):
+        ret = native_bt.message_stream_end_set_default_clock_snapshot(self._ptr, value)
         utils._handle_ret(ret, "cannot set stream end message clock value")
 
 
@@ -182,17 +182,17 @@ class _InactivityMessage(_Message):
         super().__init__(ptr)
 
     @property
-    def default_clock_value(self):
-        value_ptr = native_bt.message_inactivity_borrow_default_clock_value(self._ptr)
+    def default_clock_snapshot(self):
+        value_ptr = native_bt.message_inactivity_borrow_default_clock_snapshot(self._ptr)
 
         if value_ptr is None:
             return
 
-        return bt2.clock_value._ClockValue._create_from_ptr(value_ptr, self._ptr)
+        return bt2.clock_snapshot._ClockSnapshot._create_from_ptr(value_ptr, self._ptr)
 
-    @default_clock_value.setter
-    def default_clock_value(self, value):
-        ret = native_bt.message_inactivity_set_default_clock_value(self._ptr, value)
+    @default_clock_snapshot.setter
+    def default_clock_snapshot(self, value):
+        ret = native_bt.message_inactivity_set_default_clock_snapshot(self._ptr, value)
         utils._handle_ret(ret, "cannot set stream end message clock value")
 
 

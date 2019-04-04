@@ -27,22 +27,22 @@ from bt2 import native_bt, utils
 import bt2
 
 
-class _ClockValue(bt2.object._UniqueObject):
+class _ClockSnapshot(bt2.object._UniqueObject):
     @property
     def clock_class(self):
-        cc_ptr = native_bt.clock_value_borrow_clock_class(self._ptr)
+        cc_ptr = native_bt.clock_snapshot_borrow_clock_class(self._ptr)
         assert(cc_ptr)
         native_bt.get(cc_ptr)
         return bt2.ClockClass._create_from_ptr(cc_ptr)
 
     @property
     def cycles(self):
-        cycles = native_bt.clock_value_get_value(self._ptr)
+        cycles = native_bt.clock_snapshot_get_value(self._ptr)
         return cycles
 
     @property
     def ns_from_origin(self):
-        ret, ns = native_bt.clock_value_get_ns_from_origin(self._ptr)
+        ret, ns = native_bt.clock_snapshot_get_ns_from_origin(self._ptr)
         utils._handle_ret(ret, "cannot get clock value object's nanoseconds from origin")
         return ns
 

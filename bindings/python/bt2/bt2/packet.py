@@ -34,30 +34,30 @@ class _Packet(bt2.object._SharedObject):
         return bt2.stream._Stream._create_from_ptr(stream_ptr)
 
     @property
-    def default_beginning_clock_value(self):
-        prop_avail_status, value_ptr = native_bt.packet_borrow_default_beginning_clock_value(self._ptr)
+    def default_beginning_clock_snapshot(self):
+        prop_avail_status, value_ptr = native_bt.packet_borrow_default_beginning_clock_snapshot(self._ptr)
         if prop_avail_status is bt2.PropertyAvailability.NOT_AVAILABLE:
             return
 
-        return bt2.clock_value._create_clock_value_from_ptr(value_ptr, self._ptr)
+        return bt2.clock_snapshot._create_clock_snapshot_from_ptr(value_ptr, self._ptr)
 
-    @default_beginning_clock_value.setter
-    def default_beginning_clock_value(self, cycles):
+    @default_beginning_clock_snapshot.setter
+    def default_beginning_clock_snapshot(self, cycles):
         utils._check_uint64(cycles)
-        native_bt.packet_set_default_beginning_clock_value(self._ptr, cycles)
+        native_bt.packet_set_default_beginning_clock_snapshot(self._ptr, cycles)
 
     @property
-    def default_end_clock_value(self):
-        prop_avail_status, value_ptr = native_bt.packet_borrow_default_end_clock_value(self._ptr)
+    def default_end_clock_snapshot(self):
+        prop_avail_status, value_ptr = native_bt.packet_borrow_default_end_clock_snapshot(self._ptr)
         if prop_avail_status is bt2.PropertyAvailability.NOT_AVAILABLE:
             return
 
-        return bt2.clock_value._create_clock_value_from_ptr(value_ptr, self._ptr)
+        return bt2.clock_snapshot._create_clock_snapshot_from_ptr(value_ptr, self._ptr)
 
-    @default_end_clock_value.setter
-    def default_end_clock_value(self, cycles):
+    @default_end_clock_snapshot.setter
+    def default_end_clock_snapshot(self, cycles):
         utils._check_uint64(cycles)
-        native_bt.packet_set_default_end_clock_value(self._ptr, cycles)
+        native_bt.packet_set_default_end_clock_snapshot(self._ptr, cycles)
 
     @property
     def discarded_event_counter_snapshot(self):

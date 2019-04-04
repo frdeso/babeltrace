@@ -228,19 +228,19 @@ class _StreamClass(bt2.object._SharedObject, collections.abc.Mapping):
         native_bt.stream_class_set_packets_have_packet_counter_snapshot(self._ptr, have_packet_counter)
 
     @property
-    def packets_have_default_beginning_clock_value(self):
-        return native_bt.stream_class_packets_have_default_beginning_clock_value(self._ptr)
+    def packets_have_default_beginning_clock_snapshot(self):
+        return native_bt.stream_class_packets_have_default_beginning_clock_snapshot(self._ptr)
 
-    @packets_have_default_beginning_clock_value.setter
-    def packets_have_default_beginning_clock_value(self, have_default_beginning_clock_value):
-        utils._check_bool(have_default_beginning_clock_value)
-        native_bt.stream_class_set_packets_have_default_beginning_clock_value(self._ptr, have_default_beginning_clock_value)
+    @packets_have_default_beginning_clock_snapshot.setter
+    def packets_have_default_beginning_clock_snapshot(self, have_default_beginning_clock_snapshot):
+        utils._check_bool(have_default_beginning_clock_snapshot)
+        native_bt.stream_class_set_packets_have_default_beginning_clock_snapshot(self._ptr, have_default_beginning_clock_snapshot)
 
     @property
-    def packets_have_default_end_clock_value(self):
-        return native_bt.stream_class_packets_have_default_end_clock_value(self._ptr)
+    def packets_have_default_end_clock_snapshot(self):
+        return native_bt.stream_class_packets_have_default_end_clock_snapshot(self._ptr)
 
-    @packets_have_default_end_clock_value.setter
-    def packets_have_default_end_clock_value(self, have_default_end_clock_value):
-        utils._check_bool(have_default_end_clock_value)
-        native_bt.stream_class_set_packets_have_default_end_clock_value(self._ptr, have_default_end_clock_value)
+    @packets_have_default_end_clock_snapshot.setter
+    def packets_have_default_end_clock_snapshot(self, have_default_end_clock_snapshot):
+        utils._check_bool(have_default_end_clock_snapshot)
+        native_bt.stream_class_set_packets_have_default_end_clock_snapshot(self._ptr, have_default_end_clock_snapshot)
