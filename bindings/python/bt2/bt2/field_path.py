@@ -33,6 +33,9 @@ class Scope:
 
 
 class FieldPath(object._SharedObject, collections.abc.Iterable):
+    _GET_REF_FUNC = native_bt.field_path_get_ref
+    _PUT_REF_FUNC = native_bt.field_path_put_ref
+
     @property
     def root_scope(self):
         scope = native_bt.field_path_get_root_scope(self._ptr)

@@ -21,9 +21,9 @@
 # THE SOFTWARE.
 
 __all__ = ['IntegerDisplayBase', 'UnsignedIntegerFieldClass', 'SignedIntegerFieldClass',
-        'RealFieldClass', 'UnsignedEnumerationFieldClass', 'SignedEnumerationFieldClass',
-        'StringFieldClass', 'StructureFieldClass', 'VariantFieldClass',
-        'StaticArrayFieldClass', 'DynamicArrayFieldClass']
+           'RealFieldClass', 'UnsignedEnumerationFieldClass', 'SignedEnumerationFieldClass',
+           'StringFieldClass', 'StructureFieldClass', 'VariantFieldClass',
+           'StaticArrayFieldClass', 'DynamicArrayFieldClass']
 
 import collections
 from bt2 import native_bt, utils, object
@@ -47,21 +47,10 @@ class _FieldClass(object._SharedObject):
 
     def _check_create_status(self, ptr):
         if ptr is None:
-            raise bt2.CreationError('cannot create {} field type object'.format(self._NAME.lower()))
+            raise bt2.CreationError('cannot create {} field class object'.format(self._NAME.lower()))
 
 
 class _IntegerFieldClass(_FieldClass):
-    def __init__(self, ptr, range=None, display_base=None):
-        super().__init__(ptr)
-        if range is not None:
-            utils._check_uint64(range)
-            if range == 0:
-                raise ValueError("IntegerFieldClass range is zero")
-            self.range=range
-
-        if display_base is not None:
-            utils._check_int(display_base)
-            self.base = display_base
 
     @property
     def range(self):
@@ -69,60 +58,58 @@ class _IntegerFieldClass(_FieldClass):
         assert(size >= 1)
         return size
 
-    @range.setter
-    def range(self, size):
+    def _range(self, size):
+        if size < 1 or size > 64:
+            raise ValueError("IntegerFieldClass range is not in the range [1,64] ({})".format(size))
         native_bt.field_class_integer_set_field_value_range(self._ptr, size)
 
+    _range = property(fset=_range)
+
     @property
-    def base(self):
-        base = native_bt.field_class_integer_get_preferred_display_base(self._ptr)
+    def display_base(self):
+        base = native_bt.field_class_integer_get_preferred_display_base(
+            self._ptr)
         assert(base >= 0)
         return base
 
-    @base.setter
-    def base(self, base):
-        native_bt.field_class_integer_set_preferred_display_base(self._ptr, base)
+    def _display_base(self, base):
+        utils._check_int(base)
+        native_bt.field_class_integer_set_preferred_display_base(
+            self._ptr, base)
+
+    _display_base = property(fset=_display_base)
 
 
 class _UnsignedIntegerFieldClass(_IntegerFieldClass):
     pass
+
+
 class _SignedIntegerFieldClass(_IntegerFieldClass):
     pass
 
+
 class UnsignedIntegerFieldClass(_UnsignedIntegerFieldClass):
     _NAME = 'UnsignedInteger'
-    def __init__(self, range=None, display_base=None):
-        ptr = native_bt.field_class_unsigned_integer_create();
-        self._check_create_status(ptr)
-        super().__init__(ptr, range, display_base)
+
 
 class SignedIntegerFieldClass(_SignedIntegerFieldClass):
     _NAME = 'SignedInteger'
-    def __init__(self, range=None, display_base=None):
-        ptr = native_bt.field_class_signed_integer_create();
-        self._check_create_status(ptr)
-        super().__init__(ptr, range, display_base)
 
 
 class RealFieldClass(_FieldClass):
-    _NAME = 'SignedInteger'
-    def __init__(self, is_single_precision=None):
-        ptr = native_bt.field_class_real_create();
-        self._check_create_status(ptr)
-        super().__init__(ptr)
-        
-        if is_single_precision is not None:
-            self.single_precision = True
-
+    _NAME = 'Real'
 
     @property
     def single_precision(self):
         return native_bt.field_class_real_is_single_precision(self._ptr)
 
-    @single_precision.setter
-    def single_precision(self, is_single_precision):
+    def _single_precision(self, is_single_precision):
         utils._check_bool(is_single_precision)
-        native_bt.field_class_real_set_is_single_precision(self._ptr, is_single_precision)
+        native_bt.field_class_real_set_is_single_precision(
+            self._ptr, is_single_precision)
+
+    _single_precision = property(fset=_single_precision)
+
 
 class _EnumerationFieldClassMappingRange:
     def __init__(self, lower, upper):
@@ -204,9 +191,9 @@ class _EnumerationFieldClass(_IntegerFieldClass, collections.abc.Mapping):
 
     def __iter__(self):
         if self._is_signed:
-            borrow_mapping_by_index_fn = native_bt.field_class_signed_enumeration_borrow_mapping_by_index
+            borrow_mapping_by_index_fn = native_bt.field_class_signed_enumeration_borrow_mapping_by_index_const
         else:
-            borrow_mapping_by_index_fn = native_bt.field_class_unsigned_enumeration_borrow_mapping_by_index
+            borrow_mapping_by_index_fn = native_bt.field_class_unsigned_enumeration_borrow_mapping_by_index_const
 
         for idx in range(len(self)):
             label, mapping_ptr = borrow_mapping_by_index_fn(self._ptr, idx)
@@ -230,19 +217,11 @@ class _EnumerationFieldClass(_IntegerFieldClass, collections.abc.Mapping):
 class UnsignedEnumerationFieldClass(_EnumerationFieldClass, _UnsignedIntegerFieldClass):
     _NAME = 'UnsignedEnumerationFieldClass'
     _is_signed = False
-    def __init__(self, range=None, display_base=None):
-        ptr = native_bt.field_class_unsigned_enumeration_create();
-        self._check_create_status(ptr)
-        super().__init__(ptr, range, display_base)
 
 
 class SignedEnumerationFieldClass(_EnumerationFieldClass, _SignedIntegerFieldClass):
     _NAME = 'SignedEnumerationFieldClass'
     _is_signed = True
-    def __init__(self, range=None, display_base=None):
-        ptr = native_bt.field_class_signed_enumeration_create();
-        self._check_create_status(ptr)
-        super().__init__(ptr, range, display_base)
 
 
 class StringFieldClass(_FieldClass):
@@ -265,12 +244,10 @@ class _FieldContainer(collections.abc.Mapping):
 
         ptr = self._borrow_field_class_ptr_by_name(key)
 
-        native_bt.get(ptr)
-
         if ptr is None:
             raise KeyError(key)
 
-        return _create_field_class_from_ptr(ptr)
+        return _create_field_class_from_ptr_and_get_ref(ptr)
 
     def __iter__(self):
         return self._ITER_CLS(self)
@@ -279,7 +256,7 @@ class _FieldContainer(collections.abc.Mapping):
         utils._check_str(name)
         utils._check_type(field_class, _FieldClass)
         ret = self._add_field(name, field_class._ptr)
-        utils._handle_ret(ret, "cannot add field to {} field type object".format(self._NAME.lower()))
+        utils._handle_ret(ret, "cannot add field to {} field class object".format(self._NAME.lower()))
 
     def __iadd__(self, fields):
         for name, field_class in fields.items():
@@ -301,8 +278,8 @@ class _StructureFieldClassFieldIterator(collections.abc.Iterator):
         if self._at == len(self._struct_field_class):
             raise StopIteration
 
-        get_ft_by_index = native_bt.field_class_structure_borrow_member_by_index
-        name, field_class_ptr = get_ft_by_index(self._struct_field_class._ptr, self._at)
+        get_fc_by_index = native_bt.field_class_structure_borrow_member_by_index_const
+        name, field_class_ptr = get_fc_by_index(self._struct_field_class._ptr, self._at)
         self._at += 1
         return name
 
@@ -329,9 +306,9 @@ class StructureFieldClass(_FieldClass, _FieldContainer):
         if index < 0 or index >= len(self):
             raise IndexError
 
-        name, field_class_ptr = native_bt.field_class_structure_borrow_member_by_index(self._ptr, index)
-        native_bt.get(field_class_ptr)
-        return _create_field_class_from_ptr(field_class_ptr)
+        name, field_class_ptr = native_bt.field_class_structure_borrow_member_by_index_const(self._ptr, index)
+
+        return _create_field_class_from_ptr_and_get_ref(field_class_ptr)
 
 
 class _VariantFieldClassFieldIterator(collections.abc.Iterator):
@@ -343,10 +320,11 @@ class _VariantFieldClassFieldIterator(collections.abc.Iterator):
         if self._at == len(self._variant_field_class):
             raise StopIteration
 
-        name, field_class_ptr = native_bt.field_class_variant_borrow_option_by_index(self._variant_field_class._ptr,
-                                                                                    self._at)
+        name, field_class_ptr = native_bt.field_class_variant_borrow_option_by_index_const(self._variant_field_class._ptr,
+                                                                                           self._at)
         self._at += 1
         return name
+
 
 class VariantFieldClass(_FieldClass, _FieldContainer):
     _NAME = 'Variant'
@@ -362,12 +340,11 @@ class VariantFieldClass(_FieldClass, _FieldContainer):
 
     @property
     def selector_field_path(self):
-        ptr = native_bt.field_class_variant_borrow_selector_field_path(self._ptr);
+        ptr = native_bt.field_class_variant_borrow_selector_field_path_const(self._ptr)
         if ptr is None:
             return
 
-        native_bt.get(ptr)
-        return bt2.FieldPath._create_from_ptr(ptr)
+        return bt2.FieldPath._create_from_ptr_and_get_ref(ptr)
 
     def _set_selector_field_class(self, selector_ft):
         ret = native_bt.field_class_variant_set_selector_field_class(self._ptr, selector_ft._ptr)
@@ -389,18 +366,18 @@ class VariantFieldClass(_FieldClass, _FieldContainer):
         if index < 0 or index >= len(self):
             raise IndexError
 
-        name, field_class_ptr = native_bt.field_class_variant_borrow_option_by_index(self._ptr, index)
-        native_bt.get(field_class_ptr)
-        return _create_field_class_from_ptr(field_class_ptr)
+        name, field_class_ptr = native_bt.field_class_variant_borrow_option_by_index_const(
+            self._ptr, index)
+
+        return _create_field_class_from_ptr_and_get_ref(field_class_ptr)
 
 
 class ArrayFieldClass(_FieldClass):
     @property
     def element_field_class(self):
-        elem_ft_ptr = native_bt.field_class_array_borrow_element_field_class(self._ptr)
-        native_bt.get(elem_ft_ptr)
-        return _create_field_class_from_ptr(elem_ft_ptr)
-        
+        elem_fc_ptr = native_bt.field_class_array_borrow_element_field_class_const(self._ptr)
+        return _create_field_class_from_ptr_and_get_ref(elem_fc_ptr)
+
 
 class StaticArrayFieldClass(ArrayFieldClass):
     def __init__(self, elem_ft, length):
@@ -427,12 +404,11 @@ class DynamicArrayFieldClass(ArrayFieldClass):
 
     @property
     def length_field_path(self):
-        ptr = native_bt.field_class_dynamic_array_borrow_length_field_path(self._ptr)
+        ptr = native_bt.field_class_dynamic_array_borrow_length_field_path_const(self._ptr)
         if ptr is None:
             return
 
-        native_bt.get(ptr)
-        return bt2.FieldPath._create_from_ptr(ptr)
+        return bt2.FieldPath._create_from_ptr_and_get_ref(ptr)
 
     def _set_length_field_class(self, length_ft):
         utils._check_type(length_ft, _UnsignedIntegerFieldClass)

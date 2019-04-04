@@ -67,13 +67,13 @@ extern uint64_t bt_field_class_enumeration_get_mapping_count(
 
 extern void bt_field_class_unsigned_enumeration_borrow_mapping_by_index_const(
 		const bt_field_class *field_class, uint64_t index,
-		const char **label,
-		const bt_field_class_unsigned_enumeration_mapping_ranges **ranges);
+		const char **BTOUTSTR,
+		const bt_field_class_unsigned_enumeration_mapping_ranges **BTOUTENUMMAPPINGRANGE);
 
 extern void bt_field_class_signed_enumeration_borrow_mapping_by_index_const(
 		const bt_field_class *field_class, uint64_t index,
-		const char **label,
-		const bt_field_class_signed_enumeration_mapping_ranges **ranges);
+		const char **BTOUTSTR,
+		const bt_field_class_signed_enumeration_mapping_ranges **BTOUTENUMMAPPINGRANGE);
 
 extern uint64_t
 bt_field_class_unsigned_enumeration_mapping_ranges_get_range_count(
@@ -86,12 +86,12 @@ bt_field_class_signed_enumeration_mapping_ranges_get_range_count(
 extern void
 bt_field_class_unsigned_enumeration_mapping_ranges_get_range_by_index(
 		const bt_field_class_unsigned_enumeration_mapping_ranges *ranges,
-		uint64_t index, uint64_t *lower, uint64_t *upper);
+		uint64_t index, uint64_t *OUTPUTINIT, uint64_t *OUTPUTINIT);
 
 extern void
 bt_field_class_signed_enumeration_mapping_ranges_get_range_by_index(
 		const bt_field_class_signed_enumeration_mapping_ranges *ranges,
-		uint64_t index, int64_t *lower, int64_t *upper);
+		uint64_t index, int64_t *OUTPUTINIT, int64_t *OUTPUTINIT);
 
 extern bt_field_class_status
 bt_field_class_unsigned_enumeration_get_mapping_labels_by_value(
@@ -110,7 +110,7 @@ extern uint64_t bt_field_class_structure_get_member_count(
 
 extern void bt_field_class_structure_borrow_member_by_index_const(
 		const bt_field_class *struct_field_class, uint64_t index,
-		const char **name, const bt_field_class **field_class);
+		const char **BTOUTSTR, const bt_field_class **BTOUTFC);
 
 extern
 const bt_field_class *
@@ -137,7 +137,7 @@ extern uint64_t bt_field_class_variant_get_option_count(
 
 extern void bt_field_class_variant_borrow_option_by_index_const(
 		const bt_field_class *variant_field_class, uint64_t index,
-		const char **name, const bt_field_class **field_class);
+		const char **BTOUTSTR, const bt_field_class **BTOUTFC);
 
 extern
 const bt_field_class *
