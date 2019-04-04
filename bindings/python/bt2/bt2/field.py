@@ -491,7 +491,9 @@ class _StructureField(_ContainerField, collections.abc.MutableMapping):
 
         field_ptr = native_bt.field_structure_borrow_member_field_by_index(self._ptr, index)
         assert(field_ptr)
-        return _create_field_from_ptr(field_ptr, self._owning_ptr)
+        return _create_field_from_ptr(field_ptr, self._owning_ptr,
+                                      self._owning_ptr_get_func,
+                                      self._owning_ptr_put_func)
 
 
 class _VariantField(_ContainerField, _Field):
@@ -501,7 +503,9 @@ class _VariantField(_ContainerField, _Field):
         field_ptr = native_bt.field_variant_borrow_selected_option_field(self._ptr)
         utils._handle_ptr(field_ptr, "cannot select variant field object's field")
 
-        return _create_field_from_ptr(field_ptr, self._owning_ptr)
+        return _create_field_from_ptr(field_ptr, self._owning_ptr,
+                                      self._owning_ptr_get_func,
+                                      self._owning_ptr_put_func)
 
     @property
     def selected_index(self):
@@ -552,7 +556,9 @@ class _ArrayField(_ContainerField, _Field):
 
         field_ptr = native_bt.field_array_borrow_element_field_by_index(self._ptr, index)
         assert(field_ptr)
-        return _create_field_from_ptr(field_ptr, self._owning_ptr)
+        return _create_field_from_ptr(field_ptr, self._owning_ptr,
+                                      self._owning_ptr_get_func,
+                                      self._owning_ptr_put_func)
 
     def __setitem__(self, index, value):
         # we can only set numbers and strings
