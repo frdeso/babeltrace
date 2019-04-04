@@ -601,6 +601,9 @@ class _UserComponent(metaclass=_UserComponentType):
             if not _NO_PRINT_TRACEBACK:
                 traceback.print_exc()
 
+    def _graph_is_configured_from_native(self):
+        self._graph_is_configured()
+
     def _create_trace_class(self, env=None, uuid=None,
                             assigns_automatic_stream_class_id=None):
         ptr = self._AS_SELF_COMPONENT(self._ptr)

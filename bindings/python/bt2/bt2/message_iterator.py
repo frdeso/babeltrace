@@ -60,8 +60,9 @@ class _GenericMessageIterator(bt2.object._SharedObject, _MessageIterator):
         return bt2.message._create_from_ptr(notif_ptr)
 
 
-class _PrivateConnectionMessageIterator(_GenericMessageIterator):
+class _SelfPortInputMessageIterator(_GenericMessageIterator):
     _GET_NOFICATION_RANGE = native_bt.py3_self_component_port_input_get_msg_range
+
     @property
     def component(self):
         comp_ptr = native_bt.private_connection_message_iterator_get_component(self._ptr)
@@ -96,7 +97,7 @@ class _UserMessageIterator(_MessageIterator):
 
     @property
     def _component(self):
-        return native_bt.py3_get_user_component_from_user_notif_iter(self._ptr)
+        return native_bt.py3_get_user_component_from_user_msg_iter(self._ptr)
 
     @property
     def addr(self):

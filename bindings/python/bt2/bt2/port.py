@@ -142,6 +142,13 @@ class _SelfPort(_Port):
 class _SelfInputPort(_SelfPort, _InputPort):
     _AS_SELF_PORT = native_bt.self_component_port_input_as_self_component_port
 
+    def create_message_iterator(self):
+        msg_iter_ptr = native_bt.self_component_port_input_message_iterator_create(self._ptr)
+        if msg_iter_ptr is None:
+            raise bt2.Error('cannot create message iterator object')
+
+        return bt2.message_iterator._SelfPortInputMessageIterator(msg_iter_ptr)
+
 
 class _SelfOutputPort(_SelfPort, _OutputPort):
     _AS_SELF_PORT = native_bt.self_component_port_output_as_self_component_port

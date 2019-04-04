@@ -28,42 +28,19 @@ import bt2.port
 import bt2
 
 
-class GraphListenerType:
-    PORT_ADDED = 0
-    PORT_REMOVED = 1
-    PORTS_CONNECTED = 2
-    PORTS_DISCONNECTED = 3
-
-
-def _graph_port_added_listener_from_native(user_listener, port_ptr):
-    try:
-        port = bt2.port._create_from_ptr(port_ptr)
-        port._get()
-        user_listener(port)
-    except:
-        pass
-
-
-def _graph_port_removed_listener_from_native(user_listener, port_ptr):
-    try:
-        port = bt2.port._create_from_ptr(port_ptr)
-        port._get()
-        user_listener(port)
-    except:
-        pass
+def _graph_port_added_listener_from_native(user_listener, port_ptr, port_type):
+    port = bt2.port._create_from_ptr_and_get_ref(port_ptr, port_type)
+    user_listener(port)
 
 
 def _graph_ports_connected_listener_from_native(user_listener,
                                                 upstream_port_ptr,
                                                 downstream_port_ptr):
-    try:
-        upstream_port = bt2.port._create_from_ptr(upstream_port_ptr)
-        upstream_port._get()
-        downstream_port = bt2.port._create_from_ptr(downstream_port_ptr)
-        downstream_port._get()
-        user_listener(upstream_port, downstream_port)
-    except:
-        pass
+    upstream_port = bt2.port._create_from_ptr_and_get_ref(
+        upstream_port_ptr, native_bt.PORT_TYPE_OUTPUT)
+    downstream_port = bt2.port._create_from_ptr_and_get_ref(
+        downstream_port_ptr, native_bt.PORT_TYPE_INPUT)
+    user_listener(upstream_port, downstream_port)
 
 
 def _graph_ports_disconnected_listener_from_native(user_listener,
@@ -182,32 +159,31 @@ class Graph(bt2.object._SharedObject):
         assert(conn_ptr)
         return bt2.connection._Connection._create_from_ptr(conn_ptr)
 
-    def add_listener(self, listener_type, listener):
-        if not hasattr(listener, '__call__'):
+    def add_port_added_listener(self, listener):
+        if not callable(listener):
             raise TypeError("'listener' parameter is not callable")
 
-        if listener_type == GraphListenerType.PORT_ADDED:
-            fn = native_bt.py3_graph_add_port_added_listener
-            listener_from_native = functools.partial(_graph_port_added_listener_from_native,
-                                                     listener)
-        elif listener_type == GraphListenerType.PORT_REMOVED:
-            fn = native_bt.py3_graph_add_port_removed_listener
-            listener_from_native = functools.partial(_graph_port_removed_listener_from_native,
-                                                     listener)
-        elif listener_type == GraphListenerType.PORTS_CONNECTED:
-            fn = native_bt.py3_graph_add_ports_connected_listener
-            listener_from_native = functools.partial(_graph_ports_connected_listener_from_native,
-                                                     listener)
-        elif listener_type == GraphListenerType.PORTS_DISCONNECTED:
-            fn = native_bt.py3_graph_add_ports_disconnected_listener
-            listener_from_native = functools.partial(_graph_ports_disconnected_listener_from_native,
-                                                     listener)
-        else:
-            raise TypeError
+        fn = native_bt.py3_graph_add_port_added_listener
+        listener_from_native = functools.partial(_graph_port_added_listener_from_native,
+                                                 listener)
 
-        listener_id = fn(self._ptr, listener_from_native)
-        utils._handle_ret(listener_id, 'cannot add listener to graph object')
-        return bt2._ListenerHandle(listener_id, self)
+        listener_ids = fn(self._ptr, listener_from_native)
+        if listener_ids is None:
+            utils._raise_bt2_error('cannot add listener to graph object')
+        return bt2._ListenerHandle(listener_ids, self)
+
+    def add_ports_connected_listener(self, listener):
+        if not callable(listener):
+            raise TypeError("'listener' parameter is not callable")
+
+        fn = native_bt.py3_graph_add_ports_connected_listener
+        listener_from_native = functools.partial(_graph_ports_connected_listener_from_native,
+                                                 listener)
+
+        listener_ids = fn(self._ptr, listener_from_native)
+        if listener_ids is None:
+            utils._raise_bt2_error('cannot add listener to graph object')
+        return bt2._ListenerHandle(listener_ids, self)
 
     def run(self):
         status = native_bt.graph_run(self._ptr)
