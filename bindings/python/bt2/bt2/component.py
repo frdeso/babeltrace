@@ -256,6 +256,7 @@ _COMP_CLS_TYPE_TO_GENERIC_COMP_CLS_PYCLS = {
     native_bt.COMPONENT_CLASS_TYPE_SINK: _GenericSinkComponentClass,
 }
 
+
 def _create_known_component_from_ptr(ptr, comp_cls_type):
     """Create a component Python object (of type _GenericSourceComponent,
     _GenericFilterComponent or _GenericSinkComponent, depending on
@@ -265,17 +266,13 @@ def _create_known_component_from_ptr(ptr, comp_cls_type):
     return _COMP_CLS_TYPE_TO_GENERIC_COMP_PYCLS[comp_cls_type]._create_from_ptr(ptr)
 
 
-#def _create_generic_component_from_ptr(ptr):
-#    comp_cls_type = native_bt.component_get_class_type(ptr)
-#    return _COMP_CLS_TYPE_TO_GENERIC_COMP_PYCLS[comp_cls_type]._create_from_ptr(ptr)
+def _create_known_component_from_ptr_and_get_ref(ptr, comp_cls_type):
+    return _COMP_CLS_TYPE_TO_GENERIC_COMP_PYCLS[comp_cls_type]._create_from_ptr_and_get_ref(ptr)
 
-
-#def _create_generic_component_class_from_ptr(ptr):
-#    comp_cls_type = native_bt.component_class_get_type(ptr)
-#    return _COMP_CLS_TYPE_TO_GENERIC_COMP_CLS_PYCLS[comp_cls_type]._create_from_ptr(ptr)
 
 def _create_known_component_class_from_ptr_and_get_ref(ptr, comp_cls_type):
     return _COMP_CLS_TYPE_TO_GENERIC_COMP_CLS_PYCLS[comp_cls_type]._create_from_ptr_and_get_ref(ptr)
+
 
 def _trim_docstring(docstring):
     lines = docstring.expandtabs().splitlines()

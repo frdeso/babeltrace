@@ -197,75 +197,80 @@ static void graph_listener_removed(void *py_callable)
 }
 
 static void
-port_added_listener(const bt_component *component, const bt_port *port,
-		    bt_port_type port_type, void *py_callable)
+port_added_listener(
+	const void *component,
+	bt_component_class_type component_class_type,
+	swig_type_info *component_swig_type,
+	const void *port,
+	bt_port_type port_type,
+	swig_type_info *port_swig_type,
+	void *py_callable)
 {
+	PyObject *py_component_ptr = NULL;
 	PyObject *py_port_ptr = NULL;
 	PyObject *py_res = NULL;
 
-	swig_type_info *port_swig_type = NULL;
-	switch (port_type) {
-	case BT_PORT_TYPE_INPUT:
-		port_swig_type = SWIGTYPE_p_bt_port_input;
-		break;
-	case BT_PORT_TYPE_OUTPUT:
-		port_swig_type = SWIGTYPE_p_bt_port_output;
-		break;
+	py_component_ptr = SWIG_NewPointerObj(SWIG_as_voidptr(component), component_swig_type, 0);
+	if (!py_component_ptr) {
+		BT_LOGF_STR("Failed to create component SWIG pointer object.");
+		goto end;
 	}
-	BT_ASSERT(port_swig_type != NULL);
 
-	py_port_ptr = SWIG_NewPointerObj(SWIG_as_voidptr(port),
-		port_swig_type, 0);
+	py_port_ptr = SWIG_NewPointerObj(SWIG_as_voidptr(port), port_swig_type, 0);
 	if (!py_port_ptr) {
-		BT_LOGF_STR("Failed to create a SWIG pointer object.");
-		abort();
+		BT_LOGF_STR("Failed to create port SWIG pointer object.");
+		goto end;
 	}
 
-	py_res = PyObject_CallFunction(py_callable, "(Oi)", py_port_ptr, port_type);
+	py_res = PyObject_CallFunction(py_callable, "(OiOi)",
+		py_component_ptr, component_class_type, py_port_ptr, port_type);
 	if (!py_res) {
 		bt2_py_loge_exception();
 		PyErr_Clear();
 	} else {
 		BT_ASSERT(py_res == Py_None);
 	}
-	Py_DECREF(py_port_ptr);
+
+end:
 	Py_XDECREF(py_res);
+	Py_XDECREF(py_port_ptr);
+	Py_XDECREF(py_component_ptr);
 }
 
 static void
 source_component_output_port_added_listener(const bt_component_source *component_source,
 					    const bt_port_output *port_output, void *py_callable)
 {
-	const bt_component *component = bt_component_source_as_component_const(component_source);
-	const bt_port *port = bt_port_output_as_port_const(port_output);
-	port_added_listener(component, port, BT_PORT_TYPE_OUTPUT, py_callable);
+	port_added_listener(
+		component_source, BT_COMPONENT_CLASS_TYPE_SOURCE, SWIGTYPE_p_bt_component_source,
+		port_output, BT_PORT_TYPE_OUTPUT, SWIGTYPE_p_bt_port_output, py_callable);
 }
 
 static void
 filter_component_input_port_added_listener(const bt_component_filter *component_filter,
 					   const bt_port_input *port_input, void *py_callable)
 {
-	const bt_component *component = bt_component_filter_as_component_const(component_filter);
-	const bt_port *port = bt_port_input_as_port_const(port_input);
-	port_added_listener(component, port, BT_PORT_TYPE_INPUT, py_callable);
+	port_added_listener(
+		component_filter, BT_COMPONENT_CLASS_TYPE_FILTER, SWIGTYPE_p_bt_component_filter,
+		port_input, BT_PORT_TYPE_INPUT, SWIGTYPE_p_bt_port_input, py_callable);
 }
 
 static void
 filter_component_output_port_added_listener(const bt_component_filter *component_filter,
 					    const bt_port_output *port_output, void *py_callable)
 {
-	const bt_component *component = bt_component_filter_as_component_const(component_filter);
-	const bt_port *port = bt_port_output_as_port_const(port_output);
-	port_added_listener(component, port, BT_PORT_TYPE_OUTPUT, py_callable);
+	port_added_listener(
+		component_filter, BT_COMPONENT_CLASS_TYPE_FILTER, SWIGTYPE_p_bt_component_filter,
+		 port_output, BT_PORT_TYPE_OUTPUT, SWIGTYPE_p_bt_port_output, py_callable);
 }
 
 static void
 sink_component_input_port_added_listener(const bt_component_sink *component_sink,
 					 const bt_port_input *port_input, void *py_callable)
 {
-	const bt_component *component = bt_component_sink_as_component_const(component_sink);
-	const bt_port *port = bt_port_input_as_port_const(port_input);
-	port_added_listener(component, port, BT_PORT_TYPE_INPUT, py_callable);
+	port_added_listener(
+		component_sink, BT_COMPONENT_CLASS_TYPE_SINK, SWIGTYPE_p_bt_component_sink,
+		port_input,  BT_PORT_TYPE_INPUT, SWIGTYPE_p_bt_port_input, py_callable);
 }
 
 static PyObject *

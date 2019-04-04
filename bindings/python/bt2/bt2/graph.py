@@ -28,9 +28,10 @@ import bt2.port
 import bt2
 
 
-def _graph_port_added_listener_from_native(user_listener, port_ptr, port_type):
+def _graph_port_added_listener_from_native(user_listener, component_ptr, component_type, port_ptr, port_type):
+    component = bt2.component._create_known_component_from_ptr_and_get_ref(component_ptr, component_type)
     port = bt2.port._create_from_ptr_and_get_ref(port_ptr, port_type)
-    user_listener(port)
+    user_listener(component, port)
 
 
 def _graph_ports_connected_listener_from_native(user_listener,
