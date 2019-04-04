@@ -77,7 +77,7 @@ extern bt_event *bt_message_event_borrow_event(
 
 extern bt_clock_snapshot_state
 bt_message_message_iterator_inactivity_borrow_default_clock_snapshot_const(
-		const bt_message *msg, const bt_clock_snapshot **snapshot);
+		const bt_message *msg, const bt_clock_snapshot **BTOUTCLOCKSNAPSHOT);
 
 /* From message-message-iterator-inactivity.h */
 
@@ -184,7 +184,7 @@ typedef enum bt_message_stream_activity_clock_snapshot_state {
 
 extern bt_message_stream_activity_clock_snapshot_state
 bt_message_stream_activity_beginning_borrow_default_clock_snapshot_const(
-		const bt_message *msg, const bt_clock_snapshot **snapshot);
+		const bt_message *msg, const bt_clock_snapshot **BTOUTCLOCKSNAPSHOT);
 
 extern const bt_clock_class *
 bt_message_stream_activity_beginning_borrow_stream_class_default_clock_class_const(
@@ -214,7 +214,7 @@ extern void bt_message_stream_activity_beginning_set_default_clock_snapshot(
 
 extern bt_message_stream_activity_clock_snapshot_state
 bt_message_stream_activity_end_borrow_default_clock_snapshot_const(
-		const bt_message *msg, const bt_clock_snapshot **snapshot);
+		const bt_message *msg, const bt_clock_snapshot **BTOUTCLOCKSNAPSHOT);
 
 extern const bt_clock_class *
 bt_message_stream_activity_end_borrow_stream_class_default_clock_class_const(

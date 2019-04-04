@@ -5,27 +5,8 @@ import copy
 import bt2
 
 
-@unittest.skip("this is broken")
-class AllMessageTestCase(unittest.TestCase):
+class AllMessagesTestCase(unittest.TestCase):
     def setUp(self):
-        _trace = bt2.Trace()
-        _cc = bt2.ClockClass()
-        _sc = _trace.create_stream_class(default_clock_class=_cc)
-        self._event_class = _sc.create_event_class()
-        self._event_class.name = 'salut'
-        _my_int_ft = bt2.SignedIntegerFieldType(32)
-        payload_ft = bt2.StructureFieldType()
-        payload_ft += collections.OrderedDict([
-            ('my_int', _my_int_ft),
-        ])
-        self._event_class.payload_field_class = payload_ft
-        self._stream = _sc()
-        self._packet = self._stream.create_packet()
-
-        # Create variable proxies to access those from the inner classes.
-        stream = self._stream
-        packet = self._packet
-        event_class = self._event_class
 
         class MyIter(bt2._UserMessageIterator):
             def __init__(self):
@@ -33,58 +14,93 @@ class AllMessageTestCase(unittest.TestCase):
 
             def __next__(self):
                 if self._at == 0:
-                    notif = self._create_stream_beginning_message(stream)
-                    notif.default_clock_value = self._at
+                    msg = self._create_stream_beginning_message(test_obj._stream)
                 elif self._at == 1:
-                    notif = self._create_packet_beginning_message(packet)
+                    msg = self._create_stream_activity_beginning_message(test_obj._stream, default_clock_snapshot=self._at)
                 elif self._at == 2:
-                    notif = self._create_event_message(event_class, packet)
+                    msg = self._create_packet_beginning_message(test_obj._packet, self._at)
                 elif self._at == 3:
-                    notif = self._create_inactivity_message(_cc)
-                    notif.default_clock_value = self._at
+                    msg = self._create_event_message(test_obj._event_class, test_obj._packet, self._at)
                 elif self._at == 4:
-                    notif = self._create_packet_end_message(packet)
+                    msg = self._create_inactivity_message(test_obj._clock_class, self._at)
                 elif self._at == 5:
-                    notif = self._create_stream_end_message(stream)
-                    notif.default_clock_value = self._at
-                elif self._at >= 6:
+                    msg = self._create_packet_end_message(test_obj._packet, self._at)
+                elif self._at == 6:
+                    msg = self._create_stream_activity_end_message(test_obj._stream, default_clock_snapshot=self._at)
+                elif self._at == 7:
+                    msg = self._create_stream_end_message(test_obj._stream)
+                elif self._at >= 8:
                     raise bt2.Stop
 
                 self._at += 1
-                return notif
-
+                return msg
 
         class MySrc(bt2._UserSourceComponent, message_iterator_class=MyIter):
             def __init__(self, params):
                 self._add_output_port('out')
 
+                tc = self._create_trace_class()
+                cc = self._create_clock_class()
+                sc = tc.create_stream_class(default_clock_class=cc)
+
+                # Create payload field class
+                my_int_fc = tc.create_signed_integer_field_class(32)
+                payload_fc = tc.create_structure_field_class()
+                payload_fc += collections.OrderedDict([
+                    ('my_int', my_int_fc),
+                ])
+
+                ec = sc.create_event_class(name='salut', payload_field_class=payload_fc)
+
+                trace = tc()
+                stream = trace.create_stream(sc)
+                packet = stream.create_packet()
+
+                test_obj._trace = trace
+                test_obj._stream = stream
+                test_obj._packet = packet
+                test_obj._event_class = ec
+                test_obj._clock_class = cc
+
+        test_obj = self
         self._graph = bt2.Graph()
-        self._src_comp = self._graph.add_component(MySrc, 'my_source')
-        self._notif_iter = self._src_comp.output_ports['out'].create_message_iterator()
+        self._src_comp = self._graph.add_source_component(MySrc, 'my_source')
+        self._msg_iter = self._graph.create_output_port_message_iterator(self._src_comp.output_ports['out'])
 
     def tearDown(self):
         del self._graph
         del self._src_comp
-        del self._notif_iter
+        del self._msg_iter
         del self._event_class
         del self._packet
         del self._stream
 
-    def test_all_notif(self):
-        for i, notif in enumerate(self._notif_iter):
+    def test_all_msg(self):
+        for i, msg in enumerate(self._msg_iter):
             if i == 0:
-                self.assertEqual(notif.stream.addr, self._stream.addr)
-                self.assertEqual(notif.default_clock_value, i)
+                self.assertIsInstance(msg, bt2.message._StreamBeginningMessage)
+                self.assertEqual(msg.stream.addr, self._stream.addr)
             elif i == 1:
-                self.assertEqual(notif.packet.addr, self._packet.addr)
+                self.assertIsInstance(msg, bt2.message._StreamActivityBeginningMessage)
+                self.assertEqual(msg.default_clock_snapshot, i)
             elif i == 2:
-                self.assertEqual(notif.event.event_class.addr, self._event_class.addr)
+                self.assertIsInstance(msg, bt2.message._PacketBeginningMessage)
+                self.assertEqual(msg.packet.addr, self._packet.addr)
             elif i == 3:
-                self.assertEqual(notif.default_clock_value, i)
+                self.assertIsInstance(msg, bt2.message._EventMessage)
+                self.assertEqual(msg.event.event_class.addr, self._event_class.addr)
             elif i == 4:
-                self.assertEqual(notif.packet.addr, self._packet.addr)
+                self.assertIsInstance(msg, bt2.message._InactivityMessage)
+                self.assertEqual(msg.default_clock_snapshot, i)
             elif i == 5:
-                self.assertEqual(notif.stream.addr, self._stream.addr)
-                self.assertEqual(notif.default_clock_value, i)
+                self.assertIsInstance(msg, bt2.message._PacketEndMessage)
+                self.assertEqual(msg.packet.addr, self._packet.addr)
+            elif i == 6:
+                self.assertIsInstance(msg, bt2.message._StreamActivityEndMessage)
+                self.assertEqual(msg.stream.addr, self._stream.addr)
+                self.assertEqual(msg.default_clock_snapshot, i)
+            elif i == 7:
+                self.assertIsInstance(msg, bt2.message._StreamEndMessage)
+                self.assertEqual(msg.stream.addr, self._stream.addr)
             else:
                 raise Exception()

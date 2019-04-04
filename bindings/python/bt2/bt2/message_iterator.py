@@ -127,17 +127,23 @@ class _UserMessageIterator(_MessageIterator):
     def _create_event_message(self, event_class, packet, default_clock_snapshot=None):
         return bt2.message._EventMessage(self, event_class, packet, default_clock_snapshot)
 
-    def _create_inactivity_message(self, clock_class):
-        return bt2.message._InactivityMessage(self, clock_class);
+    def _create_inactivity_message(self, clock_class, clock_snapshot):
+        return bt2.message._InactivityMessage(self, clock_class, clock_snapshot)
 
     def _create_stream_beginning_message(self, stream):
-        return bt2.message._StreamBeginningMessage(self, stream);
+        return bt2.message._StreamBeginningMessage(self, stream)
+
+    def _create_stream_activity_beginning_message(self, stream, default_clock_snapshot=None):
+        return bt2.message._StreamActivityBeginningMessage(self, stream, default_clock_snapshot)
+
+    def _create_stream_activity_end_message(self, stream, default_clock_snapshot=None):
+        return bt2.message._StreamActivityEndMessage(self, stream, default_clock_snapshot)
 
     def _create_stream_end_message(self, stream):
-        return bt2.message._StreamEndMessage(self, stream);
+        return bt2.message._StreamEndMessage(self, stream)
 
     def _create_packet_beginning_message(self, packet, default_clock_snapshot=None):
         return bt2.message._PacketBeginningMessage(self, packet, default_clock_snapshot)
 
-    def _create_packet_end_message(self, packet):
-        return bt2.message._PacketEndMessage(self, packet);
+    def _create_packet_end_message(self, packet, default_clock_snapshot=None):
+        return bt2.message._PacketEndMessage(self, packet, default_clock_snapshot)

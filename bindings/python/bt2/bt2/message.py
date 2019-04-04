@@ -32,13 +32,12 @@ import bt2
 
 
 def _create_from_ptr(ptr):
-    notif_type = native_bt.message_get_type(ptr)
-    cls = None
+    msg_type = native_bt.message_get_type(ptr)
 
-    if notif_type not in _NOTIF_TYPE_TO_CLS:
-        raise bt2.Error('unknown message type: {}'.format(notif_type))
+    if msg_type not in _MESSAGE_TYPE_TO_CLS:
+        raise bt2.Error('unknown message type: {}'.format(msg_type))
 
-    return _NOTIF_TYPE_TO_CLS[notif_type]._create_from_ptr(ptr)
+    return _MESSAGE_TYPE_TO_CLS[msg_type]._create_from_ptr(ptr)
 
 
 class _Message(object._SharedObject):
@@ -132,17 +131,33 @@ class _PacketBeginningMessage(_Message):
 
     @property
     def packet(self):
-        packet_ptr = native_bt.message_packet_begin_get_packet(self._ptr)
-        assert(packet_ptr)
-        return bt2.packet._Packet._create_from_ptr(packet_ptr)
+        packet_ptr = native_bt.message_packet_beginning_borrow_packet(self._ptr)
+        assert packet_ptr
+        return bt2.packet._Packet._create_from_ptr_and_get_ref(packet_ptr)
 
 
 class _PacketEndMessage(_Message):
     _TYPE = native_bt.MESSAGE_TYPE_PACKET_END
 
-    def __init__(self, priv_conn_priv_iter, packet):
+    def __init__(self, priv_conn_priv_iter, packet, default_clock_snapshot):
         utils._check_type(packet, bt2.packet._Packet)
-        ptr = native_bt.message_packet_end_create(priv_conn_priv_iter._ptr, packet._ptr)
+        has_default_clock_class = packet.stream.stream_class.default_clock_class is not None
+
+        if has_default_clock_class and default_clock_snapshot is None:
+            raise bt2.Error(
+                '_PacketEndMessage: stream class has a default clock class, default_clock_snapshot should not be None')
+
+        if not has_default_clock_class and default_clock_snapshot is not None:
+            raise bt2.Error(
+                '_PacketEndMessage: stream class has no default clock class, default_clock_snapshot should be None')
+
+        if has_default_clock_class:
+            utils._check_uint64(default_clock_snapshot)
+            ptr = native_bt.message_packet_end_create_with_default_clock_snapshot(
+                priv_conn_priv_iter._ptr, packet._ptr, default_clock_snapshot)
+        else:
+            ptr = native_bt.message_packet_end_create(
+                priv_conn_priv_iter._ptr, packet._ptr)
 
         if ptr is None:
             raise bt2.CreationError('cannot create packet end message object')
@@ -151,9 +166,9 @@ class _PacketEndMessage(_Message):
 
     @property
     def packet(self):
-        packet_ptr = native_bt.message_packet_end_get_packet(self._ptr)
-        assert(packet_ptr)
-        return bt2.packet._Packet._create_from_ptr(packet_ptr)
+        packet_ptr = native_bt.message_packet_end_borrow_packet(self._ptr)
+        assert packet_ptr
+        return bt2.packet._Packet._create_from_ptr_and_get_ref(packet_ptr)
 
 
 class _StreamBeginningMessage(_Message):
@@ -171,9 +186,9 @@ class _StreamBeginningMessage(_Message):
 
     @property
     def stream(self):
-        stream_ptr = native_bt.message_stream_begin_get_stream(self._ptr)
-        assert(stream_ptr)
-        return bt2.stream._create_stream_from_ptr(stream_ptr)
+        stream_ptr = native_bt.message_stream_beginning_borrow_stream(self._ptr)
+        assert stream_ptr
+        return bt2.stream._Stream._create_from_ptr_and_get_ref(stream_ptr)
 
     @property
     def default_clock_snapshot(self):
@@ -190,6 +205,108 @@ class _StreamBeginningMessage(_Message):
         utils._handle_ret(ret, "cannot set stream begin message clock value")
 
 
+class _StreamActivityBeginningMessage(_Message):
+    _TYPE = native_bt.MESSAGE_TYPE_STREAM_ACTIVITY_BEGINNING
+
+    def __init__(self, self_msg_iter, stream, default_clock_snapshot):
+        utils._check_type(stream, bt2.stream._Stream)
+        ptr = native_bt.message_stream_activity_beginning_create(
+            self_msg_iter._ptr, stream._ptr)
+
+        if ptr is None:
+            raise bt2.CreationError(
+                'cannot create stream activity beginning message object')
+
+        super().__init__(ptr)
+
+        if default_clock_snapshot is not None:
+            self._default_clock_snapshot = default_clock_snapshot
+
+    @property
+    def default_clock_snapshot(self):
+        if self.stream.stream_class.default_clock_class is None:
+            return None
+
+        status, snapshot_ptr = native_bt.message_stream_activity_beginning_borrow_default_clock_snapshot_const(
+            self._ptr)
+
+        if status == native_bt.MESSAGE_STREAM_ACTIVITY_CLOCK_SNAPSHOT_STATE_UNKNOWN:
+            return
+
+        assert snapshot_ptr is not None
+
+        # TODO: Is it really possible that the above returns KNOWN, but a None snapshot_ptr?s
+        if snapshot_ptr is None:
+            return
+
+        return bt2.clock_snapshot._ClockSnapshot._create_from_ptr(snapshot_ptr, self._ptr,
+                                                                  self._GET_REF_FUNC,
+                                                                  self._PUT_REF_FUNC)
+
+    def _default_clock_snapshot(self, value):
+        native_bt.message_stream_activity_beginning_set_default_clock_snapshot(
+            self._ptr, value)
+
+    _default_clock_snapshot = property(fset=_default_clock_snapshot)
+
+    @property
+    def stream(self):
+        stream_ptr = native_bt.message_stream_activity_beginning_borrow_stream(self._ptr)
+        assert stream_ptr
+        return bt2.stream._Stream._create_from_ptr_and_get_ref(stream_ptr)
+
+
+class _StreamActivityEndMessage(_Message):
+    _TYPE = native_bt.MESSAGE_TYPE_STREAM_ACTIVITY_END
+
+    def __init__(self, self_msg_iter, stream, default_clock_snapshot):
+        utils._check_type(stream, bt2.stream._Stream)
+        ptr = native_bt.message_stream_activity_end_create(
+            self_msg_iter._ptr, stream._ptr)
+
+        if ptr is None:
+            raise bt2.CreationError(
+                'cannot create stream activity end message object')
+
+        super().__init__(ptr)
+
+        if default_clock_snapshot is not None:
+            self._default_clock_snapshot = default_clock_snapshot
+
+    @property
+    def default_clock_snapshot(self):
+        if self.stream.stream_class.default_clock_class is None:
+            return None
+
+        status, snapshot_ptr = native_bt.message_stream_activity_end_borrow_default_clock_snapshot_const(
+            self._ptr)
+
+        if status == native_bt.MESSAGE_STREAM_ACTIVITY_CLOCK_SNAPSHOT_STATE_UNKNOWN:
+            return
+
+        assert snapshot_ptr is not None
+
+        # TODO: Is it really possible that the above returns KNOWN, but a None snapshot_ptr?s
+        if snapshot_ptr is None:
+            return
+
+        return bt2.clock_snapshot._ClockSnapshot._create_from_ptr(snapshot_ptr, self._ptr,
+                                                                  self._GET_REF_FUNC,
+                                                                  self._PUT_REF_FUNC)
+
+    def _default_clock_snapshot(self, value):
+        native_bt.message_stream_activity_end_set_default_clock_snapshot(
+            self._ptr, value)
+
+    _default_clock_snapshot = property(fset=_default_clock_snapshot)
+
+    @property
+    def stream(self):
+        stream_ptr = native_bt.message_stream_activity_end_borrow_stream(self._ptr)
+        assert stream_ptr
+        return bt2.stream._Stream._create_from_ptr_and_get_ref(stream_ptr)
+
+
 class _StreamEndMessage(_Message):
     _TYPE = native_bt.MESSAGE_TYPE_STREAM_END
 
@@ -204,9 +321,9 @@ class _StreamEndMessage(_Message):
 
     @property
     def stream(self):
-        stream_ptr = native_bt.message_stream_end_get_stream(self._ptr)
-        assert(stream_ptr)
-        return bt2.stream._create_stream_from_ptr(stream_ptr)
+        stream_ptr = native_bt.message_stream_end_borrow_stream(self._ptr)
+        assert stream_ptr
+        return bt2.stream._Stream._create_from_ptr_and_get_ref(stream_ptr)
 
     @property
     def default_clock_snapshot(self):
@@ -226,8 +343,9 @@ class _StreamEndMessage(_Message):
 class _InactivityMessage(_Message):
     _TYPE = native_bt.MESSAGE_TYPE_MESSAGE_ITERATOR_INACTIVITY
 
-    def __init__(self, priv_conn_priv_iter, clock_class):
-        ptr = native_bt.message_inactivity_create(priv_conn_priv_iter._ptr, clock_class._ptr)
+    def __init__(self, priv_conn_priv_iter, clock_class, clock_snapshot):
+        ptr = native_bt.message_message_iterator_inactivity_create(
+            priv_conn_priv_iter._ptr, clock_class._ptr, clock_snapshot)
 
         if ptr is None:
             raise bt2.CreationError('cannot create inactivity message object')
@@ -236,24 +354,37 @@ class _InactivityMessage(_Message):
 
     @property
     def default_clock_snapshot(self):
-        value_ptr = native_bt.message_inactivity_borrow_default_clock_snapshot(self._ptr)
+        status, snapshot_ptr = native_bt.message_message_iterator_inactivity_borrow_default_clock_snapshot_const(self._ptr)
 
-        if value_ptr is None:
-            return
+        assert status == native_bt.CLOCK_SNAPSHOT_STATE_KNOWN
+        assert snapshot_ptr is not None
 
-        return bt2.clock_snapshot._ClockSnapshot._create_from_ptr(value_ptr, self._ptr)
+        return bt2.clock_snapshot._ClockSnapshot._create_from_ptr(snapshot_ptr, self._ptr,
+                                                                  self._GET_REF_FUNC,
+                                                                  self._PUT_REF_FUNC)
 
     @default_clock_snapshot.setter
     def default_clock_snapshot(self, value):
         ret = native_bt.message_inactivity_set_default_clock_snapshot(self._ptr, value)
         utils._handle_ret(ret, "cannot set stream end message clock value")
 
+class _DiscardedEventsMessage(_Message):
+    pass
 
-_NOTIF_TYPE_TO_CLS = {
+
+class _DiscardedPacketsMessage(_Message):
+    pass
+
+
+_MESSAGE_TYPE_TO_CLS = {
     native_bt.MESSAGE_TYPE_EVENT: _EventMessage,
-    native_bt.MESSAGE_TYPE_PACKET_BEGINNING: _PacketBeginningMessage,
-    native_bt.MESSAGE_TYPE_PACKET_END: _PacketEndMessage,
+    native_bt.MESSAGE_TYPE_MESSAGE_ITERATOR_INACTIVITY: _InactivityMessage,
     native_bt.MESSAGE_TYPE_STREAM_BEGINNING: _StreamBeginningMessage,
     native_bt.MESSAGE_TYPE_STREAM_END: _StreamEndMessage,
-    native_bt.MESSAGE_TYPE_MESSAGE_ITERATOR_INACTIVITY: _InactivityMessage,
+    native_bt.MESSAGE_TYPE_PACKET_BEGINNING: _PacketBeginningMessage,
+    native_bt.MESSAGE_TYPE_PACKET_END: _PacketEndMessage,
+    native_bt.MESSAGE_TYPE_STREAM_ACTIVITY_BEGINNING: _StreamActivityBeginningMessage,
+    native_bt.MESSAGE_TYPE_STREAM_ACTIVITY_END: _StreamActivityEndMessage,
+    native_bt.MESSAGE_TYPE_DISCARDED_EVENTS: _DiscardedEventsMessage,
+    native_bt.MESSAGE_TYPE_DISCARDED_PACKETS: _DiscardedPacketsMessage,
 }
