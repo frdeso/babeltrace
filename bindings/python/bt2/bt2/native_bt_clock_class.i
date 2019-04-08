@@ -53,7 +53,7 @@ extern bt_uuid bt_clock_class_get_uuid(
 
 extern bt_clock_class_status bt_clock_class_cycles_to_ns_from_origin(
 		const bt_clock_class *clock_class,
-		uint64_t cycles, int64_t *ns_from_origin);
+		uint64_t cycles, int64_t *OUTPUTINIT);
 
 extern void bt_clock_class_get_ref(const bt_clock_class *clock_class);
 

@@ -163,3 +163,9 @@ class ClockClass(bt2.object._SharedObject):
         native_bt.clock_class_set_uuid(self._ptr, uuid.bytes)
 
     _uuid = property(fset=_uuid)
+
+    def cycles_to_ns_from_origin(self, cycles):
+        utils._check_uint64(cycles)
+        ret, ns = native_bt.clock_class_cycles_to_ns_from_origin(self._ptr, cycles)
+        utils._handle_ret(ret, "cannot convert cycles to nanoseconds from origin for given clock class")
+        return ns
