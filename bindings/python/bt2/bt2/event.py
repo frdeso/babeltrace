@@ -144,20 +144,3 @@ class _Event(bt2.object._UniqueObject):
             return pkt_context_field[key]
 
         raise KeyError(key)
-
-    @property
-    def default_clock_snapshot(self):
-        status, value_ptr = native_bt.event_borrow_default_clock_snapshot(self._ptr)
-
-        if status is native_bt.CLOCK_SNAPSHOT_STATUS_UNKNOWN:
-            return
-
-        if value_ptr is None:
-            return
-
-        return bt2.clock_snapshot._ClockSnapshot._create_from_ptr(value_ptr, self._owning_ptr)
-
-    @default_clock_snapshot.setter
-    def default_clock_snapshot(self, value):
-        ret = native_bt.event_set_default_clock_snapshot(self._ptr, value);
-        utils._handle_ret(ret, "cannot set event default clock value")
