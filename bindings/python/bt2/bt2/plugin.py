@@ -33,7 +33,7 @@ def find_plugins(path, recurse=True):
     plugin_set_ptr = None
 
     if os.path.isfile(path):
-        plugin_set_ptr = native_bt.plugin_create_all_from_file(path)
+        plugin_set_ptr = native_bt.plugin_find_all_from_file(path)
     elif os.path.isdir(path):
         plugin_set_ptr = native_bt.plugin_find_all_from_dir(path, int(recurse))
 

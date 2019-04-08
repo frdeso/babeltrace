@@ -37,6 +37,11 @@ class FindPluginsTestCase(unittest.TestCase):
         pset = bt2.find_plugins(_TEST_PLUGIN_PLUGINS_PATH)
         self.assertTrue(len(pset) >= 3)
 
+    def test_find_file(self):
+        path = os.path.join(_TEST_PLUGIN_PLUGINS_PATH, 'utils', '.libs', 'babeltrace-plugin-utils.so')
+        pset = bt2.find_plugins(path)
+        self.assertTrue(len(pset) == 1))
+
 
 class FindPluginTestCase(unittest.TestCase):
     def test_find_none(self):
