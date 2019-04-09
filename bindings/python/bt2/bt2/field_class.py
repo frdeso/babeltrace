@@ -41,6 +41,7 @@ class IntegerDisplayBase:
     DECIMAL = native_bt.FIELD_CLASS_INTEGER_PREFERRED_DISPLAY_BASE_DECIMAL
     HEXADECIMAL = native_bt.FIELD_CLASS_INTEGER_PREFERRED_DISPLAY_BASE_HEXADECIMAL
 
+
 class _FieldClass(object._SharedObject):
     _GET_REF_FUNC = native_bt.field_class_get_ref
     _PUT_REF_FUNC = native_bt.field_class_put_ref
@@ -134,7 +135,7 @@ class _EnumerationFieldClassMapping(collections.abc.Set):
             self._range_count = native_bt.field_class_signed_enumeration_mapping_ranges_get_range_count(self._mapping_ptr)
         else:
             self._range_count = native_bt.field_class_unsigned_enumeration_mapping_ranges_get_range_count(self._mapping_ptr)
-    
+
     @property
     def label(self):
         return self._label
@@ -158,6 +159,7 @@ class _EnumerationFieldClassMapping(collections.abc.Set):
             lower, upper = mapping_ranges_get_range_by_index_fn(self._mapping_ptr, idx)
             yield _EnumerationFieldClassMappingRange(lower, upper)
 
+
 class _EnumerationFieldClass(_IntegerFieldClass, collections.abc.Mapping):
     def __len__(self):
         return native_bt.field_class_enumeration_get_mapping_count(self._ptr)
@@ -179,15 +181,18 @@ class _EnumerationFieldClass(_IntegerFieldClass, collections.abc.Mapping):
 
         map_range_fn(self._ptr, label, lower, upper)
 
-
     def labels_by_value(self, value):
-        labels = []
-        for curr_mapping in self:
-            for curr_range in curr_mapping:
-                if value >= curr_range.lower and value <= curr_range.upper:
-                    labels.append(curr_mapping.label)
-        return labels
+        if self._is_signed:
+            utils._check_int64(value)
+            get_mapping_labels_fn = native_bt.field_class_signed_enumeration_get_mapping_labels_by_value
+        else:
+            utils._check_uint64(value)
+            get_mapping_labels_fn = native_bt.field_class_unsigned_enumeration_get_mapping_labels_by_value
 
+        ret, labels = get_mapping_labels_fn(self._ptr, value);
+        utils._handle_ret(ret, "cannot get mapping labels for {}".format(self._NAME.lower()))
+
+        return labels
 
     def __iter__(self):
         if self._is_signed:
@@ -201,7 +206,6 @@ class _EnumerationFieldClass(_IntegerFieldClass, collections.abc.Mapping):
 
     def __getitem__(self, key):
         utils._check_str(key)
-        
         for mapping in self:
             if mapping.label in key:
                 return mapping

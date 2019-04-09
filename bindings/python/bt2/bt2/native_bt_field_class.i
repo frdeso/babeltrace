@@ -96,14 +96,14 @@ bt_field_class_signed_enumeration_mapping_ranges_get_range_by_index(
 extern bt_field_class_status
 bt_field_class_unsigned_enumeration_get_mapping_labels_by_value(
 		const bt_field_class *field_class, uint64_t value,
-		bt_field_class_enumeration_mapping_label_array *label_array,
-		uint64_t *count);
+		bt_field_class_enumeration_mapping_label_array *LABELARRAY,
+		uint64_t *LABELCOUNT);
 
 extern bt_field_class_status
 bt_field_class_signed_enumeration_get_mapping_labels_by_value(
 		const bt_field_class *field_class, int64_t value,
-		bt_field_class_enumeration_mapping_label_array *label_array,
-		uint64_t *count);
+		bt_field_class_enumeration_mapping_label_array *LABELARRAY,
+		uint64_t *LABELCOUNT);
 
 extern uint64_t bt_field_class_structure_get_member_count(
 		const bt_field_class *field_class);

@@ -195,6 +195,27 @@ typedef int bt_bool;
 	}
 }
 
+%typemap(in, numinputs=0)
+	(bt_field_class_enumeration_mapping_label_array *LABELARRAY, uint64_t *LABELCOUNT)
+	(bt_field_class_enumeration_mapping_label_array temp_value, uint64_t temp_label_count = 0) {
+	$1 = &temp_value;
+	$2 = &temp_label_count;
+}
+
+%typemap(argout) (bt_field_class_enumeration_mapping_label_array *LABELARRAY, uint64_t *LABELCOUNT) {
+	if (*$1) {
+		PyObject *py_label_list = PyList_New(*$2);
+		for (int i = 0; i < *$2; i++) {
+			PyList_SET_ITEM(py_label_list, i, PyUnicode_FromString((*$1)[i]));
+		}
+
+		$result = SWIG_Python_AppendOutput($result, py_label_list);
+	} else {
+		Py_INCREF(Py_None);
+		$result = SWIG_Python_AppendOutput($result, Py_None);
+	}
+}
+
 /* Output argument typemap for value output (always appends) */
 %typemap(in, numinputs=0) const bt_field_class_signed_enumeration_mapping_ranges **BTOUTENUMMAPPINGRANGE (bt_field_class_signed_enumeration_mapping_ranges *temp_value = NULL) {
 	$1 = &temp_value;
