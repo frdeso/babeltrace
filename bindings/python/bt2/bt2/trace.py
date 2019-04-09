@@ -227,7 +227,7 @@ class Trace(object._SharedObject, collections.abc.Sequence):
         if automatic_stream_id is not None:
             sc.assigns_automatic_stream_id = automatic_stream_id
 
-        return sc 
+        return sc
 
     @property
     def name(self):
@@ -310,34 +310,3 @@ class Trace(object._SharedObject, collections.abc.Sequence):
     @property
     def streams(self):
         return _TraceStreams(self)
-
-    @property
-    def packet_header_field_class(self):
-        ft_ptr = native_bt.trace_borrow_packet_header_field_class(self._ptr)
-
-        if ft_ptr is None:
-            return
-        native_bt.get(ft_ptr)
-
-        return bt2.field_class._create_field_class_from_ptr(ft_ptr)
-
-    @packet_header_field_class.setter
-    def packet_header_field_class(self, packet_header_field_class):
-        packet_header_field_class_ptr = None
-
-        if packet_header_field_class is not None:
-            utils._check_type(packet_header_field_class, field_class._FieldClass)
-            packet_header_field_class_ptr = packet_header_field_class._ptr
-
-        ret = native_bt.trace_set_packet_header_field_class(self._ptr,
-                                                     packet_header_field_class_ptr)
-        utils._handle_ret(ret, "cannot set trace class object's packet header field type")
-
-    @property
-    def is_static(self):
-        is_static = native_bt.trace_is_static(self._ptr)
-        return is_static > 0
-
-    def make_static(self):
-        ret = native_bt.trace_make_static(self._ptr)
-        utils._handle_ret(ret, "cannot set trace object as static")
