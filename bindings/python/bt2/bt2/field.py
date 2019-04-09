@@ -339,6 +339,9 @@ class _EnumerationField(_IntegerField):
 
     @property
     def labels(self):
+        #TODO use bt_field_{un}signed_enumeration_get_mapping_labels
+        # once we write a test for this property. to make sure this function is
+        # tested
         return self.field_class.labels_by_value(self._value)
 
 
@@ -399,7 +402,7 @@ class _StringField(_Field):
         return self._value[index]
 
     def __len__(self):
-        return len(self._value)
+        return native_bt.field_string_get_length(self._ptr)
 
     def __iadd__(self, value):
         value = self._value_to_str(value)
@@ -461,7 +464,6 @@ class _StructureField(_ContainerField, collections.abc.MutableMapping):
         return {key: value._value for key, value in self.items()}
 
     def _set_value(self, values):
-
         try:
             for key, value in values.items():
                 self[key].value = value
@@ -511,7 +513,7 @@ class _VariantField(_ContainerField, _Field):
 
     @property
     def selected_index(self):
-        return native_bt.field_variant_get_selected_option_field(self._ptr)
+        return native_bt.field_variant_get_selected_option_field_index(self._ptr)
 
     @selected_index.setter
     def selected_index(self, index):
@@ -605,7 +607,7 @@ class _StaticArrayField(_ArrayField, _Field):
     _NAME = 'Static Array'
 
     def _count(self):
-        return self.field_class.length
+        return native_bt.field_array_get_length(self._ptr)
 
     def _set_value(self, values):
         if len(self) != len(values):
