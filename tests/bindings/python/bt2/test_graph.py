@@ -374,9 +374,9 @@ class GraphTestCase(unittest.TestCase):
             def _port_connected(self, port, other_port):
                 self._add_input_port('taste')
 
-        def port_added_listener(port):
+        def port_added_listener(component, port):
             nonlocal calls
-            calls.append((port_added_listener, port))
+            calls.append((port_added_listener, component, port))
 
         def ports_connected_listener(upstream_port, downstream_port):
             nonlocal calls
@@ -394,16 +394,20 @@ class GraphTestCase(unittest.TestCase):
         self.assertEqual(len(calls), 5)
 
         self.assertIs(calls[0][0], port_added_listener)
-        self.assertEqual(calls[0][1].name, 'out')
+        self.assertEqual(calls[0][1].name, 'src' )
+        self.assertEqual(calls[0][2].name, 'out')
 
         self.assertIs(calls[1][0], port_added_listener)
-        self.assertEqual(calls[1][1].name, 'zero')
+        self.assertEqual(calls[1][1].name, 'src' )
+        self.assertEqual(calls[1][2].name, 'zero')
 
         self.assertIs(calls[2][0], port_added_listener)
-        self.assertEqual(calls[2][1].name, 'in')
+        self.assertEqual(calls[2][1].name, 'sink' )
+        self.assertEqual(calls[2][2].name, 'in')
 
         self.assertIs(calls[3][0], port_added_listener)
-        self.assertEqual(calls[3][1].name, 'taste')
+        self.assertEqual(calls[3][1].name, 'sink' )
+        self.assertEqual(calls[3][2].name, 'taste')
 
         self.assertIs(calls[4][0], ports_connected_listener)
         self.assertEqual(calls[4][1].name, 'out')
