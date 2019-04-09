@@ -42,6 +42,7 @@ class _EventClassIterator(collections.abc.Iterator):
         self._at += 1
         return ec_id
 
+
 class _StreamClass(bt2.object._SharedObject, collections.abc.Mapping):
     _GET_REF_FUNC = native_bt.stream_class_get_ref
     _PUT_REF_FUNC = native_bt.stream_class_put_ref
@@ -135,29 +136,6 @@ class _StreamClass(bt2.object._SharedObject, collections.abc.Mapping):
         return native_bt.stream_class_get_id(self._ptr)
 
     @property
-    def event_header_field_class(self):
-        ft_ptr = native_bt.stream_class_borrow_event_header_field_class(self._ptr)
-
-        if ft_ptr is None:
-            return
-
-        native_bt.get(ft_ptr)
-
-        return bt2.field_class._create_field_class_from_ptr(ft_ptr)
-
-    @event_header_field_class.setter
-    def event_header_field_class(self, event_header_field_class):
-        event_header_field_class_ptr = None
-
-        if event_header_field_class is not None:
-            utils._check_type(event_header_field_class, bt2.field_class._FieldClass)
-            event_header_field_class_ptr = event_header_field_class._ptr
-
-            ret = native_bt.stream_class_set_event_header_field_class(self._ptr,
-                                                               event_header_field_class_ptr)
-            utils._handle_ret(ret, "cannot set stream class object's event header field type")
-
-    @property
     def packet_context_field_class(self):
         ft_ptr = native_bt.stream_class_borrow_packet_context_field_class_const(self._ptr)
 
@@ -236,39 +214,3 @@ class _StreamClass(bt2.object._SharedObject, collections.abc.Mapping):
     @property
     def default_clock_always_known(self):
         return native_bt.stream_class_default_clock_is_always_known(self._ptr)
-
-    @property
-    def packets_have_discarded_event_counter_snapshot(self):
-        return native_bt.stream_class_packets_have_discarded_event_counter_snapshot(self._ptr)
-
-    @packets_have_discarded_event_counter_snapshot.setter
-    def packets_have_discarded_event_counter_snapshot(self, have_discarded_event_counter):
-        utils._check_bool(have_discarded_event_counter)
-        native_bt.stream_class_set_packets_have_discarded_event_counter_snapshot(self._ptr, have_discarded_event_counter)
-
-    @property
-    def packets_have_packet_counter_snapshot(self):
-        return native_bt.stream_class_packets_have_packet_counter_snapshot(self._ptr)
-
-    @packets_have_packet_counter_snapshot.setter
-    def packets_have_packet_counter_snapshot(self, have_packet_counter):
-        utils._check_bool(have_packet_counter)
-        native_bt.stream_class_set_packets_have_packet_counter_snapshot(self._ptr, have_packet_counter)
-
-    @property
-    def packets_have_default_beginning_clock_snapshot(self):
-        return native_bt.stream_class_packets_have_default_beginning_clock_snapshot(self._ptr)
-
-    @packets_have_default_beginning_clock_snapshot.setter
-    def packets_have_default_beginning_clock_snapshot(self, have_default_beginning_clock_snapshot):
-        utils._check_bool(have_default_beginning_clock_snapshot)
-        native_bt.stream_class_set_packets_have_default_beginning_clock_snapshot(self._ptr, have_default_beginning_clock_snapshot)
-
-    @property
-    def packets_have_default_end_clock_snapshot(self):
-        return native_bt.stream_class_packets_have_default_end_clock_snapshot(self._ptr)
-
-    @packets_have_default_end_clock_snapshot.setter
-    def packets_have_default_end_clock_snapshot(self, have_default_end_clock_snapshot):
-        utils._check_bool(have_default_end_clock_snapshot)
-        native_bt.stream_class_set_packets_have_default_end_clock_snapshot(self._ptr, have_default_end_clock_snapshot)
