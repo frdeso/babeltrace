@@ -22,6 +22,20 @@
  * THE SOFTWARE.
  */
 
+/* Output argument typemap for initialized event class log level output
+ * parameter (always appends).
+ */
+%typemap(in, numinputs=0)
+	(bt_event_class_log_level *OUT_INIT_EC_LOG_LEVEL)
+	(bt_event_class_log_level temp = -1) {
+	$1 = &temp;
+}
+
+%typemap(argout) bt_event_class_log_level *OUT_INIT_EC_LOG_LEVEL {
+	/* SWIG_Python_AppendOutput() steals the created object */
+	$result = SWIG_Python_AppendOutput($result, SWIG_From_int(*$1));
+}
+
 /* From event-class-const.h */
 
 typedef enum bt_event_class_status {
@@ -56,7 +70,7 @@ extern uint64_t bt_event_class_get_id(const bt_event_class *event_class);
 
 extern bt_property_availability bt_event_class_get_log_level(
 		const bt_event_class *event_class,
-		bt_event_class_log_level *OUTPUTINIT);
+		bt_event_class_log_level *OUT_INIT_EC_LOG_LEVEL);
 
 extern const char *bt_event_class_get_emf_uri(
 		const bt_event_class *event_class);

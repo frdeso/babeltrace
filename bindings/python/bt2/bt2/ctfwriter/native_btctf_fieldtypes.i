@@ -141,11 +141,11 @@ int64_t bt_ctf_field_type_enumeration_get_mapping_count(
 
 int bt_ctf_field_type_enumeration_signed_get_mapping_by_index(
 		struct bt_ctf_field_type *enum_field_type, uint64_t index,
-		const char **BTOUTSTR, int64_t *range_begin, int64_t *range_end);
+		const char **OUT_STR, int64_t *range_begin, int64_t *range_end);
 
 int bt_ctf_field_type_enumeration_unsigned_get_mapping_by_index(
 		struct bt_ctf_field_type *enum_field_type, uint64_t index,
-		const char **BTOUTSTR, uint64_t *range_begin,
+		const char **OUT_STR, uint64_t *range_begin,
 		uint64_t *range_end);
 
 int bt_ctf_field_type_enumeration_signed_add_mapping(
@@ -172,7 +172,7 @@ int64_t bt_ctf_field_type_structure_get_field_count(
 
 int bt_ctf_field_type_structure_get_field_by_index(
 		struct bt_ctf_field_type *struct_field_type,
-		const char **BTOUTSTR, struct bt_ctf_field_type **BTCTFOUTFT,
+		const char **OUT_STR, struct bt_ctf_field_type **BTCTFOUTFT,
 		uint64_t index);
 
 struct bt_ctf_field_type *bt_ctf_field_type_structure_get_field_type_by_name(
@@ -223,7 +223,7 @@ int64_t bt_ctf_field_type_variant_get_field_count(
 
 int bt_ctf_field_type_variant_get_field_by_index(
 		struct bt_ctf_field_type *variant_field_type,
-		const char **BTOUTSTR,
+		const char **OUT_STR,
 		struct bt_ctf_field_type **BTCTFOUTFT, uint64_t index);
 
 struct bt_ctf_field_type *bt_ctf_field_type_variant_get_field_type_by_name(

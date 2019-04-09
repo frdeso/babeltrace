@@ -22,6 +22,46 @@
  * THE SOFTWARE.
  */
 
+/* Output argument typemap for self port output (always appends) */
+%typemap(in, numinputs=0)
+	(bt_self_component_port_input **BTOUTSELFPORTINPUT)
+	(bt_self_component_port_input *temp_self_port = NULL) {
+	$1 = &temp_self_port;
+}
+
+%typemap(argout) bt_self_component_port_input **BTOUTSELFPORTINPUT {
+	if (*$1) {
+		/* SWIG_Python_AppendOutput() steals the created object */
+		$result = SWIG_Python_AppendOutput($result,
+				SWIG_NewPointerObj(SWIG_as_voidptr(*$1),
+					SWIGTYPE_p_bt_self_component_port_input, 0));
+	} else {
+		/* SWIG_Python_AppendOutput() steals Py_None */
+		Py_INCREF(Py_None);
+		$result = SWIG_Python_AppendOutput($result, Py_None);
+	}
+}
+
+/* Output argument typemap for self port output (always appends) */
+%typemap(in, numinputs=0)
+	(bt_self_component_port_output **BTOUTSELFPORTOUTPUT)
+	(bt_self_component_port_output *temp_self_port = NULL) {
+	$1 = &temp_self_port;
+}
+
+%typemap(argout) (bt_self_component_port_output **BTOUTSELFPORTOUTPUT) {
+	if (*$1) {
+		/* SWIG_Python_AppendOutput() steals the created object */
+		$result = SWIG_Python_AppendOutput($result,
+				SWIG_NewPointerObj(SWIG_as_voidptr(*$1),
+					SWIGTYPE_p_bt_self_component_port_output, 0));
+	} else {
+		/* SWIG_Python_AppendOutput() steals Py_None */
+		Py_INCREF(Py_None);
+		$result = SWIG_Python_AppendOutput($result, Py_None);
+	}
+}
+
 /* From component-const.h */
 
 extern const char *bt_component_get_name(const bt_component *component);

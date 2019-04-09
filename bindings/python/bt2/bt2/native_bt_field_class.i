@@ -22,6 +22,90 @@
  * THE SOFTWARE.
  */
 
+/* Output argument typemap for field class output (always appends) */
+%typemap(in, numinputs=0)
+	(const bt_field_class **OUT_FC)
+	(bt_field_class *temp_fc = NULL) {
+	$1 = &temp_fc;
+}
+
+%typemap(argout) (const bt_field_class **OUT_FC) {
+	if (*$1) {
+		/* SWIG_Python_AppendOutput() steals the created object */
+		$result = SWIG_Python_AppendOutput($result,
+				SWIG_NewPointerObj(SWIG_as_voidptr(*$1),
+					SWIGTYPE_p_bt_field_class, 0));
+	} else {
+		/* SWIG_Python_AppendOutput() steals Py_None */
+		Py_INCREF(Py_None);
+		$result = SWIG_Python_AppendOutput($result, Py_None);
+	}
+}
+
+%typemap(in, numinputs=0)
+	(bt_field_class_enumeration_mapping_label_array *LABELARRAY, uint64_t *LABELCOUNT)
+	(bt_field_class_enumeration_mapping_label_array temp_array, uint64_t temp_label_count = 0) {
+	$1 = &temp_array;
+	$2 = &temp_label_count;
+}
+
+%typemap(argout)
+	(bt_field_class_enumeration_mapping_label_array *LABELARRAY, uint64_t *LABELCOUNT) {
+	if (*$1) {
+		PyObject *py_label_list = PyList_New(*$2);
+		for (int i = 0; i < *$2; i++) {
+			PyList_SET_ITEM(py_label_list, i, PyUnicode_FromString((*$1)[i]));
+		}
+
+		$result = SWIG_Python_AppendOutput($result, py_label_list);
+	} else {
+		Py_INCREF(Py_None);
+		$result = SWIG_Python_AppendOutput($result, Py_None);
+	}
+}
+
+/* Output argument typemap for value output (always appends) */
+%typemap(in, numinputs=0)
+	(const bt_field_class_signed_enumeration_mapping_ranges **ENUM_RANGE_MAPPING)
+	(bt_field_class_signed_enumeration_mapping_ranges *temp_value = NULL) {
+	$1 = &temp_value;
+}
+
+%typemap(argout)
+	(const bt_field_class_signed_enumeration_mapping_ranges **ENUM_RANGE_MAPPING) {
+	if (*$1) {
+		/* SWIG_Python_AppendOutput() steals the created object */
+		$result = SWIG_Python_AppendOutput($result,
+				SWIG_NewPointerObj(SWIG_as_voidptr(*$1),
+					SWIGTYPE_p_bt_field_class_signed_enumeration_mapping_ranges, 0));
+	} else {
+		/* SWIG_Python_AppendOutput() steals Py_None */
+		Py_INCREF(Py_None);
+		$result = SWIG_Python_AppendOutput($result, Py_None);
+	}
+}
+
+/* Output argument typemap for value output (always appends) */
+%typemap(in, numinputs=0)
+	(const bt_field_class_unsigned_enumeration_mapping_ranges **ENUM_RANGE_MAPPING)
+	(bt_field_class_unsigned_enumeration_mapping_ranges *temp_value = NULL) {
+	$1 = &temp_value;
+}
+
+%typemap(argout)
+	(const bt_field_class_unsigned_enumeration_mapping_ranges **ENUM_RANGE_MAPPING ) {
+	if (*$1) {
+		/* SWIG_Python_AppendOutput() steals the created object */
+		$result = SWIG_Python_AppendOutput($result,
+				SWIG_NewPointerObj(SWIG_as_voidptr(*$1),
+					SWIGTYPE_p_bt_field_class_unsigned_enumeration_mapping_ranges, 0));
+	} else {
+		/* SWIG_Python_AppendOutput() steals Py_None */
+		Py_INCREF(Py_None);
+		$result = SWIG_Python_AppendOutput($result, Py_None);
+	}
+}
+
 /* From field-class-const.h */
 
 typedef enum bt_field_class_status {
@@ -67,13 +151,13 @@ extern uint64_t bt_field_class_enumeration_get_mapping_count(
 
 extern void bt_field_class_unsigned_enumeration_borrow_mapping_by_index_const(
 		const bt_field_class *field_class, uint64_t index,
-		const char **BTOUTSTR,
-		const bt_field_class_unsigned_enumeration_mapping_ranges **BTOUTENUMMAPPINGRANGE);
+		const char **OUT_STR,
+		const bt_field_class_unsigned_enumeration_mapping_ranges **ENUM_RANGE_MAPPING);
 
 extern void bt_field_class_signed_enumeration_borrow_mapping_by_index_const(
 		const bt_field_class *field_class, uint64_t index,
-		const char **BTOUTSTR,
-		const bt_field_class_signed_enumeration_mapping_ranges **BTOUTENUMMAPPINGRANGE);
+		const char **OUT_STR,
+		const bt_field_class_signed_enumeration_mapping_ranges **ENUM_RANGE_MAPPING);
 
 extern uint64_t
 bt_field_class_unsigned_enumeration_mapping_ranges_get_range_count(
@@ -110,7 +194,7 @@ extern uint64_t bt_field_class_structure_get_member_count(
 
 extern void bt_field_class_structure_borrow_member_by_index_const(
 		const bt_field_class *struct_field_class, uint64_t index,
-		const char **BTOUTSTR, const bt_field_class **BTOUTFC);
+		const char **OUT_STR, const bt_field_class **OUT_FC);
 
 extern
 const bt_field_class *
@@ -137,7 +221,7 @@ extern uint64_t bt_field_class_variant_get_option_count(
 
 extern void bt_field_class_variant_borrow_option_by_index_const(
 		const bt_field_class *variant_field_class, uint64_t index,
-		const char **BTOUTSTR, const bt_field_class **BTOUTFC);
+		const char **OUT_STR, const bt_field_class **OUT_FC);
 
 extern
 const bt_field_class *

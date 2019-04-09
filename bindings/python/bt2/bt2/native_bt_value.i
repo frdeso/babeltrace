@@ -75,7 +75,7 @@ bt_bool bt_value_is_array(const bt_value *object);
 bt_bool bt_value_is_map(const bt_value *object);
 
 extern bt_value_status bt_value_copy(const bt_value *object,
-		bt_value **BTOUTVALUE);
+		bt_value **OUT_VALUE);
 
 extern bt_bool bt_value_compare(const bt_value *object_a,
 		const bt_value *object_b);

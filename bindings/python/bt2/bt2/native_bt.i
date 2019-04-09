@@ -52,11 +52,11 @@ typedef int bt_bool;
 %rename("%(strip:[BT_])s", %$isenumitem) "";
 
 /* Output argument typemap for string output (always appends) */
-%typemap(in, numinputs=0) const char **BTOUTSTR (char *temp_value = NULL) {
+%typemap(in, numinputs=0) (const char **OUT_STR) (char *temp_value = NULL) {
 	$1 = &temp_value;
 }
 
-%typemap(argout) const char **BTOUTSTR {
+%typemap(argout) (const char **OUT_STR) {
 	if (*$1) {
 		/* SWIG_Python_AppendOutput() steals the created object */
 		$result = SWIG_Python_AppendOutput($result, SWIG_Python_str_FromChar(*$1));
@@ -67,198 +67,17 @@ typedef int bt_bool;
 	}
 }
 
-/* Output argument typemap for field type output (always appends) */
-%typemap(in, numinputs=0) const bt_field_class **BTOUTFC (bt_field_class *temp_ft = NULL) {
-	$1 = &temp_ft;
-}
-
-%typemap(argout) const bt_field_class **BTOUTFC {
-	if (*$1) {
-		/* SWIG_Python_AppendOutput() steals the created object */
-		$result = SWIG_Python_AppendOutput($result, SWIG_NewPointerObj(SWIG_as_voidptr(*$1), SWIGTYPE_p_bt_field_class, 0));
-	} else {
-		/* SWIG_Python_AppendOutput() steals Py_None */
-		Py_INCREF(Py_None);
-		$result = SWIG_Python_AppendOutput($result, Py_None);
-	}
-}
-
-/* Output argument typemap for component output (always appends) */
-%typemap(in, numinputs=0) const bt_component_source **BTOUTCOMP (bt_component_source *temp_comp = NULL) {
-	$1 = &temp_comp;
-}
-
-%typemap(in, numinputs=0) const bt_component_filter **BTOUTCOMP (bt_component_filter *temp_comp = NULL) {
-	$1 = &temp_comp;
-}
-
-%typemap(in, numinputs=0) const bt_component_sink **BTOUTCOMP (bt_component_sink *temp_comp = NULL) {
-	$1 = &temp_comp;
-}
-
-%typemap(argout) const bt_component_source **BTOUTCOMP {
-	if (*$1) {
-		/* SWIG_Python_AppendOutput() steals the created object */
-		$result = SWIG_Python_AppendOutput($result, SWIG_NewPointerObj(SWIG_as_voidptr(*$1), SWIGTYPE_p_bt_component_source, 0));
-	} else {
-		/* SWIG_Python_AppendOutput() steals Py_None */
-		Py_INCREF(Py_None);
-		$result = SWIG_Python_AppendOutput($result, Py_None);
-	}
-}
-
-%typemap(argout) const bt_component_filter **BTOUTCOMP {
-	if (*$1) {
-		/* SWIG_Python_AppendOutput() steals the created object */
-		$result = SWIG_Python_AppendOutput($result, SWIG_NewPointerObj(SWIG_as_voidptr(*$1), SWIGTYPE_p_bt_component_filter, 0));
-	} else {
-		/* SWIG_Python_AppendOutput() steals Py_None */
-		Py_INCREF(Py_None);
-		$result = SWIG_Python_AppendOutput($result, Py_None);
-	}
-}
-
-%typemap(argout) const bt_component_sink **BTOUTCOMP {
-	if (*$1) {
-		/* SWIG_Python_AppendOutput() steals the created object */
-		$result = SWIG_Python_AppendOutput($result, SWIG_NewPointerObj(SWIG_as_voidptr(*$1), SWIGTYPE_p_bt_component_sink, 0));
-	} else {
-		/* SWIG_Python_AppendOutput() steals Py_None */
-		Py_INCREF(Py_None);
-		$result = SWIG_Python_AppendOutput($result, Py_None);
-	}
-}
-
-/* Output argument typemap for connection output (always appends) */
-%typemap(in, numinputs=0) const bt_connection **BTOUTCONN (bt_connection *temp_conn = NULL) {
-	$1 = &temp_conn;
-}
-
-%typemap(argout) const bt_connection **BTOUTCONN {
-	if (*$1) {
-		/* SWIG_Python_AppendOutput() steals the created object */
-		$result = SWIG_Python_AppendOutput($result, SWIG_NewPointerObj(SWIG_as_voidptr(*$1), SWIGTYPE_p_bt_connection, 0));
-	} else {
-		/* SWIG_Python_AppendOutput() steals Py_None */
-		Py_INCREF(Py_None);
-		$result = SWIG_Python_AppendOutput($result, Py_None);
-	}
-}
-
-/* Output argument typemap for private port output (always appends) */
-%typemap(in, numinputs=0) bt_self_component_port_output **BTOUTSELFPORTOUTPUT (bt_self_component_port_output *temp_self_port = NULL) {
-	$1 = &temp_self_port;
-}
-
-%typemap(argout) bt_self_component_port_output **BTOUTSELFPORTOUTPUT {
-	if (*$1) {
-		/* SWIG_Python_AppendOutput() steals the created object */
-		$result = SWIG_Python_AppendOutput($result, SWIG_NewPointerObj(SWIG_as_voidptr(*$1), SWIGTYPE_p_bt_self_component_port_output, 0));
-	} else {
-		/* SWIG_Python_AppendOutput() steals Py_None */
-		Py_INCREF(Py_None);
-		$result = SWIG_Python_AppendOutput($result, Py_None);
-	}
-}
-
-/* Output argument typemap for self port output (always appends) */
-%typemap(in, numinputs=0) bt_self_component_port_input **BTOUTSELFPORTINPUT (bt_self_component_port_input *temp_self_port = NULL) {
-	$1 = &temp_self_port;
-}
-
-%typemap(argout) bt_self_component_port_input **BTOUTSELFPORTINPUT {
-	if (*$1) {
-		/* SWIG_Python_AppendOutput() steals the created object */
-		$result = SWIG_Python_AppendOutput($result, SWIG_NewPointerObj(SWIG_as_voidptr(*$1), SWIGTYPE_p_bt_self_component_port_input, 0));
-	} else {
-		/* SWIG_Python_AppendOutput() steals Py_None */
-		Py_INCREF(Py_None);
-		$result = SWIG_Python_AppendOutput($result, Py_None);
-	}
-}
-
 /* Output argument typemap for value output (always appends) */
-%typemap(in, numinputs=0) const bt_field_class_unsigned_enumeration_mapping_ranges **BTOUTENUMMAPPINGRANGE (bt_field_class_unsigned_enumeration_mapping_ranges *temp_value = NULL) {
+%typemap(in, numinputs=0) (bt_value **OUT_VALUE) (struct bt_value *temp_value = NULL) {
 	$1 = &temp_value;
 }
 
-%typemap(argout) const bt_field_class_unsigned_enumeration_mapping_ranges **BTOUTENUMMAPPINGRANGE {
+%typemap(argout) (bt_value **OUT_VALUE) {
 	if (*$1) {
 		/* SWIG_Python_AppendOutput() steals the created object */
 		$result = SWIG_Python_AppendOutput($result,
 				SWIG_NewPointerObj(SWIG_as_voidptr(*$1),
-					SWIGTYPE_p_bt_field_class_unsigned_enumeration_mapping_ranges, 0));
-	} else {
-		/* SWIG_Python_AppendOutput() steals Py_None */
-		Py_INCREF(Py_None);
-		$result = SWIG_Python_AppendOutput($result, Py_None);
-	}
-}
-
-%typemap(in, numinputs=0)
-	(bt_field_class_enumeration_mapping_label_array *LABELARRAY, uint64_t *LABELCOUNT)
-	(bt_field_class_enumeration_mapping_label_array temp_value, uint64_t temp_label_count = 0) {
-	$1 = &temp_value;
-	$2 = &temp_label_count;
-}
-
-%typemap(argout) (bt_field_class_enumeration_mapping_label_array *LABELARRAY, uint64_t *LABELCOUNT) {
-	if (*$1) {
-		PyObject *py_label_list = PyList_New(*$2);
-		for (int i = 0; i < *$2; i++) {
-			PyList_SET_ITEM(py_label_list, i, PyUnicode_FromString((*$1)[i]));
-		}
-
-		$result = SWIG_Python_AppendOutput($result, py_label_list);
-	} else {
-		Py_INCREF(Py_None);
-		$result = SWIG_Python_AppendOutput($result, Py_None);
-	}
-}
-
-/* Output argument typemap for value output (always appends) */
-%typemap(in, numinputs=0) const bt_field_class_signed_enumeration_mapping_ranges **BTOUTENUMMAPPINGRANGE (bt_field_class_signed_enumeration_mapping_ranges *temp_value = NULL) {
-	$1 = &temp_value;
-}
-
-%typemap(argout) const bt_field_class_signed_enumeration_mapping_ranges **BTOUTENUMMAPPINGRANGE {
-	if (*$1) {
-		/* SWIG_Python_AppendOutput() steals the created object */
-		$result = SWIG_Python_AppendOutput($result,
-				SWIG_NewPointerObj(SWIG_as_voidptr(*$1),
-					SWIGTYPE_p_bt_field_class_signed_enumeration_mapping_ranges, 0));
-	} else {
-		/* SWIG_Python_AppendOutput() steals Py_None */
-		Py_INCREF(Py_None);
-		$result = SWIG_Python_AppendOutput($result, Py_None);
-	}
-}
-
-/* Output argument typemap for value output (always appends) */
-%typemap(in, numinputs=0) bt_value **BTOUTVALUE (struct bt_value *temp_value = NULL) {
-	$1 = &temp_value;
-}
-
-%typemap(argout) bt_value **BTOUTVALUE {
-	if (*$1) {
-		/* SWIG_Python_AppendOutput() steals the created object */
-		$result = SWIG_Python_AppendOutput($result, SWIG_NewPointerObj(SWIG_as_voidptr(*$1), SWIGTYPE_p_bt_value, 0));
-	} else {
-		/* SWIG_Python_AppendOutput() steals Py_None */
-		Py_INCREF(Py_None);
-		$result = SWIG_Python_AppendOutput($result, Py_None);
-	}
-}
-
-/* Output argument typemap for clock value output (always appends) */
-%typemap(in, numinputs=0) const bt_clock_snapshot **BTOUTCLOCKSNAPSHOT (bt_clock_snapshot *temp_clock_snapshot = NULL) {
-	$1 = &temp_clock_snapshot;
-}
-
-%typemap(argout) const bt_clock_snapshot **BTOUTCLOCKSNAPSHOT {
-	if (*$1) {
-		/* SWIG_Python_AppendOutput() steals the created object */
-		$result = SWIG_Python_AppendOutput($result, SWIG_NewPointerObj(SWIG_as_voidptr(*$1), SWIGTYPE_p_bt_clock_snapshot, 0));
+					SWIGTYPE_p_bt_value, 0));
 	} else {
 		/* SWIG_Python_AppendOutput() steals Py_None */
 		Py_INCREF(Py_None);
@@ -267,50 +86,41 @@ typedef int bt_bool;
 }
 
 /* Output argument typemap for initialized uint64_t output parameter (always appends) */
-%typemap(in, numinputs=0) bt_event_class_log_level *OUTPUTINIT (bt_event_class_log_level temp = -1) {
-	$1 = &temp;
-}
-
-%typemap(argout) bt_event_class_log_level *OUTPUTINIT {
-	/* SWIG_Python_AppendOutput() steals the created object */
-	$result = SWIG_Python_AppendOutput($result, SWIG_From_int(*$1));
-}
-
-/* Output argument typemap for initialized uint64_t output parameter (always appends) */
-%typemap(in, numinputs=0) uint64_t *OUTPUTINIT (uint64_t temp = -1ULL) {
+%typemap(in, numinputs=0) (uint64_t *OUTPUTINIT) (uint64_t temp = -1ULL) {
 	$1 = &temp;
 }
 
 %typemap(argout) uint64_t *OUTPUTINIT {
-	$result = SWIG_Python_AppendOutput(resultobj, SWIG_From_unsigned_SS_long_SS_long((*$1)));
+	$result = SWIG_Python_AppendOutput(resultobj,
+			SWIG_From_unsigned_SS_long_SS_long((*$1)));
 }
 
 /* Output argument typemap for initialized int64_t output parameter (always appends) */
-%typemap(in, numinputs=0) int64_t *OUTPUTINIT (int64_t temp = -1ULL) {
+%typemap(in, numinputs=0) (int64_t *OUTPUTINIT) (int64_t temp = -1ULL) {
 	$1 = &temp;
 }
 
-%typemap(argout) int64_t *OUTPUTINIT {
+%typemap(argout) (int64_t *OUTPUTINIT) {
 	$result = SWIG_Python_AppendOutput(resultobj, SWIG_From_long_SS_long((*$1)));
 }
 
 /* Output argument typemap for initialized unsigned int output parameter (always appends) */
-%typemap(in, numinputs=0) unsigned int *OUTPUTINIT (unsigned int temp = -1) {
+%typemap(in, numinputs=0) (unsigned int *OUTPUTINIT) (unsigned int temp = -1) {
 	$1 = &temp;
 }
 
-%typemap(argout) unsigned int *OUTPUTINIT {
-	$result = SWIG_Python_AppendOutput(resultobj, SWIG_From_unsigned_SS_long_SS_long((uint64_t) (*$1)));
+%typemap(argout) (unsigned int *OUTPUTINIT) {
+	$result = SWIG_Python_AppendOutput(resultobj,
+			SWIG_From_unsigned_SS_long_SS_long((uint64_t) (*$1)));
 }
 /* Output argument typemap for initialized double output parameter (always appends) */
-%typemap(in, numinputs=0) double *OUTPUTINIT (double temp = -1) {
+%typemap(in, numinputs=0) (double *OUTPUTINIT) (double temp = -1) {
 	$1 = &temp;
 }
 
-%typemap(argout) double *OUTPUTINIT {
+%typemap(argout) (double *OUTPUTINIT) {
 	$result = SWIG_Python_AppendOutput(resultobj, SWIG_From_int((*$1)));
 }
-
 
 /* Input argument typemap for UUID bytes */
 %typemap(in) bt_uuid {
