@@ -266,11 +266,11 @@ class _IntegralField(_NumericField, numbers.Integral):
 
 
 class _IntegerField(_IntegralField, _Field):
-    _NAME = 'Integer'
-
+    pass
 
 
 class _UnsignedIntegerField(_IntegerField, _Field):
+    _NAME = 'Unsigned Integer'
     def _value_to_int(self, value):
         if not isinstance(value, numbers.Real):
             raise TypeError('expecting a real number object')
@@ -292,6 +292,7 @@ class _UnsignedIntegerField(_IntegerField, _Field):
 
 
 class _SignedIntegerField(_IntegerField, _Field):
+    _NAME = 'Signed Integer'
     def _value_to_int(self, value):
         if not isinstance(value, numbers.Real):
             raise TypeError('expecting a real number object')
@@ -333,8 +334,6 @@ class _RealField(_NumericField, numbers.Real):
 
 
 class _EnumerationField(_IntegerField):
-    _NAME = 'Enumeration'
-
     def _repr(self):
         return '{} ({})'.format(self._value, ', '.join(self.labels))
 
@@ -342,11 +341,14 @@ class _EnumerationField(_IntegerField):
     def labels(self):
         return self.field_class.labels_by_value(self._value)
 
+
 class _UnsignedEnumerationField(_EnumerationField, _UnsignedIntegerField):
-    _NAME = 'Enumeration'
+    _NAME = 'Unsigned Enumeration'
+
 
 class _SignedEnumerationField(_EnumerationField, _SignedIntegerField):
-    _NAME = 'Enumeration'
+    _NAME = 'Signed Enumeration'
+
 
 class _StringField(_Field):
     _NAME = 'String'
@@ -598,8 +600,9 @@ class _ArrayField(_ContainerField, _Field):
     def _repr(self):
         return '[{}]'.format(', '.join([repr(v) for v in self]))
 
+
 class _StaticArrayField(_ArrayField, _Field):
-    _NAME = 'StaticArray'
+    _NAME = 'Static Array'
 
     def _count(self):
         return self.field_class.length
@@ -618,8 +621,9 @@ class _StaticArrayField(_ArrayField, _Field):
 
     value = property(fset=_set_value)
 
+
 class _DynamicArrayField(_ArrayField, _Field):
-    _NAME = 'DynamicArray'
+    _NAME = 'Dynamic Array'
 
     def _count(self):
         return self.length
