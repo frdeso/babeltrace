@@ -818,7 +818,7 @@ class SignedIntegerFieldTestCase(_TestIntegerFieldCommon, unittest.TestCase):
         del self._def
 
 
-class EnumerationFieldTestCase(_TestIntegerFieldCommon, unittest.TestCase):
+class SignedEnumerationFieldTestCase(_TestIntegerFieldCommon, unittest.TestCase):
     def _create_fc(self, tc):
         fc = tc.create_signed_enumeration_field_class(32)
         fc.map_range('something', 17)
@@ -1293,6 +1293,21 @@ class StructureFieldTestCase(unittest.TestCase):
         field['C'] = 17.5
         self.assertNotEqual(self._def, field)
 
+    def test_eq_diff_keys(self):
+        fc = self._tc.create_structure_field_class()
+        fc.append_field('V', self._fc0_fn())
+        fc.append_field('W', self._fc1_fn())
+        fc.append_field('X', self._fc2_fn())
+        fc.append_field('Y', self._fc3_fn())
+        fc.append_field('Z', self._fc4_fn())
+        field = _create_field(self._tc, fc)
+        field['V'] = -1872
+        field['W'] = "gerry"
+        field['X'] = 18.19
+        field['Y'] = 16497
+        field['Z'] = {}
+        self.assertNotEqual(self._def, field)
+
     def test_eq_diff_content_same_len(self):
         field = _create_field(self._tc, self._create_fc(self._tc))
         field['A'] = -1872
@@ -1452,6 +1467,10 @@ class VariantFieldTestCase(unittest.TestCase):
     def tearDown(self):
         del self._def
 
+    def test_selected_index(self):
+        self._def.selected_index = 2
+        self.assertEqual(self._def.selected_index, 2)
+
     def test_selected_field(self):
         self._def.selected_index = 2
         self._def.value = -17.34
@@ -1499,7 +1518,7 @@ class VariantFieldTestCase(unittest.TestCase):
         other_field.value = 'un beau grand bateau'
         self.assertEqual(str(field), str(other_field))
 
-    def test_str_op_flt(self):
+    def test_str_op_float(self):
         field = _create_field(self._tc, self._create_fc(self._tc))
         field = field['variant_field']
         field.selected_index = 2
