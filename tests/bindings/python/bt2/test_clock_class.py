@@ -169,7 +169,7 @@ class ClockClassTestCase(unittest.TestCase):
         self.assertRaisesInComponentInit(TypeError, lambda comp_self: comp_self._create_clock_class(uuid=23))
 
 
-class ClockValueTestCase(unittest.TestCase):
+class ClockSnapshotTestCase(unittest.TestCase):
     def setUp(self):
         def f(comp_self):
             cc = comp_self._create_clock_class('my_cc', 1000,
