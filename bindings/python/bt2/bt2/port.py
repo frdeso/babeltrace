@@ -99,18 +99,6 @@ class _InputPort(_Port):
 class _OutputPort(_Port):
     _AS_PORT = native_bt.port_output_as_port_const
 
-    def create_message_iterator(self, colander_component_name=None):
-        if colander_component_name is not None:
-            utils._check_str(colander_component_name)
-
-        notif_iter_ptr = native_bt.py3_create_output_port_notif_iter(int(self._ptr),
-                                                                     colander_component_name)
-
-        if notif_iter_ptr is None:
-            raise bt2.CreationError('cannot create output port message iterator')
-
-        return bt2.message_iterator._OutputPortMessageIterator(notif_iter_ptr)
-
 
 class _SelfPort(_Port):
     @classmethod
