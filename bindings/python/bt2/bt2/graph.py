@@ -85,8 +85,6 @@ class Graph(bt2.object._SharedObject):
             raise bt2.Stop
         elif status == native_bt.GRAPH_STATUS_AGAIN:
             raise bt2.TryAgain
-        elif status == native_bt.GRAPH_STATUS_NO_SINK:
-            raise bt2.NoSinkComponent
         elif status < 0:
             raise bt2.Error(gen_error_msg)
 
