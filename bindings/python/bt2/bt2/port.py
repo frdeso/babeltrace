@@ -83,6 +83,13 @@ class _Port(bt2.object._SharedObject):
         ptr = self._AS_PORT(self._ptr)
         return native_bt.port_is_connected(ptr)
 
+    @property
+    def component(self):
+        ptr = self._AS_PORT(self._ptr)
+        comp_ptr = native_bt.port_borrow_component_const(ptr)
+
+        if comp_ptr is not None:
+            return bt2.component._GenericBaseComponent._create_from_ptr_and_get_ref(comp_ptr)
 
 
 class _InputPort(_Port):

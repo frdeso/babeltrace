@@ -751,6 +751,17 @@ class PortTestCase(unittest.TestCase):
         comp = self._create_sink_comp(MySink)
         self.assertIsNone(comp.input_ports['clear'].connection)
 
+    def test_component(self):
+        class MySink(bt2._UserSinkComponent):
+            def __init__(comp_self, params):
+                comp_self._add_input_port('clear')
+
+            def _consume(self):
+                pass
+
+        comp = self._create_sink_comp(MySink)
+        self.assertEqual(comp.addr, comp.input_ports['clear'].component.addr)
+
     def test_is_connected_false(self):
         class MySink(bt2._UserSinkComponent):
             def __init__(comp_self, params):
