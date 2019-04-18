@@ -453,7 +453,7 @@ class _UserComponentType(type):
         # create instance, not user-initialized yet
         self = cls.__new__(cls)
 
-        # pointer to native private component object (weak/borrowed)
+        # pointer to native self component object (weak/borrowed)
         self._ptr = comp_ptr
 
         # call user's __init__() method
