@@ -68,13 +68,6 @@ class _Port(bt2.object._SharedObject):
         assert name is not None
         return name
 
-    @staticmethod
-    def _disconnect(ptr):
-        status = native_bt.port_disconnect(ptr)
-
-        if status < 0:
-            raise bt2.Error('cannot disconnect port')
-
     @property
     def connection(self):
         ptr = self._AS_PORT(self._ptr)
@@ -87,10 +80,9 @@ class _Port(bt2.object._SharedObject):
 
     @property
     def is_connected(self):
-        return self.connection is not None
+        ptr = self._AS_PORT(self._ptr)
+        return native_bt.port_is_connected(ptr)
 
-    def disconnect(self):
-        self._disconnect(self._ptr)
 
 
 class _InputPort(_Port):
@@ -128,15 +120,6 @@ class _SelfPort(_Port):
             return
 
         return bt2.connection._Connection._create_from_ptr_and_get_ref(conn_ptr)
-
-    def remove_from_component(self):
-        status = native_bt.private_port_remove_from_component(self._ptr)
-
-        if status < 0:
-            raise bt2.Error("cannot remove port from component")
-
-    def disconnect(self):
-        self._disconnect(self._pub_ptr)
 
 
 class _SelfInputPort(_SelfPort, _InputPort):
