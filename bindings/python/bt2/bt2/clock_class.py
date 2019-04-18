@@ -54,36 +54,6 @@ class ClockClass(bt2.object._SharedObject):
     _GET_REF_FUNC = native_bt.clock_class_get_ref
     _PUT_REF_FUNC = native_bt.clock_class_put_ref
 
-    def __init__(self, name=None, frequency=None, description=None, precision=None,
-                 offset=None, is_absolute=None, uuid=None):
-        ptr = native_bt.clock_class_create()
-
-        if ptr is None:
-            raise bt2.CreationError('cannot create clock class object')
-
-        super().__init__(ptr)
-
-        if name is not None:
-            self.name = name
-
-        if frequency is not None:
-            self.frequency = frequency
-
-        if description is not None:
-            self.description = description
-
-        if precision is not None:
-            self.precision = precision
-
-        if offset is not None:
-            self.offset = offset
-
-        if is_absolute is not None:
-            self.is_absolute = is_absolute
-
-        if uuid is not None:
-            self.uuid = uuid
-
     @property
     def name(self):
         return native_bt.clock_class_get_name(self._ptr)
