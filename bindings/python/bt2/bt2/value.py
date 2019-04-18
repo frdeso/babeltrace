@@ -36,16 +36,7 @@ from bt2 import native_bt, utils
 def _handle_status(status, obj_name):
     if status >= 0:
         return
-
-    if status == native_bt.VALUE_STATUS_INVAL:
-        # In practice, this should never happen, because arguments
-        # should always be validated in this Python module before
-        # calling the native functions.
-        raise ValueError('unexpected invalid argument')
     else:
-        # In practice, this should never happen, because arguments
-        # should always be validated in this Python module before
-        # calling the native functions.
         raise RuntimeError('unexpected error')
 
 
