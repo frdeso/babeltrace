@@ -597,19 +597,6 @@ class _UserComponent(metaclass=_UserComponentType):
             other_port_ptr, other_port_type)
         self._port_connected(port, other_port)
 
-    def _port_disconnected(self, port):
-        pass
-
-    def _port_disconnected_from_native(self, port_ptr):
-        native_bt.get(port_ptr)
-        port = bt2.port._create_private_from_ptr(port_ptr)
-
-        try:
-            self._port_disconnected(port)
-        except:
-            if not _NO_PRINT_TRACEBACK:
-                traceback.print_exc()
-
     def _graph_is_configured_from_native(self):
         self._graph_is_configured()
 
