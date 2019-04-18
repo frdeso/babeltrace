@@ -20,78 +20,22 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import collections.abc
-import copy
 from bt2 import native_bt, utils
-import bt2.message_iterator
 import bt2.port
 import bt2
-
-
-def _handle_status(status, gen_error_msg):
-    if status == native_bt.CONNECTION_STATUS_GRAPH_IS_CANCELED:
-        raise bt2.GraphCanceled
-    elif status == native_bt.CONNECTION_STATUS_IS_ENDED:
-        raise bt2.ConnectionEnded
-    elif status < 0:
-        raise bt2.Error(gen_error_msg)
-
-
-def _create_private_from_ptr(ptr):
-    obj = _PrivateConnection._create_from_ptr(ptr)
-    obj._pub_ptr = native_bt.connection_borrow_from_private(ptr)
-    assert(obj._pub_ptr)
-    return obj
-
 
 class _Connection(bt2.object._SharedObject):
     _GET_REF_FUNC = native_bt.connection_get_ref
     _PUT_REF_FUNC = native_bt.connection_put_ref
 
-    @staticmethod
-    def _downstream_port(ptr):
-        port_ptr = native_bt.connection_borrow_downstream_port_const(ptr)
+    @property
+    def downstream_port(self):
+        port_ptr = native_bt.connection_borrow_downstream_port_const(self._ptr)
         utils._handle_ptr(port_ptr, "cannot get connection object's downstream port object")
         return bt2.port._create_from_ptr_and_get_ref(port_ptr, native_bt.PORT_TYPE_INPUT)
 
-    @staticmethod
-    def _upstream_port(ptr):
-        port_ptr = native_bt.connection_borrow_upstream_port_const(ptr)
+    @property
+    def upstream_port(self):
+        port_ptr = native_bt.connection_borrow_upstream_port_const(self._ptr)
         utils._handle_ptr(port_ptr, "cannot get connection object's upstream port object")
         return bt2.port._create_from_ptr_and_get_ref(port_ptr,  native_bt.PORT_TYPE_OUTPUT)
-
-    @property
-    def downstream_port(self):
-        return self._downstream_port(self._ptr)
-
-    @property
-    def upstream_port(self):
-        return self._upstream_port(self._ptr)
-
-    @staticmethod
-    def _is_ended(ptr):
-        return native_bt.connection_is_ended(ptr) == 1
-
-    @property
-    def is_ended(self):
-        return self._is_ended(self._ptr)
-
-
-class _PrivateConnection(bt2.object._PrivateObject, _Connection):
-    def create_message_iterator(self):
-        status, notif_iter_ptr = native_bt.py3_create_priv_conn_notif_iter(int(self._ptr))
-        _handle_status(status, 'cannot create message iterator object')
-        assert(notif_iter_ptr)
-        return bt2.message_iterator._PrivateConnectionMessageIterator(notif_iter_ptr)
-
-    @property
-    def is_ended(self):
-        return self._is_ended(self._pub_ptr)
-
-    @property
-    def downstream_port(self):
-        return self._downstream_port(self._pub_ptr)
-
-    @property
-    def upstream_port(self):
-        return self._upstream_port(self._pub_ptr)
