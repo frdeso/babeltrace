@@ -163,12 +163,6 @@ class _Component:
         return name
 
     @property
-    def graph(self):
-        ptr = native_bt.component_get_graph(self._ptr)
-        assert(ptr)
-        return bt2.Graph._create_from_ptr(ptr)
-
-    @property
     def component_class(self):
         cc_ptr = self._BORROW_COMPONENT_CLASS(self._ptr)
         assert cc_ptr is not None
@@ -559,13 +553,6 @@ class _UserComponent(metaclass=_UserComponentType):
         name = native_bt.component_get_name(ptr)
         assert name is not None
         return name
-
-    @property
-    def graph(self):
-        pub_ptr = native_bt.component_borrow_from_private(self._ptr)
-        ptr = native_bt.component_get_graph(pub_ptr)
-        assert(ptr)
-        return bt2.Graph._create_from_ptr(ptr)
 
     @property
     def component_class(self):
