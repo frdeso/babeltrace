@@ -59,6 +59,12 @@ class _GenericComponentClass(object._SharedObject):
         return native_bt.component_class_get_help(ptr)
 
 
+class _GenericBaseComponentClass(_GenericComponentClass):
+    _GET_REF_FUNC = native_bt.component_class_get_ref
+    _PUT_REF_FUNC = native_bt.component_class_put_ref
+    _AS_COMPONENT_CLASS = lambda self, ptr:ptr
+
+
 class _GenericSourceComponentClass(_GenericComponentClass):
     _GET_REF_FUNC = native_bt.component_class_source_get_ref
     _PUT_REF_FUNC = native_bt.component_class_source_put_ref
@@ -169,6 +175,13 @@ class _Component:
         return _create_known_component_class_from_ptr_and_get_ref(cc_ptr, self._COMP_CLS_TYPE)
 
 
+class _BaseComponent(_Component):
+    _AS_COMPONENT = lambda self, ptr:ptr
+    _AS_COMPONENT_CLASS = lambda self, ptr:ptr
+    _BORROW_COMPONENT_CLASS = native_bt.component_borrow_class_const
+    _COMP_CLS_TYPE = None
+
+
 class _SourceComponent(_Component):
     _AS_COMPONENT = native_bt.component_source_as_component_const
     _AS_COMPONENT_CLASS = native_bt.component_class_source_as_component_class
@@ -190,8 +203,11 @@ class _SinkComponent(_Component):
     _COMP_CLS_TYPE = native_bt.COMPONENT_CLASS_TYPE_SINK
 
 
-# This is analogous to _GenericSourceComponentClass, but for source
-# component objects.
+class _GenericBaseComponent(object._SharedObject, _BaseComponent):
+    _GET_REF_FUNC = native_bt.component_get_ref
+    _PUT_REF_FUNC = native_bt.component_put_ref
+
+
 class _GenericSourceComponent(object._SharedObject, _SourceComponent):
     _GET_REF_FUNC = native_bt.component_source_get_ref
     _PUT_REF_FUNC = native_bt.component_source_put_ref
@@ -263,15 +279,24 @@ def _create_known_component_from_ptr(ptr, comp_cls_type):
     comp_cls_type).
 
     The Python object steals the reference to ptr."""
-    return _COMP_CLS_TYPE_TO_GENERIC_COMP_PYCLS[comp_cls_type]._create_from_ptr(ptr)
+    if comp_cls_type is not None:
+        return _COMP_CLS_TYPE_TO_GENERIC_COMP_PYCLS[comp_cls_type]._create_from_ptr(ptr)
+    else:
+        return _GenericBaseComponent._create_from_ptr(ptr)
 
 
 def _create_known_component_from_ptr_and_get_ref(ptr, comp_cls_type):
-    return _COMP_CLS_TYPE_TO_GENERIC_COMP_PYCLS[comp_cls_type]._create_from_ptr_and_get_ref(ptr)
+    if comp_cls_type is not None:
+        return _COMP_CLS_TYPE_TO_GENERIC_COMP_PYCLS[comp_cls_type]._create_from_ptr_and_get_ref(ptr)
+    else:
+        return _GenericBaseComponent._create_from_ptr_and_get_ref(ptr)
 
 
 def _create_known_component_class_from_ptr_and_get_ref(ptr, comp_cls_type):
-    return _COMP_CLS_TYPE_TO_GENERIC_COMP_CLS_PYCLS[comp_cls_type]._create_from_ptr_and_get_ref(ptr)
+    if comp_cls_type is not None:
+        return _COMP_CLS_TYPE_TO_GENERIC_COMP_CLS_PYCLS[comp_cls_type]._create_from_ptr_and_get_ref(ptr)
+    else:
+        return _GenericBaseComponentClass._create_from_ptr_and_get_ref(ptr)
 
 
 def _trim_docstring(docstring):
