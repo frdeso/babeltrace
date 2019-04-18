@@ -157,6 +157,10 @@ class ClockClassTestCase(unittest.TestCase):
     def test_create_invalid_origin_is_unix_epoch(self):
         self.assertRaisesInComponentInit(TypeError, lambda comp_self: comp_self._create_clock_class(origin_is_unix_epoch=23))
 
+    def test_cycles_to_ns_from_origin(self):
+        cc = run_in_component_init(lambda comp_self: comp_self._create_clock_class(frequency=10**9, origin_is_unix_epoch=True))
+        self.assertEqual(cc.cycles_to_ns_from_origin(112), 112)
+
     def test_uuid(self):
         cc = run_in_component_init(lambda comp_self: comp_self._create_clock_class())
         self.assertIsNone(cc.uuid)
