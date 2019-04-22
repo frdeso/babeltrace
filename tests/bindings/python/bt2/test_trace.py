@@ -43,6 +43,17 @@ class TraceTestCase(unittest.TestCase):
         self.assertIn(15, sids)
         self.assertIn(17, sids)
 
+    def test_create_stream(self):
+        sc = self._tc.create_stream_class()
+        trace = self._tc()
+        s_bigras = trace.create_stream(sc, name='bigras')
+        s_belanger = trace.create_stream(sc, name='belanger')
+        s_boucher = trace.create_stream(sc, name='boucher')
+
+        self.assertEqual(s_bigras.name, 'bigras')
+        self.assertEqual(s_belanger.name, 'belanger')
+        self.assertEqual(s_boucher.name, 'boucher')
+
     def test_destruction_listener(self):
         def on_trace_class_destruction(trace_class):
             nonlocal trace_class_destroyed
