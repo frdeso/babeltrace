@@ -59,10 +59,7 @@ class _Event(bt2.object._UniqueObject):
     @property
     def stream(self):
         stream_ptr = native_bt.event_borrow_stream(self._ptr)
-
-        if stream_ptr is None:
-            return
-
+        assert stream_ptr is not None
         return bt2._Stream._create_from_ptr_and_get_ref(stream_ptr)
 
     @property
