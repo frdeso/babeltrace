@@ -78,6 +78,10 @@ class GraphTestCase(unittest.TestCase):
     def test_add_component_invalid_cls_type(self):
         with self.assertRaises(TypeError):
             self._graph.add_source_component(int, 'salut')
+        with self.assertRaises(TypeError):
+            self._graph.add_filter_component(int, 'salut')
+        with self.assertRaises(TypeError):
+            self._graph.add_sink_component(int, 'salut')
 
     def test_connect_ports(self):
         class MyIter(bt2._UserMessageIterator):
