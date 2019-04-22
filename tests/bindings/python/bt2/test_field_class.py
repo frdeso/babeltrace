@@ -502,7 +502,7 @@ class DynamicArrayFieldTypeTestCase(unittest.TestCase):
     def test_create_default(self):
         self.assertEqual(self._fc.element_field_class.addr, self._elem_fc.addr)
 
-    def test_field_path(self):
+    def test_len_field_path(self):
         foo_fc = self._tc.create_real_field_class()
         bar_fc = self._tc.create_string_field_class()
         baz_fc = self._tc.create_string_field_class()
@@ -522,6 +522,7 @@ class DynamicArrayFieldTypeTestCase(unittest.TestCase):
         self._tc.create_stream_class(packet_context_field_class=outer_struct_fc)
 
         self.assertEqual(list(self._fc.length_field_path), [1, 2])
+        self.assertEqual(self._fc.length_field_path.root_scope, bt2.field_path.Scope.PACKET_CONTEXT)
 
     def test_create_invalid_field_class(self):
         len_fc = self._tc.create_unsigned_integer_field_class(12)
