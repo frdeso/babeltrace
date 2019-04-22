@@ -144,7 +144,7 @@ class _EnumerationFieldClassMapping(collections.abc.Set):
 
     def __contains__(self, other_range):
         for curr_range in self:
-            if curr_mapping == other_range:
+            if curr_range == other_range:
                 return True
         return False
 
