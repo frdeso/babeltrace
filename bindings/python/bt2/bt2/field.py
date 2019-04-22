@@ -396,7 +396,7 @@ class _StringField(_Field):
         return repr(self._value)
 
     def __str__(self):
-        return self._value
+        return str(self._value)
 
     def __getitem__(self, index):
         return self._value[index]
@@ -459,10 +459,6 @@ class _StructureField(_ContainerField, collections.abc.MutableMapping):
         except:
             return False
 
-    @property
-    def _value(self):
-        return {key: value._value for key, value in self.items()}
-
     def _set_value(self, values):
         try:
             for key, value in values.items():
@@ -503,14 +499,6 @@ class _StructureField(_ContainerField, collections.abc.MutableMapping):
 class _VariantField(_ContainerField, _Field):
     _NAME = 'Variant'
 
-    def field(self):
-        field_ptr = native_bt.field_variant_borrow_selected_option_field(self._ptr)
-        utils._handle_ptr(field_ptr, "cannot select variant field object's field")
-
-        return _create_field_from_ptr(field_ptr, self._owning_ptr,
-                                      self._owning_ptr_get_func,
-                                      self._owning_ptr_put_func)
-
     @property
     def selected_index(self):
         return native_bt.field_variant_get_selected_option_field_index(self._ptr)
@@ -521,25 +509,25 @@ class _VariantField(_ContainerField, _Field):
 
     @property
     def selected_field(self):
-        return self.field()
+        field_ptr = native_bt.field_variant_borrow_selected_option_field(self._ptr)
+        utils._handle_ptr(field_ptr, "cannot select variant field object's field")
+
+        return _create_field_from_ptr(field_ptr, self._owning_ptr,
+                                      self._owning_ptr_get_func,
+                                      self._owning_ptr_put_func)
 
     def _spec_eq(self, other):
         new_self = _get_leaf_field(self)
         return new_self == other
 
     def __bool__(self):
-        return bool(self.selected_field)
+        raise NotImplementedError
 
     def __str__(self):
         return str(self.selected_field)
 
     def _repr(self):
         return repr(self.selected_field)
-
-    @property
-    def _value(self):
-        if self.selected_field is not None:
-            return self.selected_field._value
 
     def _set_value(self, value):
         self.selected_field.value = value
@@ -594,10 +582,6 @@ class _ArrayField(_ContainerField, _Field):
             return True
         except:
             return False
-
-    @property
-    def _value(self):
-        return [field._value for field in self]
 
     def _repr(self):
         return '[{}]'.format(', '.join([repr(v) for v in self]))

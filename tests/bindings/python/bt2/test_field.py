@@ -1220,6 +1220,9 @@ class StructureFieldTestCase(unittest.TestCase):
         fc.append_field('C', self._fc2_fn())
         fc.append_field('D', self._fc3_fn())
         fc.append_field('E', self._fc4_fn())
+        fc5 = self._fc5_fn()
+        fc5.append_field('F_1', self._fc5_inner_fn())
+        fc.append_field('F', fc5)
         return fc
 
     def setUp(self):
@@ -1229,6 +1232,8 @@ class StructureFieldTestCase(unittest.TestCase):
         self._fc2_fn = self._tc.create_real_field_class
         self._fc3_fn = self._tc.create_signed_integer_field_class
         self._fc4_fn = self._tc.create_structure_field_class
+        self._fc5_fn = self._tc.create_structure_field_class
+        self._fc5_inner_fn = self._tc.create_signed_integer_field_class
 
         self._fc = self._create_fc(self._tc)
         self._def = _create_field(self._tc, self._fc)
@@ -1237,12 +1242,14 @@ class StructureFieldTestCase(unittest.TestCase):
         self._def['C'] = 17.5
         self._def['D'] = 16497
         self._def['E'] = {}
+        self._def['F'] = { 'F_1': 52 }
         self._def_value = {
             'A': -1872,
             'B': 'salut',
             'C': 17.5,
             'D': 16497,
-            'E': {}
+            'E': {},
+            'F': { 'F_1': 52 }
         }
 
     def tearDown(self):
@@ -1259,7 +1266,7 @@ class StructureFieldTestCase(unittest.TestCase):
         self.assertFalse(field)
 
     def test_len(self):
-        self.assertEqual(len(self._def), 5)
+        self.assertEqual(len(self._def), len(self._def_value))
 
     def test_getitem(self):
         field = self._def['A']
@@ -1276,6 +1283,8 @@ class StructureFieldTestCase(unittest.TestCase):
         field['B'] = 'salut'
         field['C'] = 17.5
         field['D'] = 16497
+        field['E'] = {}
+        field['F'] = { 'F_1': 52 }
         self.assertEqual(self._def, field)
 
     def test_eq_invalid_type(self):
@@ -1295,16 +1304,18 @@ class StructureFieldTestCase(unittest.TestCase):
 
     def test_eq_diff_keys(self):
         fc = self._tc.create_structure_field_class()
-        fc.append_field('V', self._fc0_fn())
-        fc.append_field('W', self._fc1_fn())
-        fc.append_field('X', self._fc2_fn())
-        fc.append_field('Y', self._fc3_fn())
-        fc.append_field('Z', self._fc4_fn())
+        fc.append_field('U', self._fc0_fn())
+        fc.append_field('V', self._fc1_fn())
+        fc.append_field('W', self._fc2_fn())
+        fc.append_field('X', self._fc3_fn())
+        fc.append_field('Y', self._fc4_fn())
+        fc.append_field('Z', self._fc5_fn())
         field = _create_field(self._tc, fc)
-        field['V'] = -1872
-        field['W'] = "gerry"
-        field['X'] = 18.19
-        field['Y'] = 16497
+        field['U'] = -1871
+        field['V'] = "gerry"
+        field['W'] = 18.19
+        field['X'] = 16497
+        field['Y'] = {}
         field['Z'] = {}
         self.assertNotEqual(self._def, field)
 
@@ -1314,6 +1325,8 @@ class StructureFieldTestCase(unittest.TestCase):
         field['B'] = 'salut'
         field['C'] = 17.4
         field['D'] = 16497
+        field['E'] = {}
+        field['F'] = { 'F_1': 0 }
         self.assertNotEqual(self._def, field)
 
     def test_eq_same_content_diff_keys(self):
@@ -1323,12 +1336,14 @@ class StructureFieldTestCase(unittest.TestCase):
         fc.append_field('E', self._fc2_fn())
         fc.append_field('D', self._fc3_fn())
         fc.append_field('C', self._fc4_fn())
+        fc.append_field('F', self._fc5_fn())
         field = _create_field(self._tc, fc)
         field['A'] = -1872
         field['B'] = 'salut'
         field['E'] = 17.5
         field['D'] = 16497
         field['C'] = {}
+        field['F'] = {}
         self.assertNotEqual(self._def, field)
 
     def test_setitem(self):
@@ -1374,6 +1389,7 @@ class StructureFieldTestCase(unittest.TestCase):
             'C': 17.5,
             'D': 16497,
             'E': {},
+            'F': { 'F_1': 52 }
         }
 
         for vkey, vval in self._def.items():
@@ -1387,6 +1403,7 @@ class StructureFieldTestCase(unittest.TestCase):
             'C': 17.5,
             'D': 16497,
             'E': {},
+            'F': { 'F_1': 52 }
         }
         self.assertEqual(self._def, orig_values)
 
@@ -1467,6 +1484,12 @@ class VariantFieldTestCase(unittest.TestCase):
     def tearDown(self):
         del self._def
 
+    def test_bool_op_true(self):
+        self._def.selected_index = 2
+        self._def.value = -17.34
+        with self.assertRaises(NotImplementedError):
+            bool(self._def)
+
     def test_selected_index(self):
         self._def.selected_index = 2
         self.assertEqual(self._def.selected_index, 2)
@@ -1474,12 +1497,10 @@ class VariantFieldTestCase(unittest.TestCase):
     def test_selected_field(self):
         self._def.selected_index = 2
         self._def.value = -17.34
-        self.assertEqual(self._def.field(), -17.34)
         self.assertEqual(self._def.selected_field, -17.34)
 
         self._def.selected_index = 3
         self._def.value = 1921
-        self.assertEqual(self._def.field(), 1921)
         self.assertEqual(self._def.selected_field, 1921)
 
     def test_eq(self):
