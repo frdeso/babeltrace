@@ -201,6 +201,19 @@ class EnumerationFieldTypeTestCase(_TestIntegerFieldTypeProps, unittest.TestCase
         self.assertEqual(first_range.lower, 1)
         self.assertEqual(first_range.upper, 3)
 
+    def test_contains(self):
+        self._fc.map_range('a', 0)
+        self._fc.map_range('a', 2, 23)
+        self._fc.map_range('b', 2)
+        self._fc.map_range('c', 5)
+
+        a_mapping = self._fc['a']
+        b_mapping = self._fc['b']
+        first_range = next(iter(a_mapping))
+
+        self.assertIn(first_range, a_mapping)
+        self.assertNotIn(first_range, b_mapping)
+
     def test_iter(self):
         mappings = (
             ('a', 1, 5),
