@@ -116,9 +116,3 @@ class _SharedObject(_BaseObject):
         ptr = getattr(self, '_ptr', None)
         self._PUT_REF_FUNC(ptr)
         self._ptr = None
-
-
-class _PrivateObject:
-    def __del__(self):
-        self._pub_ptr = None
-        super().__del__()
