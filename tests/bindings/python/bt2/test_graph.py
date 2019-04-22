@@ -389,3 +389,29 @@ class GraphTestCase(unittest.TestCase):
         self.assertIs(calls[4][0], ports_connected_listener)
         self.assertEqual(calls[4][1].name, 'out')
         self.assertEqual(calls[4][2].name, 'in')
+
+    def test_invalid_listeners(self):
+        class MyIter(bt2._UserMessageIterator):
+            def __next__(self):
+                raise bt2.Stop
+
+        class MySource(bt2._UserSourceComponent,
+                       message_iterator_class=MyIter):
+            def __init__(self, params):
+                self._add_output_port('out')
+                self._add_output_port('zero')
+
+        class MySink(bt2._UserSinkComponent):
+            def __init__(self, params):
+                self._add_input_port('in')
+
+            def _consume(self):
+                raise bt2.Stop
+
+            def _port_connected(self, port, other_port):
+                self._add_input_port('taste')
+
+        with self.assertRaises(TypeError):
+            self._graph.add_port_added_listener(1234)
+        with self.assertRaises(TypeError):
+            self._graph.add_ports_connected_listener(1234)
