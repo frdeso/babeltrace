@@ -129,8 +129,8 @@ class _UserMessageIterator(_MessageIterator):
     def _create_event_message(self, event_class, packet, default_clock_snapshot=None):
         return bt2.message._EventMessage(self, event_class, packet, default_clock_snapshot)
 
-    def _create_inactivity_message(self, clock_class, clock_snapshot):
-        return bt2.message._InactivityMessage(self, clock_class, clock_snapshot)
+    def _create_message_iterator_inactivity_message(self, clock_class, clock_snapshot):
+        return bt2.message._MessageIteratorInactivityMessage(self, clock_class, clock_snapshot)
 
     def _create_stream_beginning_message(self, stream):
         return bt2.message._StreamBeginningMessage(self, stream)
@@ -149,3 +149,9 @@ class _UserMessageIterator(_MessageIterator):
 
     def _create_packet_end_message(self, packet, default_clock_snapshot=None):
         return bt2.message._PacketEndMessage(self, packet, default_clock_snapshot)
+
+    def _create_discarded_events_message(self, stream, count, beg_clock_snapshot=None, end_clock_snapshot=None):
+        return bt2.message._DiscardedEventsMessage(self, stream, count, beg_clock_snapshot, end_clock_snapshot)
+
+    def _create_discarded_packets_message(self, stream, count, beg_clock_snapshot=None, end_clock_snapshot=None):
+        return bt2.message._DiscardedPacketsMessage(self, stream, count, beg_clock_snapshot, end_clock_snapshot)
