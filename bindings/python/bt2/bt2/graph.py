@@ -44,26 +44,6 @@ def _graph_ports_connected_listener_from_native(user_listener,
     user_listener(upstream_port, downstream_port)
 
 
-def _graph_ports_disconnected_listener_from_native(user_listener,
-                                                   upstream_comp_ptr,
-                                                   downstream_comp_ptr,
-                                                   upstream_port_ptr,
-                                                   downstream_port_ptr):
-    try:
-        upstream_comp = bt2.component._create_generic_component_from_ptr(upstream_comp_ptr)
-        upstream_comp._get()
-        downstream_comp = bt2.component._create_generic_component_from_ptr(downstream_comp_ptr)
-        downstream_comp._get()
-        upstream_port = bt2.port._create_from_ptr(upstream_port_ptr)
-        upstream_port._get()
-        downstream_port = bt2.port._create_from_ptr(downstream_port_ptr)
-        downstream_port._get()
-        user_listener(upstream_comp, downstream_comp, upstream_port,
-                      downstream_port)
-    except:
-        pass
-
-
 class Graph(bt2.object._SharedObject):
     _GET_REF_FUNC = native_bt.graph_get_ref
     _PUT_REF_FUNC = native_bt.graph_put_ref
