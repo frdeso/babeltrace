@@ -773,7 +773,7 @@ class PortTestCase(unittest.TestCase):
         comp = self._create_sink_comp(MySink)
         self.assertFalse(comp.input_ports['clear'].is_connected)
 
-    def test_priv_name(self):
+    def test_self_name(self):
         class MySink(bt2._UserSinkComponent):
             def __init__(comp_self, params):
                 port = comp_self._add_input_port('clear')
@@ -784,7 +784,7 @@ class PortTestCase(unittest.TestCase):
 
         comp = self._create_sink_comp(MySink)
 
-    def test_priv_connection_none(self):
+    def test_self_connection_none(self):
         class MySink(bt2._UserSinkComponent):
             def __init__(comp_self, params):
                 port = comp_self._add_input_port('clear')
@@ -795,7 +795,7 @@ class PortTestCase(unittest.TestCase):
 
         comp = self._create_sink_comp(MySink)
 
-    def test_priv_is_connected_false(self):
+    def test_self_is_connected_false(self):
         class MySink(bt2._UserSinkComponent):
             def __init__(comp_self, params):
                 port = comp_self._add_input_port('clear')
