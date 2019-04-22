@@ -12,51 +12,51 @@ class StreamClassTestCase(unittest.TestCase):
 
         self._tc, self._cc = run_in_component_init(f)
 
-        self._packet_context_ft = self._tc.create_structure_field_class()
-        self._packet_context_ft.append_field(
+        self._packet_context_fc = self._tc.create_structure_field_class()
+        self._packet_context_fc.append_field(
             'menu', self._tc.create_real_field_class())
-        self._packet_context_ft.append_field(
+        self._packet_context_fc.append_field(
             'sticker', self._tc.create_string_field_class())
-        self._event_common_context_ft = self._tc.create_structure_field_class()
-        self._event_common_context_ft.append_field(
+        self._event_common_context_fc = self._tc.create_structure_field_class()
+        self._event_common_context_fc.append_field(
             'msg', self._tc.create_string_field_class())
 
         self._trace = self._tc()
 
         self._sc = self._tc.create_stream_class(id=12, name='my_stream_class',
                                                 assigns_automatic_event_class_id=False,
-                                                event_common_context_field_class=self._event_common_context_ft,
-                                                packet_context_field_class=self._packet_context_ft)
+                                                event_common_context_field_class=self._event_common_context_fc,
+                                                packet_context_field_class=self._packet_context_fc)
 
         # Create event class 1
-        context_ft = self._tc.create_structure_field_class()
-        context_ft.append_field('allo', self._tc.create_string_field_class())
-        context_ft.append_field(
+        context_fc = self._tc.create_structure_field_class()
+        context_fc.append_field('allo', self._tc.create_string_field_class())
+        context_fc.append_field(
             'zola', self._tc.create_unsigned_integer_field_class(18))
 
-        payload_ft = self._tc.create_structure_field_class()
-        payload_ft.append_field('zoom', self._tc.create_string_field_class())
+        payload_fc = self._tc.create_structure_field_class()
+        payload_fc.append_field('zoom', self._tc.create_string_field_class())
 
         self._ec1 = self._sc.create_event_class(id=23,
-                                                specific_context_field_class=context_ft,
-                                                payload_field_class=payload_ft)
+                                                specific_context_field_class=context_fc,
+                                                payload_field_class=payload_fc)
 
         # Create event class 2
-        context_ft = self._tc.create_structure_field_class()
-        context_ft.append_field('allo', self._tc.create_string_field_class())
-        context_ft.append_field(
+        context_fc = self._tc.create_structure_field_class()
+        context_fc.append_field('allo', self._tc.create_string_field_class())
+        context_fc.append_field(
             'zola', self._tc.create_unsigned_integer_field_class(18))
 
-        payload_ft = self._tc.create_structure_field_class()
-        payload_ft.append_field('zoom', self._tc.create_string_field_class())
+        payload_fc = self._tc.create_structure_field_class()
+        payload_fc.append_field('zoom', self._tc.create_string_field_class())
 
         self._ec2 = self._sc.create_event_class(id=17,
-                                                specific_context_field_class=context_ft,
-                                                payload_field_class=payload_ft)
+                                                specific_context_field_class=context_fc,
+                                                payload_field_class=payload_fc)
 
     def tearDown(self):
-        del self._packet_context_ft
-        del self._event_common_context_ft
+        del self._packet_context_fc
+        del self._event_common_context_fc
         del self._ec1
         del self._ec2
         del self._sc
@@ -65,9 +65,9 @@ class StreamClassTestCase(unittest.TestCase):
         self.assertEqual(self._sc.name, 'my_stream_class')
         self.assertEqual(self._sc.id, 12)
         self.assertEqual(self._sc.packet_context_field_class.addr,
-                         self._packet_context_ft.addr)
+                         self._packet_context_fc.addr)
         self.assertEqual(self._sc.event_common_context_field_class.addr,
-                         self._event_common_context_ft.addr)
+                         self._event_common_context_fc.addr)
         self.assertEqual(self._sc[23]._ptr, self._ec1._ptr)
         self.assertEqual(self._sc[17]._ptr, self._ec2._ptr)
         self.assertEqual(len(self._sc), 2)
@@ -91,6 +91,27 @@ class StreamClassTestCase(unittest.TestCase):
         self.assertFalse(sc.assigns_automatic_event_class_id)
         self.assertIsNotNone(ec.id)
         self.assertIsNotNone(stream.id)
+
+    def test_event_class_create_full(self):
+        sc = self._tc.create_stream_class(id=1212)
+        context_fc = self._tc.create_structure_field_class()
+        context_fc.append_field('allo', self._tc.create_string_field_class())
+        context_fc.append_field(
+            'zola', self._tc.create_unsigned_integer_field_class(18))
+
+        payload_fc = self._tc.create_structure_field_class()
+        payload_fc.append_field('zoom', self._tc.create_string_field_class())
+
+        # Create event class
+        ec1 = self._sc.create_event_class(24, 'jannine', bt2.EventClassLogLevel.EMERGENCY,
+                                                'my/emf/uri', specific_context_field_class=context_fc,
+                                                payload_field_class=payload_fc)
+        self.assertEqual(ec1.id, 24)
+        self.assertEqual(ec1.name, 'jannine')
+        self.assertEqual(ec1.log_level, bt2.EventClassLogLevel.EMERGENCY)
+        self.assertEqual(ec1.emf_uri, 'my/emf/uri')
+        self.assertEqual(ec1.specific_context_field_class._ptr, context_fc._ptr)
+        self.assertEqual(ec1.payload_field_class._ptr, payload_fc._ptr)
 
     def test_create_invalid_name(self):
         with self.assertRaises(TypeError):
