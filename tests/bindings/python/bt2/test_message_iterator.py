@@ -4,6 +4,44 @@ import unittest
 import copy
 import bt2
 
+class SelfPortInputMessageIteratorTestCase(unittest.TestCase):
+    def test_component(self):
+        class MyIter(bt2._UserMessageIterator):
+            def __init__(self):
+                pass
+
+        class MySource(bt2._UserSourceComponent,
+                       message_iterator_class=MyIter):
+            def __init__(self, params):
+                self._add_output_port('out')
+
+        class MySink(bt2._UserSinkComponent):
+            def __init__(self, params):
+                self._add_input_port('in')
+
+            def _consume(self):
+                next(self._msg_iter)
+
+            def _graph_is_configured(self):
+                self._msg_iter = self._input_ports['in'].create_message_iterator()
+                nonlocal src_comp_addr
+                nonlocal src_comp_cls_addr
+                src_comp_addr = self._msg_iter.component.addr
+                src_comp_cls_addr = self._msg_iter.component.component_class.addr
+
+        src_comp_addr = 0
+        src_comp_cls_addr = 0
+        graph = bt2.Graph()
+        src_comp = graph.add_source_component(MySource, 'src')
+        sink_comp = graph.add_sink_component(MySink, 'sink')
+        graph.connect_ports(src_comp.output_ports['out'],
+                            sink_comp.input_ports['in'])
+
+        graph.run()
+
+        self.assertEqual(src_comp_addr, src_comp.addr)
+        self.assertEqual(src_comp_cls_addr, MySource.addr)
+
 
 class UserMessageIteratorTestCase(unittest.TestCase):
     @staticmethod
