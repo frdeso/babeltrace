@@ -124,6 +124,9 @@ class _EnumerationFieldClassMappingRange:
     def upper(self):
         return self._upper
 
+    def __eq__(self, other):
+        return self.lower == other.lower and self.upper == other.upper
+
 
 class _EnumerationFieldClassMapping(collections.abc.Set):
     def __init__(self, mapping_ptr, label, is_signed):
