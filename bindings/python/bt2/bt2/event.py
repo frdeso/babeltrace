@@ -63,15 +63,6 @@ class _Event(bt2.object._UniqueObject):
         return bt2._Stream._create_from_ptr_and_get_ref(stream_ptr)
 
     @property
-    def header_field(self):
-        field_ptr = native_bt.event_borrow_header_field(self._ptr)
-
-        if field_ptr is None:
-            return
-
-        return bt2.field._create_field_from_ptr(field_ptr, self._owning_ptr)
-
-    @property
     def common_context_field(self):
         field_ptr = native_bt.event_borrow_common_context_field(self._ptr)
 
@@ -107,10 +98,7 @@ class _Event(bt2.object._UniqueObject):
     @property
     def packet(self):
         packet_ptr = native_bt.event_borrow_packet(self._ptr)
-
-        if packet_ptr is None:
-            return packet_ptr
-
+        assert packet_ptr is not None
         return bt2.packet._Packet._create_from_ptr_and_get_ref(packet_ptr)
 
     def __getitem__(self, key):
@@ -130,12 +118,7 @@ class _Event(bt2.object._UniqueObject):
         if sec_field is not None and key in sec_field:
             return sec_field[key]
 
-        packet = self.packet
-
-        if packet is None:
-            raise KeyError(key)
-
-        pkt_context_field = packet.context_field
+        pkt_context_field = self.packet.context_field
 
         if pkt_context_field is not None and key in pkt_context_field:
             return pkt_context_field[key]
