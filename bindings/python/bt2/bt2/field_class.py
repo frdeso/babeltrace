@@ -52,7 +52,6 @@ class _FieldClass(object._SharedObject):
 
 
 class _IntegerFieldClass(_FieldClass):
-
     @property
     def range(self):
         size = native_bt.field_class_integer_get_field_value_range(self._ptr)
@@ -230,11 +229,6 @@ class SignedEnumerationFieldClass(_EnumerationFieldClass, _SignedIntegerFieldCla
 
 class StringFieldClass(_FieldClass):
     _NAME = 'String'
-    def __init__(self):
-        ptr = native_bt.field_class_string_create();
-        self._check_create_status(ptr)
-        super().__init__(ptr)
-
 
 class _FieldContainer(collections.abc.Mapping):
     def __len__(self):
@@ -291,11 +285,6 @@ class _StructureFieldClassFieldIterator(collections.abc.Iterator):
 class StructureFieldClass(_FieldClass, _FieldContainer):
     _NAME = 'Structure'
     _ITER_CLS = _StructureFieldClassFieldIterator
-    def __init__(self):
-        ptr = native_bt.field_class_structure_create()
-        self._check_create_status(ptr)
-        super().__init__(ptr)
-
     def _count(self):
         return native_bt.field_class_structure_get_member_count(self._ptr)
 
@@ -333,15 +322,6 @@ class _VariantFieldClassFieldIterator(collections.abc.Iterator):
 class VariantFieldClass(_FieldClass, _FieldContainer):
     _NAME = 'Variant'
     _ITER_CLS = _VariantFieldClassFieldIterator
-
-    def __init__(self, selector_ft=None):
-        ptr = native_bt.field_class_variant_create()
-        self._check_create_status(ptr)
-        super().__init__(ptr)
-
-        if selector_ft is not None:
-            self.selector_field_class = selector_ft
-
     @property
     def selector_field_path(self):
         ptr = native_bt.field_class_variant_borrow_selector_field_path_const(self._ptr)
@@ -384,28 +364,12 @@ class ArrayFieldClass(_FieldClass):
 
 
 class StaticArrayFieldClass(ArrayFieldClass):
-    def __init__(self, elem_ft, length):
-        utils._check_type(elem_ft, _FieldClass)
-        utils._check_uint64(length)
-        ptr = native_bt.field_class_static_array_create(elem_ft._ptr, length)
-        self._check_create_status(ptr)
-        super().__init__(ptr)
-
     @property
     def length(self):
         return native_bt.field_class_static_array_get_length(self._ptr)
 
 
 class DynamicArrayFieldClass(ArrayFieldClass):
-    def __init__(self, elem_ft, length_ft=None):
-        utils._check_type(elem_ft, _FieldClass)
-        ptr = native_bt.field_class_dynamic_array_create(elem_ft._ptr)
-        self._check_create_status(ptr)
-        super().__init__(ptr)
-
-        if length_ft is not None:
-            self.length_field_class = length_ft
-
     @property
     def length_field_path(self):
         ptr = native_bt.field_class_dynamic_array_borrow_length_field_path_const(self._ptr)
