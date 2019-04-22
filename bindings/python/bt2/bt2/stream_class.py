@@ -184,18 +184,6 @@ class _StreamClass(bt2.object._SharedObject, collections.abc.Mapping):
 
     _event_common_context_field_class = property(fset=_event_common_context_field_class)
 
-    def __call__(self, id=None):
-        if self.assigns_automatic_stream_id:
-            stream_ptr = native_bt.stream_create(self._ptr)
-        else:
-            utils._check_uint64(id)
-            stream_ptr = native_bt.stream_create_with_id(self._ptr, id)
-
-        if stream_ptr is None:
-            raise bt2.CreationError('cannot create stream object')
-
-        return bt2.stream._Stream._create_from_ptr(stream_ptr)
-
     @property
     def default_clock_class(self):
         cc_ptr = native_bt.stream_class_borrow_default_clock_class(self._ptr)
