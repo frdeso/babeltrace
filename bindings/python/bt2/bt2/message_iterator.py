@@ -67,9 +67,9 @@ class _SelfPortInputMessageIterator(_GenericMessageIterator):
 
     @property
     def component(self):
-        comp_ptr = native_bt.private_connection_message_iterator_get_component(self._ptr)
+        comp_ptr = native_bt.self_component_port_input_message_iterator_borrow_component(self._ptr)
         assert(comp_ptr)
-        return bt2.component._create_generic_component_from_ptr(comp_ptr)
+        return bt2.component._create_known_component_from_ptr_and_get_ref(comp_ptr, None)
 
 
 class _OutputPortMessageIterator(_GenericMessageIterator):

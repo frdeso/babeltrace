@@ -48,7 +48,7 @@ class _Message(object._SharedObject):
 class _EventMessage(_Message):
     _TYPE = native_bt.MESSAGE_TYPE_EVENT
 
-    def __init__(self, priv_conn_priv_iter, event_class, packet, default_clock_snapshot):
+    def __init__(self, self_msg_iter, event_class, packet, default_clock_snapshot):
         utils._check_type(event_class, bt2.event_class._EventClass)
 
         has_default_clock_class = packet.stream.stream_class.default_clock_class is not None
@@ -62,10 +62,10 @@ class _EventMessage(_Message):
 
         if has_default_clock_class:
             utils._check_uint64(default_clock_snapshot)
-            ptr = native_bt.message_event_create_with_default_clock_snapshot(priv_conn_priv_iter._ptr,
+            ptr = native_bt.message_event_create_with_default_clock_snapshot(self_msg_iter._ptr,
                                                                              event_class._ptr, packet._ptr, default_clock_snapshot)
         else:
-            ptr = native_bt.message_event_create(priv_conn_priv_iter._ptr,
+            ptr = native_bt.message_event_create(self_msg_iter._ptr,
                                                  event_class._ptr, packet._ptr)
 
         if ptr is None:
