@@ -105,7 +105,6 @@ class GraphTestCase(unittest.TestCase):
 
         conn = self._graph.connect_ports(src.output_ports['out'],
                                          sink.input_ports['in'])
-        return
         self.assertTrue(src.output_ports['out'].is_connected)
         self.assertTrue(sink.input_ports['in'].is_connected)
         self.assertEqual(src.output_ports['out'].connection._ptr, conn._ptr)
@@ -159,32 +158,6 @@ class GraphTestCase(unittest.TestCase):
         sink = self._graph.add_sink_component(MySink, 'sink')
 
         with self.assertRaises(bt2.PortConnectionRefused):
-            conn = self._graph.connect_ports(src.output_ports['out'],
-                                             sink.input_ports['in'])
-
-    @unittest.skip('allo')
-    def test_connect_ports_canceled(self):
-        class MyIter(bt2._UserMessageIterator):
-            def __next__(self):
-                raise bt2.Stop
-
-        class MySource(bt2._UserSourceComponent,
-                       message_iterator_class=MyIter):
-            def __init__(self, params):
-                self._add_output_port('out')
-
-        class MySink(bt2._UserSinkComponent):
-            def __init__(self, params):
-                self._add_input_port('in')
-
-            def _consume(self):
-                raise bt2.Stop
-
-        src = self._graph.add_source_component(MySource, 'src')
-        sink = self._graph.add_sink_component(MySink, 'sink')
-        self._graph.cancel()
-
-        with self.assertRaises(bt2.GraphCanceled):
             conn = self._graph.connect_ports(src.output_ports['out'],
                                              sink.input_ports['in'])
 
