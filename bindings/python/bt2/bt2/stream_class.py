@@ -145,17 +145,13 @@ class _StreamClass(bt2.object._SharedObject, collections.abc.Mapping):
         return bt2.field_class._create_field_class_from_ptr_and_get_ref(ft_ptr)
 
     def _packet_context_field_class(self, packet_context_field_class):
-        if packet_context_field_class is None:
-            return
-
-        utils._check_type(packet_context_field_class,
-                          bt2.field_class._FieldClass)
-        packet_context_field_class_ptr = packet_context_field_class._ptr
-
-        ret = native_bt.stream_class_set_packet_context_field_class(self._ptr,
-                                                                    packet_context_field_class_ptr)
-        utils._handle_ret(
-            ret, "cannot set stream class object's packet context field type")
+        if packet_context_field_class is not None:
+            utils._check_type(packet_context_field_class,
+                              bt2.field_class._FieldClass)
+            ret = native_bt.stream_class_set_packet_context_field_class(self._ptr,
+                                                                        packet_context_field_class._ptr)
+            utils._handle_ret(ret, "cannot set stream class object's packet " \
+                                "context field type")
 
     _packet_context_field_class = property(fset=_packet_context_field_class)
 
@@ -170,17 +166,13 @@ class _StreamClass(bt2.object._SharedObject, collections.abc.Mapping):
         return bt2.field_class._create_field_class_from_ptr_and_get_ref(ft_ptr)
 
     def _event_common_context_field_class(self, event_common_context_field_class):
-        event_common_context_field_class_ptr = None
-
         if event_common_context_field_class is not None:
             utils._check_type(event_common_context_field_class,
                               bt2.field_class._FieldClass)
-            event_common_context_field_class_ptr = event_common_context_field_class._ptr
-
             ret = native_bt.stream_class_set_event_common_context_field_class(self._ptr,
-                                                                              event_common_context_field_class_ptr)
-            utils._handle_ret(
-                ret, "cannot set stream class object's event context field type")
+                                                                              event_common_context_field_class._ptr)
+            utils._handle_ret(ret, "cannot set stream class object's event " \
+                                "context field type")
 
     _event_common_context_field_class = property(fset=_event_common_context_field_class)
 
