@@ -13,14 +13,13 @@ class LttngUtilsDebugInfoTestCase(unittest.TestCase):
         flt = bt2.ComponentSpec('lttng-utils', 'debug-info', {
             'target-prefix': target_prefix,
         })
-        it = bt2.TraceCollectionNotificationIterator(src, flt,
-                                                     [bt2.EventNotification])
+        it = bt2.TraceCollectionMessageIterator(src, flt)
         notifs = list(it)
-        debug_info = notifs[2].event['debug_info']
+        debug_info = notifs[5].event['debug_info']
         self.assertEqual(debug_info['bin'], 'libhello_so+0x14d4')
         self.assertEqual(debug_info['func'], 'foo+0xa9')
         self.assertEqual(debug_info['src'], 'libhello.c:7')
-        debug_info = notifs[3].event['debug_info']
+        debug_info = notifs[6].event['debug_info']
         self.assertEqual(debug_info['bin'], 'libhello_so+0x15a6')
         self.assertEqual(debug_info['func'], 'bar+0xa9')
         self.assertEqual(debug_info['src'], 'libhello.c:13')
