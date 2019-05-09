@@ -34,18 +34,24 @@
 #define SO_NAME_ELF "libhello_elf_so"
 #define SO_NAME_BUILD_ID "libhello_build_id_so"
 #define SO_NAME_DEBUG_LINK "libhello_debug_link_so"
+
 #define SO_LOW_ADDR 0x400000
 #define SO_MEMSZ 0x400000
+
 #define FUNC_FOO_ADDR 0x4014ee
 #define FUNC_FOO_LINE_NO 8
 #define FUNC_FOO_FILENAME "/efficios/libhello.c"
+
 #define FUNC_FOO_TP_ADDR 0x4014d3
 #define FUNC_FOO_TP_LINE_NO 7
 #define FUNC_FOO_TP_FILENAME "/efficios/libhello.c"
+
 #define FUNC_FOO_ADDR_ELF 0x4013ef
 #define FUNC_FOO_ADDR_DBG_LINK 0x40148e
+
 #define FUNC_FOO_NAME "foo+0xc3"
 #define FUNC_FOO_NAME_ELF "foo+0x24"
+
 #define BUILD_ID_LEN 20
 
 char *opt_debug_info_dir;
@@ -80,10 +86,10 @@ void test_bin_info_build_id(const char *data_dir)
 
 	/* Test function name lookup (with DWARF) */
 	ret = bin_info_lookup_function_name(bin, FUNC_FOO_ADDR, &func_name);
-	ok(ret == 0, "bin_info_lookup_function_name successful");
+	ok(ret == 0, "bin_info_lookup_function_name successful at 0x%x", FUNC_FOO_ADDR);
 	if (func_name) {
 		ok(strcmp(func_name, FUNC_FOO_NAME) == 0,
-			"bin_info_lookup_function_name - correct func_name value");
+			"bin_info_lookup_function_name - correct func_name (%s == %s)", FUNC_FOO_NAME, func_name);
 		free(func_name);
 	} else {
 		skip(1, "bin_info_lookup_function_name - func_name is NULL");
@@ -91,12 +97,12 @@ void test_bin_info_build_id(const char *data_dir)
 
 	/* Test source location lookup */
 	ret = bin_info_lookup_source_location(bin, FUNC_FOO_ADDR, &src_loc);
-	ok(ret == 0, "bin_info_lookup_source_location successful");
+	ok(ret == 0, "bin_info_lookup_source_location successful at 0x%x", FUNC_FOO_ADDR);
 	if (src_loc) {
 		ok(src_loc->line_no == FUNC_FOO_LINE_NO,
-			"bin_info_lookup_source_location - correct line_no");
+			"bin_info_lookup_source_location - correct line_no (%d == %d)", FUNC_FOO_LINE_NO, src_loc->line_no);
 		ok(strcmp(src_loc->filename, FUNC_FOO_FILENAME) == 0,
-			"bin_info_lookup_source_location - correct filename");
+			"bin_info_lookup_source_location - correct filename (%s == %s)", FUNC_FOO_FILENAME, src_loc->filename);
 		source_location_destroy(src_loc);
 	} else {
 		skip(2, "bin_info_lookup_source_location - src_loc is NULL");
@@ -135,10 +141,10 @@ void test_bin_info_debug_link(const char *data_dir)
 	/* Test function name lookup (with DWARF) */
 	ret = bin_info_lookup_function_name(bin, FUNC_FOO_ADDR_DBG_LINK,
 					&func_name);
-	ok(ret == 0, "bin_info_lookup_function_name successful");
+	ok(ret == 0, "bin_info_lookup_function_name successful at 0x%x", FUNC_FOO_ADDR_DBG_LINK);
 	if (func_name) {
 		ok(strcmp(func_name, FUNC_FOO_NAME) == 0,
-			"bin_info_lookup_function_name - correct func_name value");
+			"bin_info_lookup_function_name - correct func_name (%s == %s)", FUNC_FOO_NAME, func_name);
 		free(func_name);
 	} else {
 		skip(1, "bin_info_lookup_function_name - func_name is NULL");
@@ -147,12 +153,12 @@ void test_bin_info_debug_link(const char *data_dir)
 	/* Test source location lookup */
 	ret = bin_info_lookup_source_location(bin, FUNC_FOO_ADDR_DBG_LINK,
 					&src_loc);
-	ok(ret == 0, "bin_info_lookup_source_location successful");
+	ok(ret == 0, "bin_info_lookup_source_location successful at 0x%x", FUNC_FOO_ADDR_DBG_LINK);
 	if (src_loc) {
 		ok(src_loc->line_no == FUNC_FOO_LINE_NO,
-			"bin_info_lookup_source_location - correct line_no");
+			"bin_info_lookup_source_location - correct line_no (%d == %d)", FUNC_FOO_LINE_NO, src_loc->line_no);
 		ok(strcmp(src_loc->filename, FUNC_FOO_FILENAME) == 0,
-			"bin_info_lookup_source_location - correct filename");
+			"bin_info_lookup_source_location - correct filename (%s == %s)", FUNC_FOO_FILENAME, src_loc->filename);
 		source_location_destroy(src_loc);
 	} else {
 		skip(2, "bin_info_lookup_source_location - src_loc is NULL");
@@ -186,7 +192,7 @@ void test_bin_info_elf(const char *data_dir)
 	ok(ret == 0, "bin_info_lookup_function_name successful");
 	if (func_name) {
 		ok(strcmp(func_name, FUNC_FOO_NAME_ELF) == 0,
-			"bin_info_lookup_function_name - correct func_name value");
+			"bin_info_lookup_function_name - correct func_name (%s == %s)", FUNC_FOO_NAME_ELF, func_name);
 		free(func_name);
 		func_name = NULL;
 	} else {
@@ -241,10 +247,10 @@ void test_bin_info(const char *data_dir)
 
 	/* Test function name lookup (with DWARF) */
 	ret = bin_info_lookup_function_name(bin, FUNC_FOO_ADDR, &func_name);
-	ok(ret == 0, "bin_info_lookup_function_name successful");
+	ok(ret == 0, "bin_info_lookup_function_name successful at 0x%x", FUNC_FOO_ADDR);
 	if (func_name) {
 		ok(strcmp(func_name, FUNC_FOO_NAME) == 0,
-			"bin_info_lookup_function_name - correct func_name value");
+			"bin_info_lookup_function_name - correct func_name (%s == %s)", FUNC_FOO_NAME, func_name);
 		free(func_name);
 		func_name = NULL;
 	} else {
@@ -258,12 +264,12 @@ void test_bin_info(const char *data_dir)
 
 	/* Test source location lookup */
 	ret = bin_info_lookup_source_location(bin, FUNC_FOO_ADDR, &src_loc);
-	ok(ret == 0, "bin_info_lookup_source_location successful");
+	ok(ret == 0, "bin_info_lookup_source_location successful at 0x%x", FUNC_FOO_ADDR);
 	if (src_loc) {
 		ok(src_loc->line_no == FUNC_FOO_LINE_NO,
-			"bin_info_lookup_source_location - correct line_no");
+			"bin_info_lookup_source_location - correct line_no (%d == %d)", FUNC_FOO_LINE_NO, src_loc->line_no);
 		ok(strcmp(src_loc->filename, FUNC_FOO_FILENAME) == 0,
-			"bin_info_lookup_source_location - correct filename");
+			"bin_info_lookup_source_location - correct filename (%s == %s)", FUNC_FOO_FILENAME, src_loc->filename);
 		source_location_destroy(src_loc);
 		src_loc = NULL;
 	} else {
@@ -273,12 +279,12 @@ void test_bin_info(const char *data_dir)
 	/* Test source location lookup - inlined function */
 	ret = bin_info_lookup_source_location(bin, FUNC_FOO_TP_ADDR, &src_loc);
 	ok(ret == 0,
-		"bin_info_lookup_source_location (inlined func) successful");
+		"bin_info_lookup_source_location (inlined func) successful at 0x%x", FUNC_FOO_TP_ADDR);
 	if (src_loc) {
 		ok(src_loc->line_no == FUNC_FOO_TP_LINE_NO,
-			"bin_info_lookup_source_location (inlined func) - correct line_no");
+			"bin_info_lookup_source_location (inlined func) - correct line_no (%d == %d)", FUNC_FOO_TP_LINE_NO, src_loc->line_no);
 		ok(strcmp(src_loc->filename, FUNC_FOO_TP_FILENAME) == 0,
-			"bin_info_lookup_source_location (inlined func) - correct filename");
+			"bin_info_lookup_source_location (inlined func) - correct filename (%s == %s)", FUNC_FOO_TP_FILENAME, src_loc->filename);
 		source_location_destroy(src_loc);
 		src_loc = NULL;
 	} else {
