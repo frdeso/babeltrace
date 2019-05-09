@@ -53,8 +53,10 @@ endif
 
 if ENABLE_DEBUG_INFO
 TESTS_PLUGINS += \
-	plugins/test_dwarf_complete \
-	plugins/test_bin_info_complete
+	plugins/test_dwarf_i386-linux-gnu \
+	plugins/test_dwarf_x86_64-linux-gnu \
+	plugins/test_bin_info_i386-linux-gnu \
+	plugins/test_bin_info_x86_64-linux-gnu
 endif
 
 TESTS_PYTHON_PLUGIN_PROVIDER =

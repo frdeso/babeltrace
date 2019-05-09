@@ -28,7 +28,7 @@
 #include <lttng-utils/debug-info/dwarf.h>
 #include "tap/tap.h"
 
-#define NR_TESTS 15
+#define NR_TESTS 17
 
 static
 void test_bt_dwarf(const char *data_dir)
@@ -40,7 +40,26 @@ void test_bt_dwarf(const char *data_dir)
 	struct bt_dwarf_die *die = NULL;
 	Dwarf *dwarf_info = NULL;
 
-	snprintf(path, PATH_MAX, "%s/libhello_so", data_dir);
+	/*
+	 * First test that we fail on an ELF file without DWARF.
+	 */
+	snprintf(path, PATH_MAX, "%s/elf_only/libhello_so", data_dir);
+
+	fd = open(path, O_RDONLY);
+	ok(fd >= 0, "Open ELF file %s", path);
+	if (fd < 0) {
+	        exit(EXIT_FAILURE);
+	}
+	dwarf_info = dwarf_begin(fd, DWARF_C_READ);
+	ok(dwarf_info == NULL, "dwarf_begin failed as expected");
+	if (dwarf_info != NULL) {
+		exit(EXIT_FAILURE);
+	}
+
+	/*
+	 * Then try with a proper DWARF file.
+	 */
+	snprintf(path, PATH_MAX, "%s/dwarf_full/libhello_so", data_dir);
 
 	fd = open(path, O_RDONLY);
 	ok(fd >= 0, "Open DWARF file %s", path);
