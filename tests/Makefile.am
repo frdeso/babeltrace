@@ -1,8 +1,8 @@
 SUBDIRS = utils cli lib bindings plugins
 
-EXTRA_DIST = $(srcdir)/ctf-traces/** \
-	     $(srcdir)/debug-info-data/** \
-	     $(srcdir)/debug-info-data/.build-id/cd/**
+# Directories added to EXTRA_DIST will be recursively copied to the distribution.
+EXTRA_DIST = $(srcdir)/ctf-traces \
+	     $(srcdir)/debug-info-data
 
 TESTS_BINDINGS =
 
