@@ -24,4 +24,12 @@ curdir="$(cd -P "$(dirname "$0")" >/dev/null && pwd)"
 
 debug_info_data="${BT_SRC_PATH}/tests/debug-info-data/i386-linux-gnu"
 
-"${curdir}/test_bin_info" "$debug_info_data"
+"${curdir}/test_bin_info" \
+	--foo-addr=0x1c8d \
+	--printf-offset=0xda \
+	--printf-lineno=36 \
+	--tp-offset=0x12 \
+	--tp-lineno=35 \
+	--debug-link-crc=0xdeead493 \
+	--debug-info-dir "$debug_info_data" \
+	--build-id cdd98cdd87f7fe64c13b6daad553987eafd40cbb
