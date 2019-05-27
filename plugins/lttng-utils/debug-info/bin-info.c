@@ -1439,6 +1439,7 @@ int bin_info_lookup_cu_src_loc_no_inl(struct bt_dwarf_cu *cu, uint64_t addr,
 	Dwarf_Line *line = NULL;
 	Dwarf_Addr line_addr;
 	int ret, line_no;
+	bool found = false;
 
 	if (!cu || !src_loc) {
 		goto error;
@@ -1449,24 +1450,51 @@ int bin_info_lookup_cu_src_loc_no_inl(struct bt_dwarf_cu *cu, uint64_t addr,
 		goto error;
 	}
 
-	line = dwarf_getsrc_die(die->dwarf_die, addr);
-	if (!line) {
-		goto error;
+	while (bt_dwarf_die_next(die) == 0) {
+		int tag;
+
+		ret = bt_dwarf_die_get_tag(die, &tag);
+		if (ret) {
+			goto error;
+		}
+
+		if (tag == DW_TAG_subprogram) {
+			ret = bt_dwarf_die_contains_addr(die, addr, &found);
+			if (ret) {
+				goto error;
+			}
+
+			if (found) {
+				break;
+			}
+		}
 	}
 
-	ret = dwarf_lineaddr(line, &line_addr);
-	if (ret) {
-		goto error;
-	}
+	if (found) {
+		struct bt_dwarf_die *cu_die = NULL;
+		int line_no = 0;
 
-	filename = dwarf_linesrc(line, NULL, NULL);
-	if (!filename) {
-		goto error;
-	}
+		cu_die = bt_dwarf_die_create(die->cu);
+		if (!cu_die) {
+			goto error;
+		}
 
-	if (addr == line_addr) {
-		_src_loc = g_new0(struct source_location, 1);
-		if (!_src_loc) {
+		line = dwarf_getsrc_die(cu_die->dwarf_die, addr);
+		if (!line) {
+			goto error;
+		}
+
+		ret = dwarf_lineaddr(line, &line_addr);
+		if (ret) {
+			goto error;
+		}
+
+		filename = dwarf_linesrc(line, NULL, NULL);
+		if (!filename) {
+			goto error;
+		}
+
+		if (addr != line_addr) {
 			goto error;
 		}
 
@@ -1475,16 +1503,17 @@ int bin_info_lookup_cu_src_loc_no_inl(struct bt_dwarf_cu *cu, uint64_t addr,
 			goto error;
 		}
 
-		_src_loc->line_no = line_no;
+		_src_loc = g_new0(struct source_location, 1);
+		if (!_src_loc) {
+			goto error;
+		}
+
 		_src_loc->filename = g_strdup(filename);
-	}
-
-	bt_dwarf_die_destroy(die);
-
-	if (_src_loc) {
+		_src_loc->line_no = line_no;
 		*src_loc = _src_loc;
 	}
 
+	bt_dwarf_die_destroy(die);
 	return 0;
 
 error:

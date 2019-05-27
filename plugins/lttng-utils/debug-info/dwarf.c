@@ -258,6 +258,12 @@ int bt_dwarf_die_get_name(struct bt_dwarf_die *die, char **name)
 error:
 	return -1;
 }
+BT_HIDDEN
+int bt_dwarf_die_get_src_die(struct bt_dwarf_die *die, uint64_t addr)
+{
+	int ret;
+	return ret;
+}
 
 BT_HIDDEN
 int bt_dwarf_die_get_call_file(struct bt_dwarf_die *die, char **filename)
