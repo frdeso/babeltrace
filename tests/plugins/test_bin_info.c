@@ -365,7 +365,7 @@ int main(int argc, char **argv)
 	GError *error = NULL;
 	GOptionContext *context;
 
-	context = g_option_context_new("- test tree model performance");
+	context = g_option_context_new("- bin info test");
 	g_option_context_add_main_entries(context, entries, NULL);
 	if (!g_option_context_parse(context, &argc, &argv, &error))
 	{
@@ -376,6 +376,7 @@ int main(int argc, char **argv)
 	g_snprintf(func_foo_printf_name, FUNC_FOO_NAME_LEN, FUNC_FOO_PRINTF_NAME_FMT, opt_func_foo_printf_offset);
 	func_foo_printf_addr = SO_LOW_ADDR + opt_func_foo_addr + opt_func_foo_printf_offset;
 	func_foo_tp_addr = SO_LOW_ADDR + opt_func_foo_addr + opt_func_foo_tp_offset;
+
 	if (build_id_to_bin()) {
 		fprintf(stderr, "Failed to parse / missing build id\n");
 		exit(EXIT_FAILURE);
