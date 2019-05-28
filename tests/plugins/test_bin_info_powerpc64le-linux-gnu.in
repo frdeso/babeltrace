@@ -25,11 +25,11 @@ curdir="$(cd -P "$(dirname "$0")" >/dev/null && pwd)"
 debug_info_data="${BT_SRC_PATH}/tests/debug-info-data/powerpc64le-linux-gnu"
 
 "${curdir}/test_bin_info" \
-	--foo-addr=0x23bc \
-	--printf-offset=0x114 \
+	--foo-addr=0x2e7c \
+	--printf-offset=0x190 \
 	--printf-lineno=36 \
-	--tp-offset=0x28 \
+	--tp-offset=0x1c \
 	--tp-lineno=35 \
-	--debug-link-crc=0xd7b98958 \
+	--debug-link-crc=0x9b8eb2ff \
 	--debug-info-dir "$debug_info_data" \
 	--build-id cdd98cdd87f7fe64c13b6daad553987eafd40cbb
