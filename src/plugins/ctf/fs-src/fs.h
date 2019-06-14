@@ -115,6 +115,9 @@ struct ctf_fs_trace {
 };
 
 struct ctf_fs_ds_index_entry {
+	/* Weak, belongs to ctf_fs_ds_file_info. */
+	GString *path;
+
 	/* Position, in bytes, of the packet from the beginning of the file. */
 	uint64_t offset;
 
