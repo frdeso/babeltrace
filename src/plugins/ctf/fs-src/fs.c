@@ -1759,6 +1759,15 @@ end:
 }
 
 static
+int decode_packet_first_event_timestamp(struct ctf_fs_trace *ctf_fs_trace,
+	struct ctf_clock_class *default_cc,
+	struct ctf_fs_ds_index_entry *index_entry, uint64_t *cs, int64_t *ts_ns)
+{
+	return decode_clock_snapshot_after_event(ctf_fs_trace, default_cc,
+		index_entry, FIRST_EVENT, cs, ts_ns);
+}
+
+static
 int decode_packet_last_event_timestamp(struct ctf_fs_trace *ctf_fs_trace,
 	struct ctf_clock_class *default_cc,
 	struct ctf_fs_ds_index_entry *index_entry, uint64_t *cs, int64_t *ts_ns)
@@ -1853,6 +1862,77 @@ void fix_index_lttng_event_after_packet_bug(struct ctf_fs_trace *trace)
 		}
 	}
 
+end:
+	return;
+}
+
+/*
+ * Fix up packet index entries for barectf's "event-before-packet" bug.
+ * Some buggy barectf tracer versions may emit events with a timestamp that is
+ * smaller (before) than the timestamp_begin of the their packets.
+ *
+ * To fix up this erroneous data we do the following:
+ *  1. Starting at the second index entry, set the timestamp_begin of the
+ *     current entry to the timestamp of the first event of the packet.
+ *  2. Set the previous entry's timestamp_end to the timestamp_begin of the
+ *     current packet.
+ *
+ * Known buggy tracer versions:
+ *  - before barectf 2.3.1
+ */
+static
+void fix_index_barectf_event_before_packet_bug(struct ctf_fs_trace *trace)
+{
+	guint ds_file_group_idx;
+	GPtrArray *ds_file_groups = trace->ds_file_groups;
+	bt_logging_level log_level = trace->log_level;
+
+	for (ds_file_group_idx = 0; ds_file_group_idx < ds_file_groups->len;
+			ds_file_group_idx++) {
+		guint entry_idx;
+		int ret;
+		struct ctf_clock_class *default_cc;
+		struct ctf_fs_ds_file_group *ds_file_group =
+			g_ptr_array_index(ds_file_groups, ds_file_group_idx);
+
+		struct ctf_fs_ds_index *index = ds_file_group->index;
+
+		BT_ASSERT(index);
+		BT_ASSERT(index->entries);
+		BT_ASSERT(index->entries->len > 0);
+
+		BT_ASSERT(ds_file_group->sc->default_clock_class);
+		default_cc = ds_file_group->sc->default_clock_class;
+
+		/*
+		 * 1. Iterate over the index, starting from the second entry
+		 * (index = 1).
+		 */
+		for (entry_idx = 1; entry_idx < index->entries->len;
+				entry_idx++) {
+			struct ctf_fs_ds_index_entry *curr_entry, *prev_entry;
+			prev_entry = g_ptr_array_index(index->entries, entry_idx - 1);
+			curr_entry = g_ptr_array_index(index->entries, entry_idx);
+			/*
+			 * 2. Set the current entry `begin` timestamp to the
+			 * timestamp of the first event of the current packet.
+			 */
+			ret = decode_packet_first_event_timestamp(trace, default_cc,
+				curr_entry, &curr_entry->timestamp_begin,
+				&curr_entry->timestamp_begin_ns);
+			if (ret) {
+				BT_LOGE_STR("Failed to decode first event's clock snapshot");
+				goto end;
+			}
+
+			/*
+			 * 3. Set the previous entry `end` timestamp to the
+			 * timestamp of the first event of the current packet.
+			 */
+			prev_entry->timestamp_end = curr_entry->timestamp_begin;
+			prev_entry->timestamp_end_ns = curr_entry->timestamp_begin_ns;
+		}
+	}
 end:
 	return;
 }
@@ -1981,6 +2061,35 @@ bool is_tracer_affected_by_lttng_event_after_packet_bug(
 	return is_affected;
 }
 
+static
+bool is_tracer_affected_by_barectf_event_before_packet_bug(
+		struct tracer_info *curr_tracer_info)
+{
+	bool is_affected;
+	if (strcmp(curr_tracer_info->name, "barectf") == 0) {
+		if (curr_tracer_info->major > 2) {
+			is_affected = false;
+		} else {
+			if (curr_tracer_info->minor > 3) {
+				is_affected = false;
+			} else if (curr_tracer_info->minor == 3) {
+				/* fixed in barectf 2.3.1 */
+				if (curr_tracer_info->patch >= 1) {
+					is_affected = false;
+				} else {
+					is_affected = true;
+				}
+			} else {
+				is_affected = true;
+			}
+		}
+	} else {
+		is_affected = false;
+	}
+
+	return is_affected;
+}
+
 /*
  * Looks for trace produced by known buggy tracers and fix up the index
  * produced earlier.
@@ -2018,6 +2127,12 @@ void fix_packet_index_tracer_bugs(struct ctf_fs_component *ctf_fs)
 				&current_tracer_info)) {
 			BT_LOGW_STR("Trace may be affected by LTTng tracer packet timestamp bug. Fixing up.");
 			fix_index_lttng_event_after_packet_bug(trace);
+		}
+
+		if (is_tracer_affected_by_barectf_event_before_packet_bug(
+				&current_tracer_info)) {
+			BT_LOGW_STR("Trace may be affected by barectf tracer packet timestamp bug. Fixing up.");
+			fix_index_barectf_event_before_packet_bug(trace);
 		}
 	}
 }
