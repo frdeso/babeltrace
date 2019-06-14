@@ -3077,6 +3077,41 @@ end:
 	return ret;
 }
 
+static
+enum bt_msg_iter_status clock_snapshot_at_msg_iter_state(
+		struct bt_msg_iter *notit, enum state target_state,
+		uint64_t *clock_snapshot)
+{
+	enum bt_msg_iter_status status = BT_MSG_ITER_STATUS_OK;
+
+	BT_ASSERT(notit);
+	BT_ASSERT(clock_snapshot);
+	status = decode_until_state(notit, target_state);
+	if (status != BT_MSG_ITER_STATUS_OK) {
+		goto end;
+	}
+
+	*clock_snapshot = notit->default_clock_snapshot;
+end:
+	return status;
+}
+
+BT_HIDDEN
+enum bt_msg_iter_status bt_msg_iter_first_event_clock_snapshot(
+		struct bt_msg_iter *notit, uint64_t *first_clock_snapshot)
+{
+	return clock_snapshot_at_msg_iter_state(notit,
+		STATE_AFTER_EVENT_HEADER, first_clock_snapshot);
+}
+
+BT_HIDDEN
+enum bt_msg_iter_status bt_msg_iter_last_event_clock_snapshot(
+		struct bt_msg_iter *notit, uint64_t *last_clock_snapshot)
+{
+	return clock_snapshot_at_msg_iter_state(notit,
+		STATE_EMIT_MSG_PACKET_END_MULTI, last_clock_snapshot);
+}
+
 BT_HIDDEN
 enum bt_msg_iter_status bt_msg_iter_get_packet_properties(
 		struct bt_msg_iter *notit,
