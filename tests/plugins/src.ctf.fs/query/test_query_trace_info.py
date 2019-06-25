@@ -199,5 +199,37 @@ class QueryTraceInfoRangeTestCase(unittest.TestCase):
         self.assertRaises(KeyError, lambda: streams[0]['range-ns'])
 
 
+class QueryTraceInfoPacketTimestampQuirksTestCase(unittest.TestCase):
+    def setUp(self):
+        ctf = bt2.find_plugin('ctf')
+        self._fs = ctf.source_component_classes['fs']
+        self._path = os.path.join(test_ctf_traces_path, 'succeed')
+
+        self._executor = bt2.QueryExecutor()
+
+    def _test_lttng_quirks(self, path):
+        # Reuse code, for test traces sharing the same base trace and having
+        # the same work around.
+        res = self._executor.query(
+            self._fs,
+            "trace-info",
+            {"paths": [path]},
+        )
+
+        self.assertEqual(len(res), 1)
+        trace = res[0]
+        streams = trace["streams"]
+        self.assertEqual(len(streams), 1)
+
+        self.assertEqual(streams[0]['range-ns']['begin'], 1561489497322777352)
+        self.assertEqual(streams[0]['range-ns']['end'], 1561489497327275498)
+
+    def test_event_after_packet(self):
+        self._test_lttng_quirks(os.path.join(self._path, "lttng-event-after-packet"))
+
+    def test_lttng_crash(self):
+        self._test_lttng_quirks(os.path.join(self._path, "lttng-crash"))
+
+
 if __name__ == '__main__':
     unittest.main()
