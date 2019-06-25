@@ -20,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import cmath
 import bt2
 import bt2.logging
 
@@ -143,3 +144,15 @@ def _check_log_level(log_level):
 
     if log_level not in log_levels:
         raise ValueError("'{}' is not a valid logging level".format(log_level))
+
+
+# Conditionnally define an `isclose()` function to compare complex numbers for
+# equality if not already provided by the `cmath` module. This function was
+# added in Python 3.5.
+if not hasattr(cmath, 'isclose'):
+    # Use the implementation suggested by the Python documentation
+    # https://docs.python.org/3/library/cmath.html#cmath.isclose
+    def _isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
+        return abs(a-b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
+else:
+    _isclose = cmath.isclose

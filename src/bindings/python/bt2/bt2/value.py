@@ -28,7 +28,6 @@ import math
 import abc
 import bt2
 
-
 def _handle_status(status, obj_name):
     if status >= 0:
         return
@@ -167,7 +166,7 @@ class _NumericValue(_Value):
         if not isinstance(other, numbers.Number):
             return False
 
-        return self._value == complex(other)
+        return utils._isclose(self._value, complex(other))
 
     def __rmod__(self, other):
         return self._extract_value(other) % self._value

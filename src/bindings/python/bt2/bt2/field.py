@@ -105,7 +105,7 @@ class _NumericField(_Field):
         if not isinstance(other, numbers.Number):
             return NotImplemented
 
-        return self._value == complex(other)
+        return utils._isclose(self._value, complex(other))
 
     def __rmod__(self, other):
         return self._extract_value(other) % self._value
