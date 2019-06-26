@@ -2235,6 +2235,7 @@ void fix_packet_index_tracer_bugs(struct ctf_fs_component *ctf_fs)
 				&current_tracer_info)) {
 			BT_LOGW_STR("Trace may be affected by LTTng tracer packet timestamp bug. Fixing up.");
 			fix_index_lttng_event_after_packet_bug(trace);
+			trace->metadata->tc->quirks.lttng_event_after_packet = true;
 		}
 
 		if (is_tracer_affected_by_barectf_event_before_packet_bug(
