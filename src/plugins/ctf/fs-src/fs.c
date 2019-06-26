@@ -2246,6 +2246,7 @@ void fix_packet_index_tracer_bugs(struct ctf_fs_component *ctf_fs)
 		if (is_tracer_affected_by_lttng_crash_quirk(
 				&current_tracer_info)) {
 			fix_index_lttng_crash_quirk(trace);
+			trace->metadata->tc->quirks.lttng_crash = true;
 		}
 	}
 }

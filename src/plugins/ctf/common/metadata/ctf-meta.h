@@ -300,6 +300,10 @@ struct ctf_trace_class {
 
 	/* Weak, set during translation */
 	bt_trace_class *ir_tc;
+
+	struct {
+		bool lttng_crash;
+	} quirks;
 };
 
 static inline
