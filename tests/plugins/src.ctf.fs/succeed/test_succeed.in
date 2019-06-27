@@ -49,7 +49,9 @@ test_ctf_single() {
 	ok $? "Trace '$name' gives the expected output"
 }
 
-plan_tests 2
+plan_tests 4
 
 test_ctf_gen_single simple
 test_ctf_single smalltrace
+test_ctf_single lttng-crash
+test_ctf_single lttng-event-after-packet

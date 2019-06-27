@@ -1,0 +1,72 @@
+Trace class:
+  UUID: 8d5e6d6f-1f40-4af3-807c-327db45890b3
+  Environment (5 entries):
+    domain: ust
+    hostname: raton
+    tracer_major: 2
+    tracer_minor: 10
+    tracer_name: lttng-ust
+  Stream class (ID 0):
+    Packets have beginning default clock snapshot: Yes
+    Packets have end default clock snapshot: Yes
+    Supports discarded events: Yes
+    Discarded events have default clock snapshots: Yes
+    Supports discarded packets: Yes
+    Discarded packets have default clock snapshots: Yes
+    Default clock class:
+      Name: monotonic
+      Description: Monotonic Clock
+      Frequency (Hz): 1,000,000,000
+      Precision (cycles): 0
+      Offset (s): 1,561,456,219
+      Offset (cycles): 346,779,135
+      Origin is Unix epoch: Yes
+      UUID: ca8eb8d1-83a9-45c1-9e80-8d9d3bb2c641
+    Packet context field class: Structure (1 member):
+      cpu_id: Unsigned integer (32-bit, Base 10)
+    Event class `my_app:current_temp` (ID 0):
+      Log level: Debug (line)
+      Payload field class: Structure (2 members):
+        temp: Signed integer (32-bit, Base 10)
+        status: String
+
+{Trace 0, Stream class ID 0, Stream ID 3}
+Stream beginning:
+  Trace:
+    Class UUID: 8d5e6d6f-1f40-4af3-807c-327db45890b3
+    Stream (ID 3, Class ID 0)
+
+[Unknown]
+{Trace 0, Stream class ID 0, Stream ID 3}
+Stream activity beginning
+
+[33,277,975,998,217 cycles, 1,561,489,497,322,777,352 ns from origin]
+{Trace 0, Stream class ID 0, Stream ID 3}
+Packet beginning:
+  Context:
+    cpu_id: 3
+
+[33,277,980,484,036 cycles, 1,561,489,497,327,263,171 ns from origin]
+{Trace 0, Stream class ID 0, Stream ID 3}
+Event `my_app:current_temp` (Class ID 0):
+  Payload:
+    temp: 53
+    status: Si le silence craque, Pour couper l'hiver en deux, Vous avez tout fait pour ça, C'est bien de votre faute, Si je me souviens de vous, Si le silence tombe, Pour couper l'amour en deux, Vous avez tout fait pour ça, C'est bien de votre faute, Si je me rappelle à vous, Vous m'avez monté un beau grand bateau, Vous m'avez fait de bien grandes vagues, Si le silence passe, Pour couper le monde en deux, Vous avez tout fait pour ça, C'est bien de votre faute, Si je me colle à vous, , Si le silence coule, Pour couper le jour en deux, Vous avez tout fait pour ça, C'est bien de votre faute, Si je me parle de vous, , Vous m'avez monté un beau grand bateau, Vous m'avez fait de bien grandes vagues, , Si le silence rampe, Pour couper la poire en deux, Vous avez tout fait pour ça, C'est bien de votre faute, Si je me moque de vous, Si le silence veille, Pour couper le cœur en deux, Vous avez tout fait pour ça, C'est bien de votre faute, Si je m'éloigne de vous, Vous m'avez monté un beau grand bateau, Vous m'avez fait de bien grandes vagues
+
+[33,277,980,496,363 cycles, 1,561,489,497,327,275,498 ns from origin]
+{Trace 0, Stream class ID 0, Stream ID 3}
+Event `my_app:current_temp` (Class ID 0):
+  Payload:
+    temp: 56
+    status: Si le silence craque, Pour couper l'hiver en deux, Vous avez tout fait pour ça, C'est bien de votre faute, Si je me souviens de vous, Si le silence tombe, Pour couper l'amour en deux, Vous avez tout fait pour ça, C'est bien de votre faute, Si je me rappelle à vous, Vous m'avez monté un beau grand bateau, Vous m'avez fait de bien grandes vagues, Si le silence passe, Pour couper le monde en deux, Vous avez tout fait pour ça, C'est bien de votre faute, Si je me colle à vous, , Si le silence coule, Pour couper le jour en deux, Vous avez tout fait pour ça, C'est bien de votre faute, Si je me parle de vous, , Vous m'avez monté un beau grand bateau, Vous m'avez fait de bien grandes vagues, , Si le silence rampe, Pour couper la poire en deux, Vous avez tout fait pour ça, C'est bien de votre faute, Si je me moque de vous, Si le silence veille, Pour couper le cœur en deux, Vous avez tout fait pour ça, C'est bien de votre faute, Si je m'éloigne de vous, Vous m'avez monté un beau grand bateau, Vous m'avez fait de bien grandes vagues
+
+[33,277,980,496,363 cycles, 1,561,489,497,327,275,498 ns from origin]
+{Trace 0, Stream class ID 0, Stream ID 3}
+Packet end
+
+[Unknown]
+{Trace 0, Stream class ID 0, Stream ID 3}
+Stream activity end
+
+{Trace 0, Stream class ID 0, Stream ID 3}
+Stream end
