@@ -25,21 +25,40 @@ from bt2 import field_class as bt2_field_class
 from bt2 import event_class as bt2_event_class
 from bt2 import trace_class as bt2_trace_class
 from bt2 import clock_class as bt2_clock_class
+import bt2
 import collections.abc
 
 
-class _StreamClass(object._SharedObject, collections.abc.Mapping):
+class _StreamClassConst(object._SharedObject, collections.abc.Mapping):
     _get_ref = staticmethod(native_bt.stream_class_get_ref)
     _put_ref = staticmethod(native_bt.stream_class_put_ref)
+    _borrow_event_class_by_id = staticmethod(
+        native_bt.stream_class_borrow_event_class_by_id_const
+    )
+    _borrow_event_class_by_index = staticmethod(
+        native_bt.stream_class_borrow_event_class_by_index_const
+    )
+    _borrow_trace_class = staticmethod(native_bt.stream_class_borrow_trace_class_const)
+    _borrow_packet_context_field_class = staticmethod(
+        native_bt.stream_class_borrow_packet_context_field_class_const
+    )
+    _borrow_event_common_context_field_class = staticmethod(
+        native_bt.stream_class_borrow_event_common_context_field_class_const
+    )
+    _borrow_default_clock_class = staticmethod(
+        native_bt.stream_class_borrow_default_clock_class_const
+    )
+    _event_class_class = bt2_event_class._EventClassConst
+    _trace_class_class = bt2_trace_class._TraceClassConst
 
     def __getitem__(self, key):
         utils._check_int64(key)
-        ec_ptr = native_bt.stream_class_borrow_event_class_by_id(self._ptr, key)
+        ec_ptr = _borrow_event_class_by_id(self._ptr, key)
 
         if ec_ptr is None:
             raise KeyError(key)
 
-        return bt2_event_class._EventClass._create_from_ptr_and_get_ref(ec_ptr)
+        return _event_class_class._create_from_ptr_and_get_ref(ec_ptr)
 
     def __len__(self):
         count = native_bt.stream_class_get_event_class_count(self._ptr)
@@ -48,15 +67,125 @@ class _StreamClass(object._SharedObject, collections.abc.Mapping):
 
     def __iter__(self):
         for idx in range(len(self)):
-            ec_ptr = native_bt.stream_class_borrow_event_class_by_index_const(
-                self._ptr, idx
-            )
+            ec_ptr = _borrow_event_class_by_index(self._ptr, idx)
             assert ec_ptr is not None
 
             id = native_bt.event_class_get_id(ec_ptr)
             assert id >= 0
 
             yield id
+
+    @property
+    def trace_class(self):
+        tc_ptr = _borrow_trace_class(self._ptr)
+
+        if tc_ptr is not None:
+            return _trace_class_class._create_from_ptr_and_get_ref(tc_ptr)
+
+    @property
+    def name(self):
+        return native_bt.stream_class_get_name(self._ptr)
+
+    @property
+    def assigns_automatic_event_class_id(self):
+        return native_bt.stream_class_assigns_automatic_event_class_id(self._ptr)
+
+    @property
+    def assigns_automatic_stream_id(self):
+        return native_bt.stream_class_assigns_automatic_stream_id(self._ptr)
+
+    @property
+    def supports_packets(self):
+        return native_bt.stream_class_supports_packets(self._ptr)
+
+    @property
+    def packets_have_beginning_default_clock_snapshot(self):
+        return native_bt.stream_class_packets_have_beginning_default_clock_snapshot(
+            self._ptr
+        )
+
+    @property
+    def packets_have_end_default_clock_snapshot(self):
+        return native_bt.stream_class_packets_have_end_default_clock_snapshot(self._ptr)
+
+    @property
+    def supports_discarded_events(self):
+        return native_bt.stream_class_supports_discarded_events(self._ptr)
+
+    @property
+    def discarded_events_have_default_clock_snapshots(self):
+        return native_bt.stream_class_discarded_events_have_default_clock_snapshots(
+            self._ptr
+        )
+
+    @property
+    def supports_discarded_packets(self):
+        return native_bt.stream_class_supports_discarded_packets(self._ptr)
+
+    @property
+    def discarded_packets_have_default_clock_snapshots(self):
+        return native_bt.stream_class_discarded_packets_have_default_clock_snapshots(
+            self._ptr
+        )
+
+    @property
+    def id(self):
+        id = native_bt.stream_class_get_id(self._ptr)
+
+        if id < 0:
+            return
+
+        return id
+
+    @property
+    def packet_context_field_class(self):
+        fc_ptr = _borrow_packet_context_field_class_const(self._ptr)
+
+        if fc_ptr is None:
+            return
+
+        return bt2_field_class._create_field_class_from_ptr_and_get_ref(fc_ptr)
+
+    @property
+    def event_common_context_field_class(self):
+        fc_ptr = _borrow_event_common_context_field_class_const(self._ptr)
+
+        if fc_ptr is None:
+            return
+
+        return bt2_field_class._create_field_class_from_ptr_and_get_ref(fc_ptr)
+
+    @property
+    def default_clock_class(self):
+        cc_ptr = _borrow_default_clock_class(self._ptr)
+        cc_ptr = native_bt.stream_class_borrow_default_clock_class(self._ptr)
+        if cc_ptr is None:
+            return
+
+        return bt2_clock_class._ClockClass._create_from_ptr_and_get_ref(cc_ptr)
+
+
+class _StreamClass(_StreamClassConst):
+    _get_ref = staticmethod(native_bt.stream_class_get_ref)
+    _put_ref = staticmethod(native_bt.stream_class_put_ref)
+    _borrow_event_class_by_id = staticmethod(
+        native_bt.stream_class_borrow_event_class_by_id
+    )
+    _borrow_event_class_by_index = staticmethod(
+        native_bt.stream_class_borrow_event_class_by_index
+    )
+    _borrow_trace_class = staticmethod(native_bt.stream_class_borrow_trace_class)
+    _borrow_packet_context_field_class = staticmethod(
+        native_bt.stream_class_borrow_packet_context_field_class
+    )
+    _borrow_event_common_context_field_class = staticmethod(
+        native_bt.stream_class_borrow_event_common_context_field_class
+    )
+    _borrow_default_clock_class = staticmethod(
+        native_bt.stream_class_borrow_default_clock_class
+    )
+    _event_class_class = bt2_event_class._EventClass
+    _trace_class_class = bt2_trace_class._TraceClass
 
     def create_event_class(
         self,
@@ -102,27 +231,12 @@ class _StreamClass(object._SharedObject, collections.abc.Mapping):
 
         return event_class
 
-    @property
-    def trace_class(self):
-        tc_ptr = native_bt.stream_class_borrow_trace_class_const(self._ptr)
-
-        if tc_ptr is not None:
-            return bt2_trace_class._TraceClass._create_from_ptr_and_get_ref(tc_ptr)
-
-    @property
-    def name(self):
-        return native_bt.stream_class_get_name(self._ptr)
-
     def _name(self, name):
         utils._check_str(name)
         status = native_bt.stream_class_set_name(self._ptr, name)
         utils._handle_func_status(status, "cannot set stream class object's name")
 
-    _name = property(fset=_name)
-
-    @property
-    def assigns_automatic_event_class_id(self):
-        return native_bt.stream_class_assigns_automatic_event_class_id(self._ptr)
+    name = property(fget=_StreamClassConst.name.get, fset=_name)
 
     def _assigns_automatic_event_class_id(self, auto_id):
         utils._check_bool(auto_id)
@@ -130,11 +244,10 @@ class _StreamClass(object._SharedObject, collections.abc.Mapping):
             self._ptr, auto_id
         )
 
-    _assigns_automatic_event_class_id = property(fset=_assigns_automatic_event_class_id)
-
-    @property
-    def assigns_automatic_stream_id(self):
-        return native_bt.stream_class_assigns_automatic_stream_id(self._ptr)
+    assigns_automatic_event_class_id = property(
+        fget=_StreamClassConst.assigns_automatic_event_class_id.get,
+        fset=_assigns_automatic_event_class_id,
+    )
 
     def _assigns_automatic_stream_id(self, auto_id):
         utils._check_bool(auto_id)
@@ -142,21 +255,10 @@ class _StreamClass(object._SharedObject, collections.abc.Mapping):
             self._ptr, auto_id
         )
 
-    _assigns_automatic_stream_id = property(fset=_assigns_automatic_stream_id)
-
-    @property
-    def supports_packets(self):
-        return native_bt.stream_class_supports_packets(self._ptr)
-
-    @property
-    def packets_have_beginning_default_clock_snapshot(self):
-        return native_bt.stream_class_packets_have_beginning_default_clock_snapshot(
-            self._ptr
-        )
-
-    @property
-    def packets_have_end_default_clock_snapshot(self):
-        return native_bt.stream_class_packets_have_end_default_clock_snapshot(self._ptr)
+    assigns_automatic_stream_id = property(
+        fget=_StreamClassConst.assigns_automatic_stream_id.get,
+        fset=_assigns_automatic_stream_id,
+    )
 
     def _set_supports_packets(self, supports, with_begin_cs=False, with_end_cs=False):
         utils._check_bool(supports)
@@ -175,9 +277,9 @@ class _StreamClass(object._SharedObject, collections.abc.Mapping):
             self._ptr, supports, with_begin_cs, with_end_cs
         )
 
-    @property
-    def supports_discarded_events(self):
-        return native_bt.stream_class_supports_discarded_events(self._ptr)
+    supports_packets = property(
+        fget=_StreamClassConst.supports_packets.get, fset=_set_supports_packets
+    )
 
     def _set_supports_discarded_events(self, supports, with_cs=False):
         utils._check_bool(supports)
@@ -192,15 +294,10 @@ class _StreamClass(object._SharedObject, collections.abc.Mapping):
             self._ptr, supports, with_cs
         )
 
-    @property
-    def discarded_events_have_default_clock_snapshots(self):
-        return native_bt.stream_class_discarded_events_have_default_clock_snapshots(
-            self._ptr
-        )
-
-    @property
-    def supports_discarded_packets(self):
-        return native_bt.stream_class_supports_discarded_packets(self._ptr)
+    supports_discarded_events = property(
+        fget=_StreamClassConst.supports_discarded_events.get,
+        fset=_set_supports_discarded_events,
+    )
 
     def _set_supports_discarded_packets(self, supports, with_cs):
         utils._check_bool(supports)
@@ -220,31 +317,10 @@ class _StreamClass(object._SharedObject, collections.abc.Mapping):
             self._ptr, supports, with_cs
         )
 
-    @property
-    def discarded_packets_have_default_clock_snapshots(self):
-        return native_bt.stream_class_discarded_packets_have_default_clock_snapshots(
-            self._ptr
-        )
-
-    @property
-    def id(self):
-        id = native_bt.stream_class_get_id(self._ptr)
-
-        if id < 0:
-            return
-
-        return id
-
-    @property
-    def packet_context_field_class(self):
-        fc_ptr = native_bt.stream_class_borrow_packet_context_field_class_const(
-            self._ptr
-        )
-
-        if fc_ptr is None:
-            return
-
-        return bt2_field_class._create_field_class_from_ptr_and_get_ref(fc_ptr)
+    supports_discarded_packets = property(
+        fget=_StreamClassConst.supports_discarded_packets.get,
+        fset=_set_supports_discarded_packets,
+    )
 
     def _packet_context_field_class(self, packet_context_field_class):
         if packet_context_field_class is not None:
@@ -262,18 +338,10 @@ class _StreamClass(object._SharedObject, collections.abc.Mapping):
                 status, "cannot set stream class' packet context field class"
             )
 
-    _packet_context_field_class = property(fset=_packet_context_field_class)
-
-    @property
-    def event_common_context_field_class(self):
-        fc_ptr = native_bt.stream_class_borrow_event_common_context_field_class_const(
-            self._ptr
-        )
-
-        if fc_ptr is None:
-            return
-
-        return bt2_field_class._create_field_class_from_ptr_and_get_ref(fc_ptr)
+    packet_context_field_class = property(
+        fget=_StreamClassConst.packet_context_field_class.get,
+        fset=_packet_context_field_class,
+    )
 
     def _event_common_context_field_class(self, event_common_context_field_class):
         if event_common_context_field_class is not None:
@@ -287,18 +355,15 @@ class _StreamClass(object._SharedObject, collections.abc.Mapping):
                 status, "cannot set stream class' event context field type"
             )
 
-    _event_common_context_field_class = property(fset=_event_common_context_field_class)
-
-    @property
-    def default_clock_class(self):
-        cc_ptr = native_bt.stream_class_borrow_default_clock_class(self._ptr)
-        if cc_ptr is None:
-            return
-
-        return bt2_clock_class._ClockClass._create_from_ptr_and_get_ref(cc_ptr)
+    event_common_context_field_class = property(
+        fget=_StreamClassConst.event_common_context_field_class.get,
+        fset=_event_common_context_field_class,
+    )
 
     def _default_clock_class(self, clock_class):
         utils._check_type(clock_class, bt2_clock_class._ClockClass)
         native_bt.stream_class_set_default_clock_class(self._ptr, clock_class._ptr)
 
-    _default_clock_class = property(fset=_default_clock_class)
+    default_clock_class = property(
+        fget=_StreamClassConst.default_clock_class.get, fset=_default_clock_class
+    )
